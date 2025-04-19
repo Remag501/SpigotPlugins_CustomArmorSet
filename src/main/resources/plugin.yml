@@ -2,3 +2,8 @@ name: CustomArmorSets
 version: 1.0
 main: me.remag501.customarmorsets.CustomArmorSets
 api-version: 1.19
+
+commands:
+  customarmorsets:
+    description: Custom armor sets command.
+    usage: /<command> give <set>
