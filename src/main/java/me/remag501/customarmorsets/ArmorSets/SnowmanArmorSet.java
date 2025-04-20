@@ -13,13 +13,15 @@ public class SnowmanArmorSet extends ArmorSet {
 
     @Override
     public void applyPassive(Player player) {
-        player.getInventory().setHelmet(new ItemStack(Material.SNOW_BLOCK));
+//        player.getInventory().setHelmet(new ItemStack(Material.SNOW_BLOCK));
         player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, true, false));
+        player.sendMessage("✅ You equipped the snowman set");
     }
 
     @Override
     public void removePassive(Player player) {
         player.removePotionEffect(PotionEffectType.SPEED);
+        player.sendMessage("❌ You removed the snowman set");
         // Restore helmet logic handled elsewhere (e.g., store original)
     }
 

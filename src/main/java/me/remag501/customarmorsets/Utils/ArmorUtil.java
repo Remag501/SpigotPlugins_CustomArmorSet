@@ -31,7 +31,7 @@ public class ArmorUtil {
 
         // Tag with armor family ID
         PersistentDataContainer container = meta.getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(plugin, "armor_family");
+        NamespacedKey key = new NamespacedKey(plugin, "armor_set");
         container.set(key, PersistentDataType.STRING, armorSetId);
 
         item.setItemMeta(meta);
