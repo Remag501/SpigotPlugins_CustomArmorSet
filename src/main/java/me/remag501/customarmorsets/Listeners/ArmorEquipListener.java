@@ -23,7 +23,7 @@ public class ArmorEquipListener implements Listener {
         for (ItemStack piece : armor) {
             if (piece == null) return false;
             ItemMeta meta = piece.getItemMeta();
-            NamespacedKey key = new NamespacedKey(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), "armor_family");
+            NamespacedKey key = new NamespacedKey(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), "armor_set");
             if (meta == null || !meta.getPersistentDataContainer().has(key, PersistentDataType.STRING)) {
                 return false;
             }
