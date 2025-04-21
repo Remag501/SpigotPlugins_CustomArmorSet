@@ -28,4 +28,9 @@ public class CustomArmorSetsCore {
         equippedArmor.remove(player.getUniqueId()); // use set id to figure out which class to use
     }
 
+    public static ArmorSet getArmorSet(Player player) {
+        UUID uuid = player.getUniqueId();
+        return equippedArmor.get(uuid);
+    }
+
 }
