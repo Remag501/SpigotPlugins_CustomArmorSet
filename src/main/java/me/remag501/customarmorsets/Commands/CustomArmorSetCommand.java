@@ -1,9 +1,8 @@
 package me.remag501.customarmorsets.Commands;
 
+import me.remag501.customarmorsets.Core.ArmorSetType;
 import me.remag501.customarmorsets.Utils.ArmorUtil;
 import org.bukkit.ChatColor;
-import org.bukkit.Color;
-import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -12,6 +11,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class CustomArmorSetCommand implements CommandExecutor {
 
@@ -34,28 +35,36 @@ public class CustomArmorSetCommand implements CommandExecutor {
             return true;
         }
 
-        if (args.length < 2 || !args[1].equalsIgnoreCase("snowman")) {
-            player.sendMessage(ChatColor.RED + "Unknown armor set. Try: snowman");
+        if (args.length < 2) {
+            player.sendMessage(ChatColor.RED + "Usage: /customarmorsets give <set>");
             return true;
         }
 
-        ItemStack[] snowmanArmor = ArmorUtil.createLeatherArmorSet(
-                plugin,
-                "Snowman",
-                Arrays.asList(
-                        ChatColor.GRAY + "Stay frosty.",
-                        ChatColor.AQUA + "Full set bonus: Speed I",
-                        ChatColor.AQUA + "Offhand Ability: Throw snowballs!"
-                ),
-                Color.WHITE,
-                "snowman"
-        );
+        ArmorSetType.fromId(args[1]).ifPresentOrElse(type -> {
+            ItemStack[] armor = ArmorUtil.createLeatherArmorSet(
+                    plugin,
+                    type.getDisplayName(), // use display name instead of capitalized ID
+                    List.of(
+                            ChatColor.GRAY + "Unique bonus coming soon!",
+                            "Full set bonus: TBD"
+                    ),
+                    type.getLeatherColor(),
+                    type.getId()
+            );
 
-        for (ItemStack piece : snowmanArmor) {
-            player.getInventory().addItem(piece);
-        }
+            for (ItemStack item : armor) {
+                player.getInventory().addItem(item);
+            }
 
-        player.sendMessage(ChatColor.GREEN + "You received the Snowman Armor Set!");
+            player.sendMessage(ChatColor.GREEN + "You received the " + type.getDisplayName() + ChatColor.GREEN + " Armor Set!");
+        }, () -> {
+            player.sendMessage(ChatColor.RED + "Unknown armor set. Try: " +
+                    Arrays.stream(ArmorSetType.values())
+                            .map(ArmorSetType::getId)
+                            .collect(Collectors.joining(", "))
+            );
+        });
+
         return true;
     }
 }

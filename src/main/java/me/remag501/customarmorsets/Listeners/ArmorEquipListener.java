@@ -1,23 +1,20 @@
 package me.remag501.customarmorsets.Listeners;
 
-import me.remag501.customarmorsets.ArmorSets.CustomArmorSetsCore;
+import me.remag501.customarmorsets.Core.ArmorSetType;
+import me.remag501.customarmorsets.Core.CustomArmorSetsCore;
 import me.remag501.customarmorsets.Utils.HelmetCosmeticUtil;
+import me.remag501.customarmorsets.Utils.ArmorUtil;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorEquipEvent;
-import me.remag501.customarmorsets.lib.armorequipevent.ArmorType;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -74,41 +71,24 @@ public class ArmorEquipListener implements Listener {
 
     @EventHandler
     public void onEquip(ArmorEquipEvent event) {
-        // Check if helmet block is picked up
-        if (event.getMethod() == ArmorEquipEvent.EquipMethod.HOTBAR_SWAP) return;
-
         Player player = event.getPlayer();
 
-        // Simulate OLD armor contents
-        ItemStack[] oldArmor = player.getInventory().getArmorContents().clone();
-        switch (event.getType()) {
-            case HELMET -> oldArmor[3] = event.getOldArmorPiece();
-            case CHESTPLATE -> oldArmor[2] = event.getOldArmorPiece();
-            case LEGGINGS -> oldArmor[1] = event.getOldArmorPiece();
-            case BOOTS -> oldArmor[0] = event.getOldArmorPiece();
-        }
+//        for (ArmorSetType type : ArmorSetType.values()) {
+            ArmorSetType wasWearing = ArmorUtil.hasFullArmorSet(player, event.getOldArmorPiece(), event.getType());
+            ArmorSetType isWearing = ArmorUtil.hasFullArmorSet(player, event.getNewArmorPiece(), event.getType());
 
-        // Simulate NEW armor contents
-        ItemStack[] newArmor = player.getInventory().getArmorContents().clone();
-        switch (event.getType()) {
-            case HELMET -> newArmor[3] = event.getNewArmorPiece();
-            case CHESTPLATE -> newArmor[2] = event.getNewArmorPiece();
-            case LEGGINGS -> newArmor[1] = event.getNewArmorPiece();
-            case BOOTS -> newArmor[0] = event.getNewArmorPiece();
-        }
+            if (wasWearing != null && isWearing == null) {
+                CustomArmorSetsCore.unequipArmor(player);
+            }
 
-        boolean wasWearingSet = isFullArmorSet(oldArmor, "snowman");
-        boolean nowWearingSet = isFullArmorSet(newArmor, "snowman");
+            ArmorSetType type = (wasWearing != null) ? wasWearing : isWearing;
 
-        if (wasWearingSet && !nowWearingSet) {
-            CustomArmorSetsCore.unequipArmor(player, "snowman");
-        }
-
-        // Optional: if you want to react to putting it on too
-        if (!wasWearingSet && nowWearingSet) {
-            CustomArmorSetsCore.equipArmor(player, "snowman");
-        }
+            if (wasWearing == null && isWearing != null) {
+                CustomArmorSetsCore.equipArmor(player, type);
+            }
+//        }
     }
+
 
 
     @EventHandler

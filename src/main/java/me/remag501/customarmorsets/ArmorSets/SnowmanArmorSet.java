@@ -1,5 +1,8 @@
 package me.remag501.customarmorsets.ArmorSets;
 
+import me.remag501.customarmorsets.Core.ArmorSet;
+import me.remag501.customarmorsets.Core.ArmorSetType;
+import me.remag501.customarmorsets.Core.CustomArmorSetsCore;
 import me.remag501.customarmorsets.Utils.HelmetCosmeticUtil;
 import org.bukkit.*;
 import org.bukkit.entity.LivingEntity;
@@ -12,19 +15,14 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.util.Vector;
-
-import java.util.HashMap;
-import java.util.UUID;
 
 public class SnowmanArmorSet extends ArmorSet implements Listener {
 
 //    private final HashMap<UUID, Long> cooldowns = new HashMap<>();
     private long cooldown;
 
-    @Override
-    public String getId() {
-        return "snowman";
+    public SnowmanArmorSet() {
+        super(ArmorSetType.SNOWMAN);
     }
 
     @Override
@@ -32,7 +30,7 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
         Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), () -> {
             ItemStack helmet = player.getInventory().getHelmet();
             if (helmet != null) {
-                player.getInventory().setHelmet(HelmetCosmeticUtil.makeCosmeticHelmet(helmet, Material.CARVED_PUMPKIN));
+                player.getInventory().setHelmet(HelmetCosmeticUtil.makeCosmeticHelmet(helmet, Material.ICE));
             }
             player.sendMessage("✅ You equipped the snowman set");
         });
