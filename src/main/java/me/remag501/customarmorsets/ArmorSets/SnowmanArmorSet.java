@@ -30,7 +30,7 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
         Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), () -> {
             ItemStack helmet = player.getInventory().getHelmet();
             if (helmet != null) {
-                player.getInventory().setHelmet(HelmetCosmeticUtil.makeCosmeticHelmet(helmet, Material.ICE));
+                player.getInventory().setHelmet(HelmetCosmeticUtil.makeCosmeticHelmet(helmet, type.getHeadUrl()));
             }
             player.sendMessage("✅ You equipped the snowman set");
         });
@@ -41,7 +41,7 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
     public void removePassive(Player player) {
         ItemStack helmet = player.getInventory().getHelmet();
         if (helmet != null) {
-            player.getInventory().setHelmet(HelmetCosmeticUtil.restoreOriginalHelmet(helmet, Color.WHITE));
+            player.getInventory().setHelmet(HelmetCosmeticUtil.restoreOriginalHelmet(helmet, type.getLeatherColor()));
         }
         player.sendMessage("❌ You removed the snowman set");
     }
