@@ -1,16 +1,20 @@
 package me.remag501.customarmorsets.Listeners;
 
 import me.remag501.customarmorsets.ArmorSets.CustomArmorSetsCore;
+import me.remag501.customarmorsets.Utils.HelmetCosmeticUtil;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorEquipEvent;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorType;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -70,6 +74,7 @@ public class ArmorEquipListener implements Listener {
 
     @EventHandler
     public void onEquip(ArmorEquipEvent event) {
+        // Check if helmet block is picked up
         if (event.getMethod() == ArmorEquipEvent.EquipMethod.HOTBAR_SWAP) return;
 
         Player player = event.getPlayer();
@@ -105,5 +110,19 @@ public class ArmorEquipListener implements Listener {
         }
     }
 
+
+    @EventHandler
+    public void helmetBlockRemoval(InventoryClickEvent event) {
+
+        HumanEntity player = event.getWhoClicked();
+
+        if (event.getSlotType() == InventoryType.SlotType.ARMOR) {
+            if (player.getInventory().getHelmet() == null)
+                return; // Player does not have helmet equipped
+            if (!player.getInventory().getHelmet().getType().name().startsWith("LEATHER_")) {
+                player.getInventory().setHelmet(HelmetCosmeticUtil.restoreOriginalHelmet(player.getInventory().getHelmet(), Color.WHITE));
+            }
+        }
+    }
 
 }

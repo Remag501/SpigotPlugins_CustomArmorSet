@@ -1,7 +1,7 @@
 package me.remag501.customarmorsets.ArmorSets;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
+import me.remag501.customarmorsets.Utils.HelmetCosmeticUtil;
+import org.bukkit.*;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
@@ -29,19 +29,27 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void applyPassive(Player player) {
-        player.sendMessage("✅ You equipped the snowman set");
+        Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), () -> {
+            ItemStack helmet = player.getInventory().getHelmet();
+            if (helmet != null) {
+                player.getInventory().setHelmet(HelmetCosmeticUtil.makeCosmeticHelmet(helmet, Material.CARVED_PUMPKIN));
+            }
+            player.sendMessage("✅ You equipped the snowman set");
+        });
     }
+
 
     @Override
     public void removePassive(Player player) {
+        ItemStack helmet = player.getInventory().getHelmet();
+        if (helmet != null) {
+            player.getInventory().setHelmet(HelmetCosmeticUtil.restoreOriginalHelmet(helmet, Color.WHITE));
+        }
         player.sendMessage("❌ You removed the snowman set");
-        // Cleanup handled externally
-        EntityDamageByEntityEvent.getHandlerList().unregister(this);
     }
 
     @Override
     public void triggerAbility(Player player) {
-        UUID uuid = player.getUniqueId();
         long now = System.currentTimeMillis();
 
         if (now - cooldown < 5000) {
@@ -73,11 +81,35 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
         ArmorSet set = CustomArmorSetsCore.getArmorSet(player);
         if (!(set instanceof SnowmanArmorSet)) return;
 
-        // Check if on ground and not jumping or flying
-        if (player.isOnGround() && !player.isFlying()) {
-            Vector dir = player.getLocation().getDirection();
-            Vector slippery = new Vector(dir.getX() * 0.15, 0, dir.getZ() * 0.15);
-            player.setVelocity(player.getVelocity().add(slippery));
+        Location from = event.getFrom();
+        Location to = event.getTo();
+
+        // Ignore head turns
+        if (from.getBlockX() == to.getBlockX() && from.getBlockZ() == to.getBlockZ()) return;
+
+        // Leave a snowy trail!
+        Location blockBelow = player.getLocation().clone().subtract(0, 1, 0);
+        if (blockBelow.getBlock().getType().isAir()) return;
+
+        // Only on solid ground
+        if (!player.isOnGround()) return;
+
+        // Make trail block (snow layer or frosted ice)
+        Material oldType = blockBelow.getBlock().getType();
+        blockBelow.getBlock().setType(Material.SNOW_BLOCK);
+
+        // Remove after 3 seconds
+        Bukkit.getScheduler().runTaskLater(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), () -> {
+            if (blockBelow.getBlock().getType() == Material.SNOW_BLOCK) {
+                blockBelow.getBlock().setType(oldType);
+            }
+        }, 60L); // 60 ticks = 3 seconds
+
+        // Speed boost while on snow
+        if (blockBelow.getBlock().getType() == Material.SNOW_BLOCK) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 0, true, false));
+            player.spawnParticle(Particle.SNOW_SHOVEL, player.getLocation(), 8, 0.2, 0.2, 0.2, 0.01);
         }
     }
+
 }
