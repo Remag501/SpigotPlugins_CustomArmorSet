@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets;
 
+import me.remag501.customarmorsets.ArmorSets.SnowmanArmorSet;
 import me.remag501.customarmorsets.Commands.CustomArmorSetCommand;
 import me.remag501.customarmorsets.Listeners.ArmorEquipListener;
 import me.remag501.customarmorsets.Listeners.OffHandAbilityListener;
@@ -16,6 +17,8 @@ public final class CustomArmorSets extends JavaPlugin {
         getCommand("customarmorsets").setExecutor(new CustomArmorSetCommand(this));
         getServer().getPluginManager().registerEvents(new ArmorEquipListener(), this);
         getServer().getPluginManager().registerEvents(new OffHandAbilityListener(), this);
+        // Register listeners for armor sets
+        getServer().getPluginManager().registerEvents(new SnowmanArmorSet(), this);
 
         // Libraries
         getServer().getPluginManager().registerEvents(new ArmorListener(getConfig().getStringList("blocked")), this);

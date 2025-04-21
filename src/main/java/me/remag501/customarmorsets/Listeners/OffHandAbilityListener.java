@@ -14,7 +14,7 @@ public class OffHandAbilityListener implements Listener {
     @EventHandler
     public void onOffhandUse(PlayerSwapHandItemsEvent event) {
         Player player = event.getPlayer();
-        // Check if player has an armor set
+        // Check if player has an armor setf
         ArmorSet set = CustomArmorSetsCore.getArmorSet(player);
         if (set == null) return;
 
