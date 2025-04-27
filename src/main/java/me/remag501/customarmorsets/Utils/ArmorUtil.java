@@ -6,6 +6,7 @@ import me.remag501.customarmorsets.lib.armorequipevent.ArmorType;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
@@ -21,7 +22,8 @@ import java.util.UUID;
 
 public class ArmorUtil {
 
-    public static ItemStack createLeatherArmorPiece(JavaPlugin plugin, Material material, String displayName, List<String> lore, Color color, String armorSetId, int armorPoints) {
+    public static ItemStack createLeatherArmorPiece(JavaPlugin plugin, Material material, String displayName, List<String> lore,
+                                                    Color color, String armorSetId, int armorPoints, int durability, int armorToughness) {
         if (!material.name().startsWith("LEATHER_")) {
             throw new IllegalArgumentException("Material must be a leather armor piece!");
         }
@@ -53,9 +55,11 @@ public class ArmorUtil {
 //        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         meta.addItemFlags(ItemFlag.HIDE_DYE);
 
-        // Adjust armor set points
+        // Adjust set armor points, durability, and knockback
         AttributeModifier modifier = new AttributeModifier(UUID.randomUUID(), "generic.armor", armorPoints, AttributeModifier.Operation.ADD_NUMBER, slot);
         meta.addAttributeModifier(Attribute.GENERIC_ARMOR, modifier);
+        modifier = new AttributeModifier(UUID.randomUUID(), "generic.armor.toughness", armorToughness, AttributeModifier.Operation.ADD_NUMBER, slot);
+        meta.addAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS, modifier);
 
         // Currently only in armor passives, but might be added for armor piece stats
         // Add armor attributes (hardcoded temporarily)
@@ -75,15 +79,25 @@ public class ArmorUtil {
         container.set(key, PersistentDataType.STRING, armorSetId);
 
         item.setItemMeta(meta);
+
+        // Now adjust durability with datapack, add custom NBT (requires NMS or a helper lib like PersistentDataContainer)
+        key = new NamespacedKey(plugin, "cDamageMax");
+        ItemMeta armorMeta = item.getItemMeta();
+        if (armorMeta != null) {
+            armorMeta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, durability); // Simulating diamond durability
+            item.setItemMeta(armorMeta);
+        }
+
         return item;
     }
 
-    public static ItemStack[] createLeatherArmorSet(JavaPlugin plugin, String displayName, List<String> lore, Color color, String armorSetId, int[] armorPoints) {
+    public static ItemStack[] createLeatherArmorSet(JavaPlugin plugin, String displayName, List<String> lore, Color color,
+                                                    String armorSetId, int[] armorPoints, int[] durability, int[] armorToughness) {
         return new ItemStack[]{
-                createLeatherArmorPiece(plugin, Material.LEATHER_HELMET, displayName + " Helmet", lore, color, armorSetId, armorPoints[0]),
-                createLeatherArmorPiece(plugin, Material.LEATHER_CHESTPLATE, displayName + " Chestplate", lore, color, armorSetId, armorPoints[1]),
-                createLeatherArmorPiece(plugin, Material.LEATHER_LEGGINGS, displayName + " Leggings", lore, color, armorSetId, armorPoints[2]),
-                createLeatherArmorPiece(plugin, Material.LEATHER_BOOTS, displayName + " Boots", lore, color, armorSetId, armorPoints[3])
+                createLeatherArmorPiece(plugin, Material.LEATHER_HELMET, displayName + " Helmet", lore, color, armorSetId, armorPoints[0], durability[0], armorToughness[0]),
+                createLeatherArmorPiece(plugin, Material.LEATHER_CHESTPLATE, displayName + " Chestplate", lore, color, armorSetId, armorPoints[1], durability[1], armorToughness[1]),
+                createLeatherArmorPiece(plugin, Material.LEATHER_LEGGINGS, displayName + " Leggings", lore, color, armorSetId, armorPoints[2], durability[2], armorToughness[2]),
+                createLeatherArmorPiece(plugin, Material.LEATHER_BOOTS, displayName + " Boots", lore, color, armorSetId, armorPoints[3], durability[3], armorToughness[3])
         };
     }
 

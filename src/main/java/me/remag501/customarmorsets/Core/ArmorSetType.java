@@ -3,7 +3,6 @@ package me.remag501.customarmorsets.Core;
 import me.remag501.customarmorsets.ArmorSets.SnowmanArmorSet;
 import me.remag501.customarmorsets.ArmorSets.InfernusArmorSet;
 import org.bukkit.Color;
-import org.bukkit.Material;
 
 import java.util.Arrays;
 import java.util.List;
@@ -12,10 +11,10 @@ import java.util.function.Supplier;
 
 public enum ArmorSetType {
     SNOWMAN("snowman", "Snow Man", Color.WHITE, "http://textures.minecraft.net/texture/bf96f13c7fb55b00a172ded93c12419c912188700389ef366d43eb3c107aab71", SnowmanArmorSet::new,
-            Arrays.asList("I like men", "Dik"), new int[]{1, 1, 1, 1}),
+            Arrays.asList("", ""), new int[]{1, 1, 1, 1}, new int[]{55, 80, 70, 65}, new int[]{0, 0, 0, 0}),
     INFERNUS("infernus", "Infernus", Color.ORANGE, "http://textures.minecraft.net/texture/3ff87d0e910883d3d12fdacbc8719d4b63e183e507f16b7cf58bda8c81efa4b", InfernusArmorSet::new,
             Arrays.asList("§6Ability: §ePress F to shoot a fire trail", "§6Passive: §eFire resistance, trail of fire"),
-            new int[]{1, 8, 6, 2});
+            new int[]{1, 8, 6, 2}, new int[]{55, 528, 495, 195}, new int[]{0, 2, 2, 0});
 
     // FLAME(..., FlameArmorSet::new);
 
@@ -24,13 +23,14 @@ public enum ArmorSetType {
     private final Color leatherColor;
     private final String headUrl;
     private final Supplier<ArmorSet> constructor;// now no plugin
-
     private final List<String> lore;
-
     private final int[] armorPoints;
+    private final int[] durability;
+    private final int[] armorToughness;
 
     ArmorSetType(String id, String displayName, Color leatherColor, String headUrl,
-                 Supplier<ArmorSet> constructor, List<String> lore, int[] armorPoints) {
+                 Supplier<ArmorSet> constructor, List<String> lore, int[] armorPoints,
+                 int[] durability, int[] armorToughness) {
         this.id = id;
         this.displayName = displayName;
         this.leatherColor = leatherColor;
@@ -38,6 +38,8 @@ public enum ArmorSetType {
         this.constructor = constructor;
         this.lore = lore; // or pass this in as usual
         this.armorPoints = armorPoints;
+        this.durability = durability;
+        this.armorToughness = armorToughness;
     }
 
     public String getId() { return id; }
@@ -51,6 +53,14 @@ public enum ArmorSetType {
 
     public int[] getArmorPoints() {
         return this.armorPoints;
+    }
+
+    public int[] getDurability() {
+        return durability;
+    }
+
+    public int[] getArmorToughness() {
+        return armorToughness;
     }
 
     public ArmorSet create() { return constructor.get(); }

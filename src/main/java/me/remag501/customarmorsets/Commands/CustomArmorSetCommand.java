@@ -12,7 +12,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class CustomArmorSetCommand implements CommandExecutor {
@@ -65,7 +64,9 @@ public class CustomArmorSetCommand implements CommandExecutor {
                     type.getLore(),
                     type.getLeatherColor(),
                     type.getId(),
-                    type.getArmorPoints()
+                    type.getArmorPoints(),
+                    type.getDurability(),
+                    type.getArmorToughness()
             );
 
             for (ItemStack item : armor) {
