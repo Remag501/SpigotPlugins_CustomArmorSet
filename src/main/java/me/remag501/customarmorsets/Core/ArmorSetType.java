@@ -1,6 +1,7 @@
 package me.remag501.customarmorsets.Core;
 
 import me.remag501.customarmorsets.ArmorSets.SnowmanArmorSet;
+import me.remag501.customarmorsets.ArmorSets.InfernusArmorSet;
 import org.bukkit.Color;
 import org.bukkit.Material;
 
@@ -11,7 +12,11 @@ import java.util.function.Supplier;
 
 public enum ArmorSetType {
     SNOWMAN("snowman", "Snow Man", Color.WHITE, "http://textures.minecraft.net/texture/bf96f13c7fb55b00a172ded93c12419c912188700389ef366d43eb3c107aab71", SnowmanArmorSet::new,
-            Arrays.asList("I like men", "Dik"), new int[]{1, 1, 1, 1});
+            Arrays.asList("I like men", "Dik"), new int[]{1, 1, 1, 1}),
+    INFERNUS("infernus", "Infernus", Color.ORANGE, "http://textures.minecraft.net/texture/4d4b8c12f1c24d08cbea761f127fd5d0cf5a5b9b8dbf4cf0b6d2c01d5b1b9c49", InfernusArmorSet::new,
+            Arrays.asList("§6Ability: §ePress F to shoot a fire trail", "§6Passive: §eFire resistance, trail of fire"),
+            new int[]{2, 5, 4, 2});
+
     // FLAME(..., FlameArmorSet::new);
 
     private final String id;
