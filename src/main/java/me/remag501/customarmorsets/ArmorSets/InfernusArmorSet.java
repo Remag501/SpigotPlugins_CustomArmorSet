@@ -3,17 +3,20 @@ package me.remag501.customarmorsets.ArmorSets;
 import me.remag501.customarmorsets.Core.ArmorSet;
 import me.remag501.customarmorsets.Core.ArmorSetType;
 import me.remag501.customarmorsets.Core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.Utils.CooldownBarUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.boss.BarColor;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -58,10 +61,14 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
             return;
         }
 
-        abilityCooldowns.put(uuid, now);
-
         Vector direction = player.getLocation().getDirection().normalize();
 
+        // Set up the 2 second active ability phase
+        int activeDurationSeconds = 2;
+        Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
+
+        // Show bar during active ability
+        CooldownBarUtil.startCooldownBar(plugin, player, activeDurationSeconds);
         new BukkitRunnable() {
             int ticks = 0;
 
@@ -69,6 +76,12 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
             public void run() {
                 if (ticks >= 20) { // 2 seconds (20 ticks at 0.1s per run)
                     cancel();
+
+                    // After ability ends, start cooldown bar
+                    int cooldownSeconds = (int) (COOLDOWN / 1000);
+                    long now = System.currentTimeMillis();
+                    abilityCooldowns.put(uuid, now);
+                    CooldownBarUtil.startCooldownBar(plugin, player, cooldownSeconds);
                     return;
                 }
 
@@ -92,6 +105,7 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
 
                 ticks++;
             }
+
         }.runTaskTimer(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), 0L, 2L); // Every 0.1 seconds
     }
 

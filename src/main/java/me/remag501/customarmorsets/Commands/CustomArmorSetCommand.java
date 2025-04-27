@@ -2,6 +2,7 @@ package me.remag501.customarmorsets.Commands;
 
 import me.remag501.customarmorsets.Core.ArmorSetType;
 import me.remag501.customarmorsets.Utils.ArmorUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -25,25 +26,42 @@ public class CustomArmorSetCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(ChatColor.RED + "Only players can use this command.");
-            return true;
-        }
-
         if (args.length < 1 || !args[0].equalsIgnoreCase("give")) {
-            player.sendMessage(ChatColor.RED + "Usage: /customarmorsets give <armorset>");
+            sender.sendMessage(ChatColor.RED + "Usage: /customarmorsets give <player> <set> OR /customarmorsets give <set>");
             return true;
         }
 
-        if (args.length < 2) {
-            player.sendMessage(ChatColor.RED + "Usage: /customarmorsets give <set>");
-            return true;
+        if (args.length == 2 && sender instanceof Player player) {
+            // /customarmorsets give <set> (self)
+            String setId = args[1];
+            giveArmorSet(player, setId);
+        }
+        else if (args.length == 3) {
+            // /customarmorsets give <player> <set> (give to another)
+            String targetName = args[1];
+            String setId = args[2];
+
+            Player target = Bukkit.getPlayerExact(targetName);
+            if (target == null) {
+                sender.sendMessage(ChatColor.RED + "Player '" + targetName + "' not found.");
+                return true;
+            }
+
+            giveArmorSet(target, setId);
+            sender.sendMessage(ChatColor.GREEN + "Gave " + setId + " armor set to " + target.getName() + "!");
+        }
+        else {
+            sender.sendMessage(ChatColor.RED + "Usage: /customarmorsets give <player> <set> OR /customarmorsets give <set>");
         }
 
-        ArmorSetType.fromId(args[1]).ifPresentOrElse(type -> {
+        return true;
+    }
+
+    private void giveArmorSet(Player player, String setId) {
+        ArmorSetType.fromId(setId).ifPresentOrElse(type -> {
             ItemStack[] armor = ArmorUtil.createLeatherArmorSet(
                     plugin,
-                    type.getDisplayName(), // use display name instead of capitalized ID
+                    type.getDisplayName(),
                     type.getLore(),
                     type.getLeatherColor(),
                     type.getId(),
@@ -62,7 +80,6 @@ public class CustomArmorSetCommand implements CommandExecutor {
                             .collect(Collectors.joining(", "))
             );
         });
-
-        return true;
     }
+
 }
