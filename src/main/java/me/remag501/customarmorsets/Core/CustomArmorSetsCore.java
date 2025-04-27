@@ -2,21 +2,33 @@ package me.remag501.customarmorsets.Core;
 
 import me.remag501.customarmorsets.Core.ArmorSet;
 import me.remag501.customarmorsets.Core.ArmorSetType;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 public class CustomArmorSetsCore {
 
     public static Map<UUID, ArmorSet> equippedArmor = new HashMap<>();
-//    public static Map<UUID, List<ArmorSet>> armorTypes;
 
-    public static void equipArmor(Player player, ArmorSetType type) {
+    private static List<String> allowedWorlds = List.of("kuroko", "icecaverns", "sahara", "test");
+
+    public static boolean equipArmor(Player player, ArmorSetType type) {
+        // Check if player is pvp world
+        World world = player.getWorld();
+        if (!allowedWorlds.contains(world.getName())) {
+            return false;
+        }
+
+        // Create armor set instance, map it to player, and activate passive
         ArmorSet set = type.create();
         equippedArmor.put(player.getUniqueId(), set);
         set.applyPassive(player);
+        return true;
     }
 
     public static void unequipArmor(Player player) {

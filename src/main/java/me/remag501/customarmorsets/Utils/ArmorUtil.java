@@ -57,6 +57,7 @@ public class ArmorUtil {
         AttributeModifier modifier = new AttributeModifier(UUID.randomUUID(), "generic.armor", armorPoints, AttributeModifier.Operation.ADD_NUMBER, slot);
         meta.addAttributeModifier(Attribute.GENERIC_ARMOR, modifier);
 
+        // Currently only in armor passives, but might be added for armor piece stats
         // Add armor attributes (hardcoded temporarily)
 //        AttributeModifier modifier = new AttributeModifier(UUID.randomUUID(), "generic.maxHealth", 100.0, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
 //        meta.addAttributeModifier(Attribute.GENERIC_MAX_HEALTH, modifier);
@@ -112,6 +113,26 @@ public class ArmorUtil {
 
         // Return matching ArmorSetType
         return ArmorSetType.fromId(setId).orElse(null);
+    }
+
+    public static ArmorSetType isFullArmorSet(Player player) {
+        ItemStack[] armor = player.getInventory().getArmorContents();
+
+        if (armor.length != 4) return null;
+
+        // First, get the id from the first armor piece (helmet)
+        String id = ArmorUtil.getArmorSetId(armor[3]);
+        if (id == null) return null;
+
+        // Now check if ALL armor pieces match the same id
+        for (ItemStack piece : armor) {
+            if (!id.equals(ArmorUtil.getArmorSetId(piece))) {
+                return null;
+            }
+        }
+
+        // Now lookup the ArmorSetType from the id
+        return ArmorSetType.fromId(id).orElse(null);
     }
 
     private static String getArmorSetId(ItemStack item) {
