@@ -10,7 +10,8 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public enum ArmorSetType {
-    SNOWMAN("snowman", "Snow Man", Color.WHITE, "http://textures.minecraft.net/texture/bf96f13c7fb55b00a172ded93c12419c912188700389ef366d43eb3c107aab71", SnowmanArmorSet::new);
+    SNOWMAN("snowman", "Snow Man", Color.WHITE, "http://textures.minecraft.net/texture/bf96f13c7fb55b00a172ded93c12419c912188700389ef366d43eb3c107aab71", SnowmanArmorSet::new,
+            Arrays.asList("I like men", "Dik"));
     // FLAME(..., FlameArmorSet::new);
 
     private final String id;
@@ -18,22 +19,27 @@ public enum ArmorSetType {
     private final Color leatherColor;
     private final String headUrl;
     private final Supplier<ArmorSet> constructor;// now no plugin
+
     private final List<String> lore;
 
     ArmorSetType(String id, String displayName, Color leatherColor, String headUrl,
-                 Supplier<ArmorSet> constructor) {
+                 Supplier<ArmorSet> constructor, List<String> lore) {
         this.id = id;
         this.displayName = displayName;
         this.leatherColor = leatherColor;
         this.headUrl = headUrl;
         this.constructor = constructor;
-        this.lore = List.of(); // or pass this in as usual
+        this.lore = lore; // or pass this in as usual
     }
 
     public String getId() { return id; }
     public String getDisplayName() { return displayName; }
     public Color getLeatherColor() { return leatherColor; }
     public String getHeadUrl() { return headUrl; }
+
+    public List<String> getLore() {
+        return lore;
+    }
     public ArmorSet create() { return constructor.get(); }
 
     public static Optional<ArmorSetType> fromId(String id) {

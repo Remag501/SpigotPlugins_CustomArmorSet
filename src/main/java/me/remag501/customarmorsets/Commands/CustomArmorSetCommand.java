@@ -44,10 +44,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
             ItemStack[] armor = ArmorUtil.createLeatherArmorSet(
                     plugin,
                     type.getDisplayName(), // use display name instead of capitalized ID
-                    List.of(
-                            ChatColor.GRAY + "Unique bonus coming soon!",
-                            "Full set bonus: TBD"
-                    ),
+                    type.getLore(),
                     type.getLeatherColor(),
                     type.getId()
             );

@@ -4,7 +4,11 @@ import me.remag501.customarmorsets.Core.ArmorSetType;
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorType;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
@@ -13,6 +17,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.UUID;
 
 public class ArmorUtil {
 
@@ -21,9 +26,18 @@ public class ArmorUtil {
             throw new IllegalArgumentException("Material must be a leather armor piece!");
         }
 
+
         ItemStack item = new ItemStack(material);
         LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
         if (meta == null) return item;
+
+        // Clear existing meta (Dyed & +x Armor)
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        meta.addItemFlags(ItemFlag.HIDE_DYE);
+
+        // Add armor attributes (hardcoded temporarily)
+//        AttributeModifier modifier = new AttributeModifier(UUID.randomUUID(), "generic.maxHealth", 100.0, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
+//        meta.addAttributeModifier(Attribute.GENERIC_MAX_HEALTH, modifier);
 
         // Set display name and lore
         meta.setDisplayName(ChatColor.RESET + displayName);
@@ -55,7 +69,7 @@ public class ArmorUtil {
         String setId = getArmorSetId(armorPiece);
         if (setId == null) return null;
 
-        // Simulate current armor contents
+        // Simulate current armor content
         ItemStack[] armor = player.getInventory().getArmorContents().clone();
 
         // Replace the slot with the passed `armorPiece` (simulate this equip)
