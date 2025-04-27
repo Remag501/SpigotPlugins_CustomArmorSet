@@ -17,6 +17,7 @@ public class CooldownBarUtil {
     private static final Map<UUID, Integer> originalLevels = new HashMap<>();
     private static final Map<UUID, Float> originalXp = new HashMap<>();
     private static final Map<UUID, BossBar> activeBossBars = new HashMap<>();
+    private static boolean inUse = false;
 
     /**
      * Starts a cooldown display using both XP bar and BossBar.
@@ -45,6 +46,8 @@ public class CooldownBarUtil {
         final int totalTicks = seconds * 20;
         final long startTime = System.currentTimeMillis();
 
+        inUse = true;
+
         new BukkitRunnable() {
             int ticksLeft = totalTicks;
 
@@ -72,6 +75,7 @@ public class CooldownBarUtil {
 
                 // When done
                 if (progress <= 0.0) {
+                    inUse = false;
                     flashXpBar(plugin, player);
                     cleanup(player);
                     cancel();
@@ -81,6 +85,8 @@ public class CooldownBarUtil {
     }
 
     private static void flashXpBar(Plugin plugin, Player player) {
+        if (inUse)
+            return;
         UUID uuid = player.getUniqueId();
 
         new BukkitRunnable() {
@@ -89,7 +95,7 @@ public class CooldownBarUtil {
 
             @Override
             public void run() {
-                if (!player.isOnline()) {
+                if (!player.isOnline() || inUse) {
                     cancel();
                     return;
                 }
