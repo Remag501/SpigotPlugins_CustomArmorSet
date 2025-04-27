@@ -2,15 +2,32 @@ package me.remag501.customarmorsets.ArmorSets;
 
 import me.remag501.customarmorsets.Core.ArmorSet;
 import me.remag501.customarmorsets.Core.ArmorSetType;
+import me.remag501.customarmorsets.Core.CustomArmorSetsCore;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-public class InfernusArmorSet extends ArmorSet {
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+public class InfernusArmorSet extends ArmorSet implements Listener {
+
+
+    private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
+    private static final long COOLDOWN = 10 * 1000; // 10 seconds cooldown in milliseconds
 
     public InfernusArmorSet() {
         super(ArmorSetType.INFERNUS);
@@ -20,33 +37,94 @@ public class InfernusArmorSet extends ArmorSet {
     public void applyPassive(Player player) {
         // Give player permanent fire resistance (infinite duration)
         player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 0, true, false));
-
-        // Optional: You can also spawn particles as a passive effect
-        // This is often handled by a scheduled task outside of the ArmorSet class
+        player.sendMessage("✅ You equipped the Infernus set");
     }
 
     @Override
     public void removePassive(Player player) {
         // Remove fire resistance when unequipped
         player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
+        player.sendMessage("❌ You removed the Infernus set");
     }
 
     @Override
     public void triggerAbility(Player player) {
-        // Create a fire trail when player presses F (Swap hand key)
+        UUID uuid = player.getUniqueId();
+        long now = System.currentTimeMillis();
 
-        Vector direction = player.getLocation().getDirection().normalize().multiply(0.5);
-
-        for (int i = 0; i < 10; i++) { // Fire trail for 10 blocks
-            player.getWorld().spawnParticle(Particle.FLAME, player.getLocation().add(direction.clone().multiply(i)), 10, 0.2, 0.2, 0.2, 0.01);
-
-            player.getWorld().spawnParticle(Particle.SMOKE_NORMAL, player.getLocation().add(direction.clone().multiply(i)), 5, 0.2, 0.2, 0.2, 0.01);
+        if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
+            long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
+            player.sendMessage("§cAbility is on cooldown for " + timeLeft + " more seconds!");
+            return;
         }
 
-        // Optional: Play a fiery sound
-        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.0f, 1.0f);
+        abilityCooldowns.put(uuid, now);
 
-        // Damage nearby enemies along the fire trail? (bonus feature)
-        // Can add later if you want.
+        Vector direction = player.getLocation().getDirection().normalize();
+
+        new BukkitRunnable() {
+            int ticks = 0;
+
+            @Override
+            public void run() {
+                if (ticks >= 20) { // 2 seconds (20 ticks at 0.1s per run)
+                    cancel();
+                    return;
+                }
+
+                // Emit a trail of flame particles
+                for (double i = 0; i <= 5; i += 0.5) {
+                    Vector point = direction.clone().multiply(i);
+                    player.getWorld().spawnParticle(Particle.FLAME,
+                            player.getLocation().add(point),
+                            5, 0.2, 0.2, 0.2, 0);
+
+                    // Damage entities nearby
+                    for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
+                        if (entity instanceof LivingEntity livingEntity && entity != player) {
+                            if (entity.getLocation().distance(player.getLocation().add(point)) < 1.5) {
+                                livingEntity.damage(3, player);
+                                livingEntity.setFireTicks(60);
+                            }
+                        }
+                    }
+                }
+
+                ticks++;
+            }
+        }.runTaskTimer(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), 0L, 2L); // Every 0.1 seconds
     }
+
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) {
+        Player player = event.getPlayer();
+        ArmorSet set = CustomArmorSetsCore.getArmorSet(player);
+        if (!(set instanceof InfernusArmorSet)) return;
+
+        // Only trigger if the player actually moved a block (not just rotated)
+        if (event.getFrom().getBlockX() == event.getTo().getBlockX()
+                && event.getFrom().getBlockY() == event.getTo().getBlockY()
+                && event.getFrom().getBlockZ() == event.getTo().getBlockZ()) {
+            return;
+        }
+
+        Block blockBelow = player.getLocation().subtract(0, 1, 0).getBlock();
+        Block blockAtFeet = player.getLocation().getBlock();
+
+        // Only place fire if standing over solid block AND current block is air
+        if (blockBelow.getType().isSolid() && blockAtFeet.getType() == Material.AIR) {
+            blockAtFeet.setType(Material.FIRE);
+
+            // Remove the fire after 3 seconds
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (blockAtFeet.getType() == Material.FIRE) {
+                        blockAtFeet.setType(Material.AIR);
+                    }
+                }
+            }.runTaskLater(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), 60L);
+        }
+    }
+
 }
