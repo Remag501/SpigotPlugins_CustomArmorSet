@@ -21,19 +21,41 @@ import java.util.UUID;
 
 public class ArmorUtil {
 
-    public static ItemStack createLeatherArmorPiece(JavaPlugin plugin, Material material, String displayName, List<String> lore, Color color, String armorSetId) {
+    public static ItemStack createLeatherArmorPiece(JavaPlugin plugin, Material material, String displayName, List<String> lore, Color color, String armorSetId, int armorPoints) {
         if (!material.name().startsWith("LEATHER_")) {
             throw new IllegalArgumentException("Material must be a leather armor piece!");
         }
-
 
         ItemStack item = new ItemStack(material);
         LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
         if (meta == null) return item;
 
+        // Get piece type (Helmet, Chestplate, Leggings, Boots
+        EquipmentSlot slot;
+        switch (material.name()) {
+            case "LEATHER_HELMET":
+                slot = EquipmentSlot.HEAD;
+                break;
+            case "LEATHER_CHESTPLATE":
+                slot = EquipmentSlot.CHEST;
+                break;
+            case "LEATHER_LEGGINGS":
+                slot = EquipmentSlot.LEGS;
+                break;
+            case "LEATHER_BOOTS":
+                slot = EquipmentSlot.FEET;
+                break;
+            default:
+                slot = null;
+        }
+
         // Clear existing meta (Dyed & +x Armor)
-        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+//        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         meta.addItemFlags(ItemFlag.HIDE_DYE);
+
+        // Adjust armor set points
+        AttributeModifier modifier = new AttributeModifier(UUID.randomUUID(), "generic.armor", armorPoints, AttributeModifier.Operation.ADD_NUMBER, slot);
+        meta.addAttributeModifier(Attribute.GENERIC_ARMOR, modifier);
 
         // Add armor attributes (hardcoded temporarily)
 //        AttributeModifier modifier = new AttributeModifier(UUID.randomUUID(), "generic.maxHealth", 100.0, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
@@ -55,12 +77,12 @@ public class ArmorUtil {
         return item;
     }
 
-    public static ItemStack[] createLeatherArmorSet(JavaPlugin plugin, String displayName, List<String> lore, Color color, String armorSetId) {
+    public static ItemStack[] createLeatherArmorSet(JavaPlugin plugin, String displayName, List<String> lore, Color color, String armorSetId, int[] armorPoints) {
         return new ItemStack[]{
-                createLeatherArmorPiece(plugin, Material.LEATHER_HELMET, displayName + " Helmet", lore, color, armorSetId),
-                createLeatherArmorPiece(plugin, Material.LEATHER_CHESTPLATE, displayName + " Chestplate", lore, color, armorSetId),
-                createLeatherArmorPiece(plugin, Material.LEATHER_LEGGINGS, displayName + " Leggings", lore, color, armorSetId),
-                createLeatherArmorPiece(plugin, Material.LEATHER_BOOTS, displayName + " Boots", lore, color, armorSetId)
+                createLeatherArmorPiece(plugin, Material.LEATHER_HELMET, displayName + " Helmet", lore, color, armorSetId, armorPoints[0]),
+                createLeatherArmorPiece(plugin, Material.LEATHER_CHESTPLATE, displayName + " Chestplate", lore, color, armorSetId, armorPoints[1]),
+                createLeatherArmorPiece(plugin, Material.LEATHER_LEGGINGS, displayName + " Leggings", lore, color, armorSetId, armorPoints[2]),
+                createLeatherArmorPiece(plugin, Material.LEATHER_BOOTS, displayName + " Boots", lore, color, armorSetId, armorPoints[3])
         };
     }
 

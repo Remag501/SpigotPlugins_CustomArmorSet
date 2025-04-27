@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 
 public enum ArmorSetType {
     SNOWMAN("snowman", "Snow Man", Color.WHITE, "http://textures.minecraft.net/texture/bf96f13c7fb55b00a172ded93c12419c912188700389ef366d43eb3c107aab71", SnowmanArmorSet::new,
-            Arrays.asList("I like men", "Dik"));
+            Arrays.asList("I like men", "Dik"), new int[]{1, 1, 1, 1});
     // FLAME(..., FlameArmorSet::new);
 
     private final String id;
@@ -22,14 +22,17 @@ public enum ArmorSetType {
 
     private final List<String> lore;
 
+    private final int[] armorPoints;
+
     ArmorSetType(String id, String displayName, Color leatherColor, String headUrl,
-                 Supplier<ArmorSet> constructor, List<String> lore) {
+                 Supplier<ArmorSet> constructor, List<String> lore, int[] armorPoints) {
         this.id = id;
         this.displayName = displayName;
         this.leatherColor = leatherColor;
         this.headUrl = headUrl;
         this.constructor = constructor;
         this.lore = lore; // or pass this in as usual
+        this.armorPoints = armorPoints;
     }
 
     public String getId() { return id; }
@@ -40,6 +43,11 @@ public enum ArmorSetType {
     public List<String> getLore() {
         return lore;
     }
+
+    public int[] getArmorPoints() {
+        return this.armorPoints;
+    }
+
     public ArmorSet create() { return constructor.get(); }
 
     public static Optional<ArmorSetType> fromId(String id) {

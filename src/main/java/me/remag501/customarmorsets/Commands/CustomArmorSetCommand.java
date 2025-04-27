@@ -46,7 +46,8 @@ public class CustomArmorSetCommand implements CommandExecutor {
                     type.getDisplayName(), // use display name instead of capitalized ID
                     type.getLore(),
                     type.getLeatherColor(),
-                    type.getId()
+                    type.getId(),
+                    type.getArmorPoints()
             );
 
             for (ItemStack item : armor) {
