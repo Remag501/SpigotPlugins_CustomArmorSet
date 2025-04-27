@@ -31,7 +31,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
         }
 
         if (args.length < 1 || !args[0].equalsIgnoreCase("give")) {
-            player.sendMessage(ChatColor.RED + "Usage: /customarmorsets give snowman");
+            player.sendMessage(ChatColor.RED + "Usage: /customarmorsets give <armorset>");
             return true;
         }
 

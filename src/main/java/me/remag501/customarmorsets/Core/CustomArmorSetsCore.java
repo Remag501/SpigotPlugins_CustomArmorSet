@@ -2,9 +2,11 @@ package me.remag501.customarmorsets.Core;
 
 import me.remag501.customarmorsets.Core.ArmorSet;
 import me.remag501.customarmorsets.Core.ArmorSetType;
+import me.remag501.customarmorsets.Utils.HelmetCosmeticUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +26,14 @@ public class CustomArmorSetsCore {
             return false;
         }
 
+        // Equip player head
+        Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), () -> {
+            ItemStack helmet = player.getInventory().getHelmet();
+            if (helmet != null) {
+                player.getInventory().setHelmet(HelmetCosmeticUtil.makeCosmeticHelmet(helmet, type.getHeadUrl()));
+            }
+        });
+
         // Create armor set instance, map it to player, and activate passive
         ArmorSet set = type.create();
         equippedArmor.put(player.getUniqueId(), set);
@@ -32,9 +42,22 @@ public class CustomArmorSetsCore {
     }
 
     public static void unequipArmor(Player player) {
+
         ArmorSet set = equippedArmor.remove(player.getUniqueId());
-        if (set != null)
+        if (set != null) {
+
+            // Unequip player head
+            ArmorSetType type = set.getType();
+            ItemStack helmet = player.getInventory().getHelmet();
+            if (helmet != null) {
+                player.getInventory().setHelmet(HelmetCosmeticUtil.restoreOriginalHelmet(helmet, type.getLeatherColor()));
+            }
+
+            // Remove armor set instance from player map and deactivate passive
             set.removePassive(player);
+
+        }
+
     }
 
     public static ArmorSet getArmorSet(Player player) {
