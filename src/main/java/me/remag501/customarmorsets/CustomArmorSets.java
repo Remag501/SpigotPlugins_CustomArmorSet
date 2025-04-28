@@ -1,6 +1,7 @@
 package me.remag501.customarmorsets;
 
 import me.remag501.customarmorsets.ArmorSets.InfernusArmorSet;
+import me.remag501.customarmorsets.ArmorSets.LastSpartanArmorSet;
 import me.remag501.customarmorsets.ArmorSets.SnowmanArmorSet;
 import me.remag501.customarmorsets.Commands.CustomArmorSetCommand;
 import me.remag501.customarmorsets.Listeners.ArmorEquipListener;
@@ -30,6 +31,7 @@ public final class CustomArmorSets extends JavaPlugin {
         // Register listeners for armor sets
         getServer().getPluginManager().registerEvents(new SnowmanArmorSet(), this);
         getServer().getPluginManager().registerEvents(new InfernusArmorSet(), this);
+        getServer().getPluginManager().registerEvents(new LastSpartanArmorSet(), this);
         // Libraries
         getServer().getPluginManager().registerEvents(new ArmorListener(getConfig().getStringList("blocked")), this);
         getServer().getPluginManager().registerEvents(new DispenserArmorListener(), this);
