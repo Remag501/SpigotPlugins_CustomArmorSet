@@ -2,12 +2,16 @@ package me.remag501.customarmorsets.ArmorSets;
 
 import me.remag501.customarmorsets.Core.ArmorSet;
 import me.remag501.customarmorsets.Core.ArmorSetType;
+import me.remag501.customarmorsets.Core.CustomArmorSetsCore;
 import me.remag501.customarmorsets.Utils.CooldownBarUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -33,8 +37,6 @@ public class RoyalKnightArmorSet extends ArmorSet implements Listener {
         if (health != null) {
             health.setBaseValue(health.getBaseValue() * 1.25);
         }
-        // -15% weapon damage (we could add Weakness effect)
-        player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, Integer.MAX_VALUE, 0, true, false));
         player.sendMessage("✅ You equipped the Royal Knight set");
     }
 
@@ -44,7 +46,6 @@ public class RoyalKnightArmorSet extends ArmorSet implements Listener {
         if (health != null) {
             health.setBaseValue(health.getDefaultValue());
         }
-        player.removePotionEffect(PotionEffectType.WEAKNESS);
         player.sendMessage("❌ You removed the Royal Knight set");
     }
 
@@ -67,4 +68,40 @@ public class RoyalKnightArmorSet extends ArmorSet implements Listener {
         CooldownBarUtil.startCooldownBar(plugin, player, (int)(COOLDOWN / 1000));
         abilityCooldowns.put(uuid, now);
     }
+
+    @EventHandler
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        Entity damager = event.getDamager();
+        Player player = null;
+
+        // Case 1: Direct melee damage by player
+        if (damager instanceof Player p) {
+            player = p;
+
+            Material weapon = player.getInventory().getItemInMainHand().getType();
+            String name = weapon.name();
+            // Reduce damage only for sword or axe
+            if (!(name.endsWith("_SWORD") || name.endsWith("_AXE") || name.endsWith("TRIDENT"))) {
+                return;
+            }
+        }
+
+        // Case 2: Projectile damage (arrow, trident) shot by player
+        else if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player p) {
+            player = p;
+
+            if (!(damager instanceof Arrow || damager instanceof Trident)) {
+                return; // Only reduce for arrow/trident, not snowball/egg/etc.
+            }
+        }
+
+        if (player == null) return;
+
+        ArmorSet set = CustomArmorSetsCore.getArmorSet(player);
+        if (!(set instanceof RoyalKnightArmorSet)) return;
+
+        double originalDamage = event.getDamage();
+        event.setDamage(originalDamage * 0.85); // Reduce outgoing damage by 15%
+    }
+
 }
