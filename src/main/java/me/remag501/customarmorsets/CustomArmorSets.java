@@ -8,6 +8,7 @@ import me.remag501.customarmorsets.Listeners.OffHandAbilityListener;
 import me.remag501.customarmorsets.Listeners.WorldChangeListener;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorListener;
 import me.remag501.customarmorsets.lib.armorequipevent.DispenserArmorListener;
+import org.bukkit.World;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -32,6 +33,7 @@ public final class CustomArmorSets extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new LastSpartanArmorSet(), this);
         getServer().getPluginManager().registerEvents(new VikingCaptainArmorSet(), this);
         getServer().getPluginManager().registerEvents(new RoyalKnightArmorSet(), this);
+        getServer().getPluginManager().registerEvents(new WorldGuardianArmorSet(), this);
         // Libraries
         getServer().getPluginManager().registerEvents(new ArmorListener(getConfig().getStringList("blocked")), this);
         getServer().getPluginManager().registerEvents(new DispenserArmorListener(), this);
