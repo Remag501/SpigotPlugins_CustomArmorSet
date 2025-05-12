@@ -3,6 +3,7 @@ package me.remag501.customarmorsets.ArmorSets;
 import me.remag501.customarmorsets.Core.ArmorSet;
 import me.remag501.customarmorsets.Core.ArmorSetType;
 import me.remag501.customarmorsets.Core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.Utils.AttributesUtil;
 import me.remag501.customarmorsets.Utils.CooldownBarUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -33,20 +34,14 @@ public class RoyalKnightArmorSet extends ArmorSet implements Listener {
     @Override
     public void applyPassive(Player player) {
         // 125% max hp
-        AttributeInstance health = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (health != null) {
-            health.setBaseValue(health.getBaseValue() * 1.25);
-        }
-        player.sendMessage("✅ You equipped the Royal Knight set");
+        AttributesUtil.applyHealth(player, 1.25);
+        player.sendMessage("You equipped the Royal Knight set");
     }
 
     @Override
     public void removePassive(Player player) {
-        AttributeInstance health = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (health != null) {
-            health.setBaseValue(health.getDefaultValue());
-        }
-        player.sendMessage("❌ You removed the Royal Knight set");
+        AttributesUtil.removeHealth(player);
+        player.sendMessage("You removed the Royal Knight set");
     }
 
     @Override

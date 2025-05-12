@@ -3,12 +3,14 @@ package me.remag501.customarmorsets.ArmorSets;
 import me.remag501.customarmorsets.Core.ArmorSet;
 import me.remag501.customarmorsets.Core.ArmorSetType;
 import me.remag501.customarmorsets.Core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.Utils.AttributesUtil;
 import me.remag501.customarmorsets.Utils.CooldownBarUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -33,14 +35,14 @@ public class LastSpartanArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void applyPassive(Player player) {
-        player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(14); // 70% of 20
-        player.sendMessage("✅ You equipped the Last Spartan set");
+        AttributesUtil.applyHealth(player, 0.7);
+        player.sendMessage("You equipped the Last Spartan set");
     }
 
     @Override
     public void removePassive(Player player) {
-        player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20);
-        player.sendMessage("❌ You removed the Last Spartan set");
+        AttributesUtil.removeHealth(player);
+        player.sendMessage("You removed the Last Spartan set");
     }
 
     @Override

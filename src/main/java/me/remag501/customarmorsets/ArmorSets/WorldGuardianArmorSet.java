@@ -3,6 +3,7 @@ package me.remag501.customarmorsets.ArmorSets;
 import me.remag501.customarmorsets.Core.ArmorSet;
 import me.remag501.customarmorsets.Core.ArmorSetType;
 import me.remag501.customarmorsets.Core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.Utils.AttributesUtil;
 import me.remag501.customarmorsets.Utils.CooldownBarUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -13,6 +14,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -36,28 +38,16 @@ public class WorldGuardianArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void applyPassive(Player player) {
-        AttributeInstance health = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (health != null) {
-            health.setBaseValue(health.getBaseValue() * 1.5);
-        }
-        AttributeInstance speed = player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
-        if (speed != null) {
-            prevSpeed = speed.getValue();
-            speed.setBaseValue(speed.getValue() * 0.85);
-        }
+        AttributesUtil.applyHealth(player, 1.5);
+        AttributesUtil.applySpeed(player, 0.8);
         player.sendMessage("You equipped the World Guardian set");
+
     }
 
     @Override
     public void removePassive(Player player) {
-        AttributeInstance health = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (health != null) {
-            health.setBaseValue(health.getDefaultValue());
-        }
-        AttributeInstance speed = player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
-        if (speed != null) {
-            speed.setBaseValue(prevSpeed);
-        }
+        AttributesUtil.removeHealth(player);
+        AttributesUtil.removeSpeed(player);
         player.sendMessage("You removed the World Guardian set");
     }
 
