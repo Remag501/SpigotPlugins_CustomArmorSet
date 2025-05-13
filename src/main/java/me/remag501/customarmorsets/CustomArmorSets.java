@@ -2,10 +2,7 @@ package me.remag501.customarmorsets;
 
 import me.remag501.customarmorsets.ArmorSets.*;
 import me.remag501.customarmorsets.Commands.CustomArmorSetCommand;
-import me.remag501.customarmorsets.Listeners.ArmorEquipListener;
-import me.remag501.customarmorsets.Listeners.DisconnectReconnectListener;
-import me.remag501.customarmorsets.Listeners.OffHandAbilityListener;
-import me.remag501.customarmorsets.Listeners.WorldChangeListener;
+import me.remag501.customarmorsets.Listeners.*;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorListener;
 import me.remag501.customarmorsets.lib.armorequipevent.DispenserArmorListener;
 import org.bukkit.World;
@@ -24,6 +21,7 @@ public final class CustomArmorSets extends JavaPlugin {
         getCommand("customarmorsets").setExecutor(new CustomArmorSetCommand(this));
         getServer().getPluginManager().registerEvents(new ArmorEquipListener(), this);
         getServer().getPluginManager().registerEvents(new OffHandAbilityListener(), this);
+        getServer().getPluginManager().registerEvents(new DurabilityListener(), this);
         // Listeners for world change and connection
         getServer().getPluginManager().registerEvents(new DisconnectReconnectListener(), this);
         getServer().getPluginManager().registerEvents(new WorldChangeListener(), this);

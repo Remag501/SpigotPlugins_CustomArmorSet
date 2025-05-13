@@ -86,7 +86,6 @@ public class WorldGuardianArmorSet extends ArmorSet implements Listener {
         if (!(set instanceof WorldGuardianArmorSet armorSet)) return;
 
         if (armorSet.isInvulnerable == true) {
-            player.sendMessage("reached");
             event.setCancelled(true);
         }
 

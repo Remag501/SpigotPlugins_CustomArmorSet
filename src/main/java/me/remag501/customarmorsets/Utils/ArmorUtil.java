@@ -17,6 +17,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,16 +56,14 @@ public class ArmorUtil {
 //        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         meta.addItemFlags(ItemFlag.HIDE_DYE);
 
-        // Adjust set armor points, durability, and knockback
+        // Adjust set armor points, durability, and toughness
         AttributeModifier modifier = new AttributeModifier(UUID.randomUUID(), "generic.armor", armorPoints, AttributeModifier.Operation.ADD_NUMBER, slot);
         meta.addAttributeModifier(Attribute.GENERIC_ARMOR, modifier);
         modifier = new AttributeModifier(UUID.randomUUID(), "generic.armor.toughness", armorToughness, AttributeModifier.Operation.ADD_NUMBER, slot);
         meta.addAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS, modifier);
-
-        // Currently only in armor passives, but might be added for armor piece stats
-        // Add armor attributes (hardcoded temporarily)
-//        AttributeModifier modifier = new AttributeModifier(UUID.randomUUID(), "generic.maxHealth", 100.0, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
-//        meta.addAttributeModifier(Attribute.GENERIC_MAX_HEALTH, modifier);
+//        meta.setUnbreakable(true); // Make default unbreakable so we use internal durability
+        lore = new ArrayList<>(lore); // Make lore mutable
+        lore.add("§7Durability: " + durability + "/" + durability);
 
         // Set display name and lore
         meta.setDisplayName(ChatColor.RESET + displayName);
@@ -75,8 +74,12 @@ public class ArmorUtil {
 
         // Tag with armor family ID
         PersistentDataContainer container = meta.getPersistentDataContainer();
+        NamespacedKey durabilityKey = new NamespacedKey(plugin, "internal_durability");
+        NamespacedKey maxDurabilityKey = new NamespacedKey(plugin, "internal_max_durability");
         NamespacedKey key = new NamespacedKey(plugin, "armor_set");
         container.set(key, PersistentDataType.STRING, armorSetId);
+        container.set(durabilityKey, PersistentDataType.INTEGER, durability);
+        container.set(maxDurabilityKey, PersistentDataType.INTEGER, durability);
 
         item.setItemMeta(meta);
 

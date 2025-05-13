@@ -1,20 +1,20 @@
 package me.remag501.customarmorsets.Utils;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Color;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class HelmetCosmeticUtil {
@@ -39,6 +39,40 @@ public class HelmetCosmeticUtil {
         original.setItemMeta(skullMeta);
         return original;
 
+    }
+
+    /**
+     * Updates the lore of any armor piece by appending new lines, safely preserving cosmetic helmet textures.
+     * This function assumes that PDC handling and durability logic have already been processed outside.
+     *
+     * @param armorPiece The ItemStack to modify.
+     * @param newLoreLines The new lore lines to append.
+     */
+    public static void updateCosmeticHelmetLoreSafely(ItemStack armorPiece, List<String> newLoreLines) {
+        if (armorPiece == null || !armorPiece.hasItemMeta()) return;
+
+        ItemMeta meta = armorPiece.getItemMeta();
+        if (meta == null) return;
+
+        List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+        // Remove old durability line(s)
+        lore.removeIf(line -> ChatColor.stripColor(line).contains("Durability"));
+
+        // Append new lore
+        lore.addAll(newLoreLines);
+        meta.setLore(lore);
+
+//        // Special handling for textured heads
+//        if (armorPiece.getType() == Material.PLAYER_HEAD && meta instanceof SkullMeta skullMeta) {
+//            PlayerProfile profile = skullMeta.getOwnerProfile();
+//            if (profile != null) {
+//                skullMeta.setOwnerProfile(profile); // Restore profile after mutation
+//            }
+//            armorPiece.setItemMeta(skullMeta);
+//        } else {
+//            armorPiece.setItemMeta(meta);
+//        }
+        armorPiece.setItemMeta(meta);
     }
 
     public static ItemStack restoreOriginalHelmet(ItemStack cosmetic, Color color) {
