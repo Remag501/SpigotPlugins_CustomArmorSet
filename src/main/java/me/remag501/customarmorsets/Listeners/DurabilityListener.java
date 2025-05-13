@@ -33,7 +33,7 @@ public class DurabilityListener implements Listener {
         ItemStack damagedItem = event.getItem();
 
         if (damagedItem == null || !damagedItem.hasItemMeta()) return;
-        if (ArmorUtil.isFullArmorSet(player) == null) return;
+        if (!ArmorUtil.isCustomArmorPiece(damagedItem)) return;
 
         ItemMeta meta = damagedItem.getItemMeta();
         PersistentDataContainer container = meta.getPersistentDataContainer();
@@ -51,11 +51,12 @@ public class DurabilityListener implements Listener {
         String durabilityLine = ChatColor.GRAY + "Durability: " + ChatColor.WHITE + newDurability + " / " + maxDurability;
         List<String> appendedLore = Collections.singletonList(durabilityLine);
 
-        // Reset visible damage
-        if (meta instanceof Damageable damageable) {
-            damageable.setDamage(0); // 0 = fully repaired visually
-            damagedItem.setItemMeta((ItemMeta) damageable);
-        }
+        // Reset visible damage by stopping event
+//        if (meta instanceof Damageable damageable) {
+//            damageable.setDamage(0); // 0 = fully repaired visually
+//            damagedItem.setItemMeta((ItemMeta) damageable);
+//        }
+        event.setCancelled(true);
 
         damagedItem.setItemMeta(meta); // Save internal durability
 
@@ -70,7 +71,7 @@ public class DurabilityListener implements Listener {
         }
 
         // Mirror head durability update manually only when leggings are damaged
-        if (damagedItem.getType().name().endsWith("_LEGGINGS")) {
+        if (damagedItem.getType().name().endsWith("_LEGGINGS") && ArmorUtil.isFullArmorSet(player) != null) {
             ItemStack helmet = player.getInventory().getHelmet();
 
             if (helmet != null && helmet.getType() == Material.PLAYER_HEAD && helmet.hasItemMeta()) {

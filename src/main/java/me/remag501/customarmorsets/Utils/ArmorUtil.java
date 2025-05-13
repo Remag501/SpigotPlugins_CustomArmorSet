@@ -161,6 +161,15 @@ public class ArmorUtil {
         return container.has(key, PersistentDataType.STRING) ? container.get(key, PersistentDataType.STRING) : null;
     }
 
+    public static boolean isCustomArmorPiece(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
 
+        ItemMeta meta = item.getItemMeta();
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+
+        NamespacedKey armorSetKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), "armor_set");
+
+        return container.has(armorSetKey, PersistentDataType.STRING);
+    }
 
 }
