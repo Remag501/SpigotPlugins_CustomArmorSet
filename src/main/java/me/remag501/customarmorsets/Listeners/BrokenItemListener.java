@@ -1,0 +1,64 @@
+package me.remag501.customarmorsets.Listeners;
+
+import me.remag501.customarmorsets.Utils.ItemUtil;
+import me.remag501.customarmorsets.lib.armorequipevent.ArmorEquipEvent;
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.inventory.ItemStack;
+
+public class BrokenItemListener implements Listener {
+
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+//        if (ItemUtil.isBroken(event.getPlayer().getInventory().getItemInMainHand())) {
+//            event.setCancelled(true);
+//            event.getPlayer().sendMessage(ChatColor.RED + "This tool is broken and can't be used!");
+//        }
+    }
+
+    @EventHandler
+    public void onEntityDamage(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Player player)) return;
+
+        if (ItemUtil.isBroken(player.getInventory().getItemInMainHand())) {
+            event.setCancelled(true);
+            player.sendMessage(ChatColor.RED + "This weapon is broken and can't be used!");
+        }
+    }
+
+    @EventHandler
+    public void onInteract(PlayerInteractEvent event) {
+        if (ItemUtil.isBroken(event.getItem())) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(ChatColor.RED + "This item is broken and can't be used!");
+        }
+    }
+
+    @EventHandler
+    public void onItemHeld(PlayerItemHeldEvent event) {
+//        Player player = event.getPlayer();
+//        ItemStack item = player.getInventory().getItem(event.getNewSlot());
+//
+//        if (ItemUtil.isBroken(item)) {
+//            event.setCancelled(true);
+//            player.sendMessage(ChatColor.RED + "This item is broken and cannot be equipped!");
+//        }
+    }
+
+    // Optional: Prevent re-equipping broken armor (only if not already handling this elsewhere)
+    @EventHandler
+    public void onArmorEquip(ArmorEquipEvent event) {
+        ItemStack newArmor = event.getNewArmorPiece();
+        if (ItemUtil.isBroken(newArmor)) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(ChatColor.RED + "This armor is broken and can't be equipped!");
+        }
+    }
+}
+

@@ -25,6 +25,8 @@ public final class CustomArmorSets extends JavaPlugin {
         // Listeners for world change and connection
         getServer().getPluginManager().registerEvents(new DisconnectReconnectListener(), this);
         getServer().getPluginManager().registerEvents(new WorldChangeListener(), this);
+        // Listener for broken items
+        getServer().getPluginManager().registerEvents(new BrokenItemListener(), this);
         // Register listeners for armor sets
         getServer().getPluginManager().registerEvents(new SnowmanArmorSet(), this);
         getServer().getPluginManager().registerEvents(new InfernusArmorSet(), this);
