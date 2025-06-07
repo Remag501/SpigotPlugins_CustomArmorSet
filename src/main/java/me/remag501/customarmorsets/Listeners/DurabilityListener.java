@@ -13,6 +13,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -32,8 +33,22 @@ public class DurabilityListener implements Listener {
         Player player = event.getPlayer();
         ItemStack damagedItem = event.getItem();
 
-        if (damagedItem == null || !damagedItem.hasItemMeta()) return;
-        if (!ArmorUtil.isCustomArmorPiece(damagedItem)) return;
+        if (!damagedItem.hasItemMeta()) return;
+        if (!ArmorUtil.isCustomArmorPiece(damagedItem)) {
+            // Check if regular piece has a durability of 0 and unequip it
+            Damageable meta = (Damageable) event.getItem().getItemMeta();
+            int maxDurability = event.getItem().getType().getMaxDurability();
+            int damageTaken = meta.getDamage();
+            int remainingDurability = maxDurability - damageTaken;
+            // Check remaining durability is 1, break, cancel event and set it to 0
+            if (remainingDurability <= 1) {
+                meta.setDamage(maxDurability);
+                event.getItem().setItemMeta(meta);
+                unequipAndBreakArmorPiece(event.getPlayer(), event.getItem());
+                event.setCancelled(true);
+            }
+            return;
+        }
 
         ItemMeta meta = damagedItem.getItemMeta();
         PersistentDataContainer container = meta.getPersistentDataContainer();
@@ -46,6 +61,10 @@ public class DurabilityListener implements Listener {
 
         int newDurability = Math.max(0, currentDurability - 1);
         container.set(durabilityKey, PersistentDataType.INTEGER, newDurability);
+
+        // Break item if needed
+        if (newDurability == 0)
+            unequipAndBreakArmorPiece(player, damagedItem);
 
         // Prepare lore update
         String durabilityLine = ChatColor.GRAY + "Durability: " + ChatColor.WHITE + newDurability + " / " + maxDurability;
@@ -83,6 +102,10 @@ public class DurabilityListener implements Listener {
                 int newHeadDurability = Math.max(0, headDurability - 1);
                 headContainer.set(durabilityKey, PersistentDataType.INTEGER, newHeadDurability);
 
+                // Break head if needed
+                if (newHeadDurability == 0)
+                    unequipAndBreakArmorPiece(player, helmet);
+
                 String headDurabilityLine = ChatColor.GRAY + "Durability: " + ChatColor.WHITE + newHeadDurability + " / " + headMaxDurability;
                 helmet.setItemMeta(headMeta); // Save updated container first
                 HelmetCosmeticUtil.updateCosmeticHelmetLoreSafely(helmet, Collections.singletonList(headDurabilityLine));
@@ -90,7 +113,40 @@ public class DurabilityListener implements Listener {
         }
     }
 
+    // Unequips and breaks the armor piece if it is equipped
+    private void unequipAndBreakArmorPiece(Player player, ItemStack itemStack) {
+        if (itemStack == null || itemStack.getType() == Material.AIR) return;
 
+        PlayerInventory inventory = player.getInventory();
+        Material type = itemStack.getType();
+        ItemStack storage = null;
 
+        if (type.name().endsWith("_HELMET") || type == Material.PLAYER_HEAD) {
+            storage = inventory.getHelmet();
+            inventory.setHelmet(null);
+        } else if (type.name().endsWith("_CHESTPLATE")) {
+            storage = inventory.getChestplate();
+            inventory.setChestplate(null);
+        } else if (type.name().endsWith("_LEGGINGS")) {
+            storage = inventory.getLeggings();
+            inventory.setLeggings(null);
+        } else if (type.name().endsWith("_BOOTS")) {
+            storage = inventory.getBoots();
+            inventory.setBoots(null);
+        }
+
+        if (storage != null)
+            inventory.addItem(storage);
+
+        // Throw armorequipevent
+        if (itemStack.getItemMeta().hasDisplayName())
+            player.sendMessage(ChatColor.RED + "Your " + itemStack.getItemMeta().getDisplayName() + " broke!");
+        else
+            player.sendMessage(ChatColor.RED + "Your " + formatMaterialName(type) + " broke!");
+    }
+
+    private String formatMaterialName(Material material) {
+        return material.name().toLowerCase().replace("_", " ");
+    }
 
 }
