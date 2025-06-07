@@ -1,7 +1,11 @@
 package me.remag501.customarmorsets.Listeners;
 
+import me.remag501.customarmorsets.Core.ArmorSet;
+import me.remag501.customarmorsets.Core.ArmorSetType;
 import me.remag501.customarmorsets.Utils.ArmorUtil;
 import me.remag501.customarmorsets.Utils.HelmetCosmeticUtil;
+import me.remag501.customarmorsets.lib.armorequipevent.ArmorEquipEvent;
+import me.remag501.customarmorsets.lib.armorequipevent.ArmorType;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -62,10 +66,6 @@ public class DurabilityListener implements Listener {
         int newDurability = Math.max(0, currentDurability - 1);
         container.set(durabilityKey, PersistentDataType.INTEGER, newDurability);
 
-        // Break item if needed
-        if (newDurability == 0)
-            unequipAndBreakArmorPiece(player, damagedItem);
-
         // Prepare lore update
         String durabilityLine = ChatColor.GRAY + "Durability: " + ChatColor.WHITE + newDurability + " / " + maxDurability;
         List<String> appendedLore = Collections.singletonList(durabilityLine);
@@ -88,6 +88,10 @@ public class DurabilityListener implements Listener {
             meta.setLore(lore);
             damagedItem.setItemMeta(meta);
         }
+
+        // Break item if needed
+        if (newDurability == 0)
+            unequipAndBreakArmorPiece(player, damagedItem);
 
         // Mirror head durability update manually only when leggings are damaged
         if (damagedItem.getType().name().endsWith("_LEGGINGS") && ArmorUtil.isFullArmorSet(player) != null) {
@@ -120,25 +124,38 @@ public class DurabilityListener implements Listener {
         PlayerInventory inventory = player.getInventory();
         Material type = itemStack.getType();
         ItemStack storage = null;
+        ArmorType armorType = null;
 
         if (type.name().endsWith("_HELMET") || type == Material.PLAYER_HEAD) {
             storage = inventory.getHelmet();
+            // Handle cosmetic case
+            ArmorSetType armorSetType = ArmorUtil.isFullArmorSet(player);
+            if (armorSetType != null) // Revert cosmetic
+                HelmetCosmeticUtil.restoreOriginalHelmet(storage, armorSetType.getLeatherColor());
+            // Handle normally
             inventory.setHelmet(null);
+            armorType = ArmorType.HELMET;
         } else if (type.name().endsWith("_CHESTPLATE")) {
             storage = inventory.getChestplate();
             inventory.setChestplate(null);
+            armorType = ArmorType.CHESTPLATE;
         } else if (type.name().endsWith("_LEGGINGS")) {
             storage = inventory.getLeggings();
             inventory.setLeggings(null);
+            armorType = ArmorType.LEGGINGS;
         } else if (type.name().endsWith("_BOOTS")) {
             storage = inventory.getBoots();
             inventory.setBoots(null);
+            armorType = ArmorType.BOOTS;
         }
 
-        if (storage != null)
+        if (storage != null) {
+            ArmorEquipEvent armorEquipEvent = new ArmorEquipEvent(player, ArmorEquipEvent.EquipMethod.BROKE, armorType, storage, null);
+            Bukkit.getServer().getPluginManager().callEvent(armorEquipEvent);
             inventory.addItem(storage);
+        }
 
-        // Throw armorequipevent
+
         if (itemStack.getItemMeta().hasDisplayName())
             player.sendMessage(ChatColor.RED + "Your " + itemStack.getItemMeta().getDisplayName() + " broke!");
         else
