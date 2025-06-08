@@ -5,6 +5,7 @@ import me.remag501.customarmorsets.lib.armorequipevent.ArmorEquipEvent;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -51,14 +52,5 @@ public class BrokenItemListener implements Listener {
 //        }
     }
 
-    // Optional: Prevent re-equipping broken armor (only if not already handling this elsewhere)
-    @EventHandler
-    public void onArmorEquip(ArmorEquipEvent event) {
-        ItemStack newArmor = event.getNewArmorPiece();
-        if (ItemUtil.isBroken(newArmor)) {
-            event.setCancelled(true);
-            event.getPlayer().sendMessage(ChatColor.RED + "This armor is broken and can't be equipped!");
-        }
-    }
 }
 

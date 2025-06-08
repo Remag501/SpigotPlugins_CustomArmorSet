@@ -116,13 +116,13 @@ public class DurabilityListener implements Listener {
 
                 headContainer.set(durabilityKey, PersistentDataType.INTEGER, newHeadDurability);
 
-                // Break head if needed
-                if (newHeadDurability == 0)
-                    unequipAndBreakArmorPiece(player, helmet);
-
                 String headDurabilityLine = ChatColor.GRAY + "Durability: " + ChatColor.WHITE + newHeadDurability + " / " + headMaxDurability;
                 helmet.setItemMeta(headMeta); // Save updated container first
                 HelmetCosmeticUtil.updateCosmeticHelmetLoreSafely(helmet, Collections.singletonList(headDurabilityLine));
+
+                // Break head if needed
+                if (newHeadDurability == 0)
+                    unequipAndBreakArmorPiece(player, helmet);
             }
         }
     }

@@ -25,7 +25,7 @@ public class ItemUtil {
         }
 
         // Vanilla durability (Damageable)
-        if (meta instanceof Damageable damageable) {
+        if (meta instanceof Damageable damageable && item.getType().getMaxDurability() > 0) {
             int maxDurability = item.getType().getMaxDurability();
             int currentDamage = damageable.getDamage();
             return currentDamage >= maxDurability;
