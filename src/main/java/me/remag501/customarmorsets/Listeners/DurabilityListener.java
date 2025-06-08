@@ -10,6 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -63,7 +64,11 @@ public class DurabilityListener implements Listener {
         int currentDurability = container.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 100);
         int maxDurability = container.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 100);
 
-        int newDurability = Math.max(0, currentDurability - 1);
+        int unbreakingLevel = damagedItem.getEnchantmentLevel(Enchantment.DURABILITY);
+        boolean shouldTakeDamage = shouldTakeDurabilityLoss(unbreakingLevel);
+
+        int newDurability = shouldTakeDamage ? Math.max(0, currentDurability - 1) : currentDurability;
+
         container.set(durabilityKey, PersistentDataType.INTEGER, newDurability);
 
         // Prepare lore update
@@ -103,7 +108,12 @@ public class DurabilityListener implements Listener {
 
                 int headDurability = headContainer.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 100);
                 int headMaxDurability = headContainer.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 100);
-                int newHeadDurability = Math.max(0, headDurability - 1);
+
+                unbreakingLevel = helmet.getEnchantmentLevel(Enchantment.DURABILITY);
+                shouldTakeDamage = shouldTakeDurabilityLoss(unbreakingLevel);
+
+                int newHeadDurability = shouldTakeDamage ? Math.max(0, headDurability - 1) : headDurability;
+
                 headContainer.set(durabilityKey, PersistentDataType.INTEGER, newHeadDurability);
 
                 // Break head if needed
@@ -115,6 +125,12 @@ public class DurabilityListener implements Listener {
                 HelmetCosmeticUtil.updateCosmeticHelmetLoreSafely(helmet, Collections.singletonList(headDurabilityLine));
             }
         }
+    }
+
+    private boolean shouldTakeDurabilityLoss(int unbreakingLevel) {
+        if (unbreakingLevel <= 0) return true;
+        double chance = 1.0 / (unbreakingLevel + 1);
+        return Math.random() < chance;
     }
 
     // Unequips and breaks the armor piece if it is equipped
