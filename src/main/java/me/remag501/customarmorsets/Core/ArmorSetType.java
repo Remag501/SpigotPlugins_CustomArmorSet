@@ -1,13 +1,6 @@
 package me.remag501.customarmorsets.Core;
 
-import me.remag501.customarmorsets.ArmorSets.SnowmanArmorSet;
-import me.remag501.customarmorsets.ArmorSets.InfernusArmorSet;
-import me.remag501.customarmorsets.ArmorSets.BanditArmorSet;
-import me.remag501.customarmorsets.ArmorSets.DevoidArmorSet;
-import me.remag501.customarmorsets.ArmorSets.RoyalKnightArmorSet;
-import me.remag501.customarmorsets.ArmorSets.VikingCaptainArmorSet;
-import me.remag501.customarmorsets.ArmorSets.LastSpartanArmorSet;
-import me.remag501.customarmorsets.ArmorSets.WorldGuardianArmorSet;
+import me.remag501.customarmorsets.ArmorSets.*;
 
 import org.bukkit.Color;
 
@@ -77,7 +70,30 @@ public enum ArmorSetType {
             Arrays.asList("§6Ability: §ePress F to become invulnerable (3s)", "§6Passive: §e+150% HP, reduced speed"),
             new int[]{3, 8, 7, 3},
             new int[]{80, 600, 570, 250},
-            new int[]{2, 3, 2, 1});
+            new int[]{2, 3, 2, 1}),
+    VAMPIRE("vampire", "Vampire", Color.MAROON,
+            "http://textures.minecraft.net/texture/cbd36b1881aa4cd26ab403508437abe0e8d3728d0d8035e0280a4bfc7e53dc0f",
+            VampireArmorSet::new,
+            Arrays.asList("§6Ability: §eDrain HP or transform on kill", "§6Passive: §eHeal when attacking living entities"),
+            new int[]{2, 5, 4, 2},
+            new int[]{65, 310, 295, 225},
+            new int[]{1, 2, 2, 1}),
+
+    FISTER("fister", "Fister", Color.GRAY,
+            "http://textures.minecraft.net/texture/fad8c8cf7ee1a2cb01a27f9a89b8fbd8b640fe4c5a1e34d2c6ff0fa02a21a7cf",
+            FisterArmorSet::new,
+            Arrays.asList("§6Ability: §eFist flurry", "§6Passive: §eInvulnerability, Overshield, Regen, No weapons"),
+            new int[]{1, 4, 3, 1},
+            new int[]{40, 210, 180, 150},
+            new int[]{0, 1, 1, 0}),
+
+    ARCHER("archer", "Archer", Color.LIME,
+            "http://textures.minecraft.net/texture/9b09f4c9b2240c2c6fdfc0a6f1f0a7bc5de6a8e9d0e5cdde192774eef25f79d5",
+            ArcherArmorSet::new,
+            Arrays.asList("§6Ability: §eArrow slash and knockback", "§6Passive: §eSpeed, Half HP, 25% more bow damage"),
+            new int[]{1, 3, 2, 1},
+            new int[]{45, 160, 140, 120},
+            new int[]{0, 0, 0, 0});
 
     private final String id;
     private final String displayName;
