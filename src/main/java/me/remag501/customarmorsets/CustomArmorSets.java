@@ -3,6 +3,7 @@ package me.remag501.customarmorsets;
 import me.remag501.customarmorsets.ArmorSets.*;
 import me.remag501.customarmorsets.Commands.CustomArmorSetCommand;
 import me.remag501.customarmorsets.Listeners.*;
+import me.remag501.customarmorsets.Utils.InvisibilityUtil;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorListener;
 import me.remag501.customarmorsets.lib.armorequipevent.DispenserArmorListener;
 import org.bukkit.World;
