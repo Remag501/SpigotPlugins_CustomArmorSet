@@ -19,6 +19,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -258,6 +259,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
                     Location offset = target.getLocation().add(randomOffset(player, target, tick == 5 ? 1 : -1));
                     NPC afterImage = tick == 5 ? afterImageOne : afterImageTwo;
                     spawnAfterImage(afterImage, offset, target);
+                    giveNPCArmor(player, afterImage);
                 }
                 if (tick == 15) {
                     afterImageOne.despawn();
@@ -270,6 +272,23 @@ public class FisterArmorSet extends ArmorSet implements Listener {
                 tick += 5;
             }
         }.runTaskTimer(plugin, 0, 5);
+    }
+
+    private void giveNPCArmor(Player player, NPC npc) {
+        if (npc == null || !npc.isSpawned()) return;
+
+        if (npc.getEntity() instanceof Player npcPlayer) {
+            PlayerInventory playerInv = player.getInventory();
+            PlayerInventory npcInv = npcPlayer.getInventory();
+
+            npcInv.setHelmet(playerInv.getHelmet());
+            npcInv.setChestplate(playerInv.getChestplate());
+            npcInv.setLeggings(playerInv.getLeggings());
+            npcInv.setBoots(playerInv.getBoots());
+
+            npcPlayer.updateInventory(); // optional but helps visuals
+            npc.getEntity().teleport(npc.getEntity().getLocation()); // force client-side sync
+        }
     }
 
     private Vector randomOffset(Player player, Entity target, int side) {
@@ -305,7 +324,6 @@ public class FisterArmorSet extends ArmorSet implements Listener {
             victim.damage(3, npcEntity);
         }
     }
-
 
     @EventHandler
     public void playerInteract(PlayerInteractAtEntityEvent event) {
