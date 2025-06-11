@@ -2,8 +2,10 @@ package me.remag501.customarmorsets.ArmorSets;
 
 import me.remag501.customarmorsets.Core.ArmorSet;
 import me.remag501.customarmorsets.Core.ArmorSetType;
+import me.remag501.customarmorsets.Core.CustomArmorSetsCore;
 import me.remag501.customarmorsets.Utils.ArmorUtil;
 import me.remag501.customarmorsets.Utils.AttributesUtil;
+import me.remag501.customarmorsets.Utils.CooldownBarUtil;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.md_5.bungee.api.ChatMessageType;
@@ -13,17 +15,17 @@ import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
-import org.mcmonkey.sentinel.SentinelTrait;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,10 +36,14 @@ public class FisterArmorSet extends ArmorSet implements Listener {
     private static Map<UUID, NPC> afterImagesOne = new HashMap<>();
     private static Map<UUID, NPC> afterImagesTwo = new HashMap<>();
 
-    private static Map<UUID, Long> cooldowns = new HashMap<>();
+    private static Map<UUID, Long> dodgeCooldowns = new HashMap<>();
+    private static Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static Map<UUID, Entity> dodging = new HashMap<>();
 
-    private static final int COOLDOWN_TICKS = 2 * 20;
+    private static final Map<UUID, BukkitTask> meditating = new HashMap<>();
+
+    private static final int DODGING_COOLDOWN_TICKS = 2 * 20;
+    private static final int ABILITY_COOLDOWN_TICKS = 15 * 20;
 
     public FisterArmorSet() {
         super(ArmorSetType.FISTER);
@@ -68,12 +74,143 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void triggerAbility(Player player) {
-        // TODO: Trigger burst punches (e.g., rapid melee attacks)
-        // You might launch multiple punches via cooldowned task
+        UUID uuid = player.getUniqueId();
+        Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
+        long now = System.currentTimeMillis();
+
+        // Cancel meditative state if already active
+        if (meditating.containsKey(uuid)) {
+            Vector launch = player.getLocation().getDirection().multiply(1.2).setY(0.4);
+            player.setVelocity(launch);
+            endMeditation(player);
+            return;
+        }
+
+        // Check if player is on cooldown
+        if (abilityCooldowns.containsKey(uuid) && now < abilityCooldowns.get(uuid)) {
+            long remaining = (abilityCooldowns.get(uuid) - now) / 1000;
+            player.sendMessage(ChatColor.RED + "Your meditate ability is on cooldown for another " + remaining + " seconds.");
+            return;
+        }
+
+        // Begin meditative state
+        Location floatLocation = player.getLocation().clone().add(0, 3, 0);
+        player.teleport(floatLocation);
+        player.setAllowFlight(true);
+        player.setFlying(true);
+        player.setFlySpeed(0);
+        player.setInvulnerable(true);
+        AttributesUtil.applyHealth(player, 1.5);
+
+        // Ring particles + aura
+        World world = player.getWorld();
+        new BukkitRunnable() {
+            double angle = 0;
+            @Override
+            public void run() {
+                if (!meditating.containsKey(uuid)) {
+                    cancel();
+                    return;
+                }
+                angle += Math.PI / 8;
+                for (double i = 0; i < 2 * Math.PI; i += Math.PI / 8) {
+                    double x = Math.cos(i + angle) * 2;
+                    double z = Math.sin(i + angle) * 2;
+                    world.spawnParticle(Particle.END_ROD, floatLocation.clone().add(x, -1, z), 0);
+                }
+                world.spawnParticle(Particle.ENCHANTMENT_TABLE, floatLocation, 5, 0.5, 0.5, 0.5, 0);
+                // Constantly add regen
+                player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20, 3));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, 20, 3));
+            }
+        }.runTaskTimer(plugin, 0L, 4L);
+
+        // Sound effect
+        world.playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1f, 1f);
+
+        // Pushback + debuffs on nearby entities
+        for (Entity nearby : player.getNearbyEntities(5, 5, 5)) {
+            if (nearby instanceof LivingEntity le && !le.equals(player)) {
+                Vector knockback = le.getLocation().toVector().subtract(player.getLocation().toVector()).normalize().multiply(1.5);
+                knockback.setY(0.5);
+                le.setVelocity(knockback);
+
+                le.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 60, 1));
+                le.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 60, 2));
+                le.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, 60, 0));
+            }
+        }
+
+        // Store and auto-end after 3 seconds
+        BukkitTask task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                endMeditation(player);
+            }
+        }.runTaskLater(plugin, 60L); // 3 seconds
+
+        meditating.put(uuid, task);
+    }
+
+    private void endMeditation(Player player) {
+        UUID uuid = player.getUniqueId();
+
+        player.setInvulnerable(false);
+        player.setAllowFlight(false);
+        player.setFlying(false);
+        player.setFlySpeed((float)0.1);
+
+        // Apply potion effects
+        player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 60, 1)); // 3 seconds
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 100, 1));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 100, 0));
+
+        // Play exit sound and particles
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1f, 1.2f);
+        player.getWorld().spawnParticle(Particle.EXPLOSION_NORMAL, player.getLocation(), 10);
+
+        BukkitTask task = meditating.remove(uuid);
+        if (task != null) task.cancel();
+
+        // Start timer to remove hp
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                AttributesUtil.removeHealth(player);
+            }
+        }.runTaskLater(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), 100);
+
+        // Start the cooldown
+        abilityCooldowns.put(uuid, System.currentTimeMillis() + ABILITY_COOLDOWN_TICKS * 50);
+        CooldownBarUtil.startCooldownBar(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), player, ABILITY_COOLDOWN_TICKS / 20);
+    }
+
+    @EventHandler
+    public void detectFlight(PlayerToggleFlightEvent event) {
+        Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
+
+        if (meditating.containsKey(uuid)) {
+            // Cancel the toggle and freeze the player mid-air
+            endMeditation(player);
+        }
+    }
+
+    @EventHandler
+    public void onMoveWhileMeditating(PlayerMoveEvent event) {
+        Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
+
+        if (meditating.containsKey(uuid)) {
+            if (!event.getFrom().toVector().equals(event.getTo().toVector())) {
+                event.setCancelled(true);
+            }
+        }
     }
 
     @EventHandler
     public void playerAttack(EntityDamageByEntityEvent event) {
+        // Check if damaged entity is invulerable
         if (event.getEntity() instanceof Player damaged && dodging.getOrDefault(damaged.getUniqueId(), null) == event.getDamager()) {
             event.setCancelled(true);
             // Subtitle feedback
@@ -85,10 +222,19 @@ public class FisterArmorSet extends ArmorSet implements Listener {
             damaged.getWorld().spawnParticle(Particle.SWEEP_ATTACK, damaged.getLocation().add(0, 1, 0), 10, 0.3, 0.3, 0.3, 0);
             return;
         }
-        if (!(event.getDamager() instanceof Player player)) return;
-        // Check if damaged entity is invulerable
+
+        // Prevent ranged attacks
+        Entity damager = event.getDamager();
+        if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player p) {
+
+            if (CustomArmorSetsCore.getArmorSet(p) instanceof FisterArmorSet) {
+                event.setCancelled(true);
+                return; // Only reduce for arrow/trident, not snowball/egg/etc., actually it reduces for all in this case
+            }
+        }
 
         // Check if player is wearing armor and apply after image passive
+        if (!(event.getDamager() instanceof Player player)) return;
         if (ArmorUtil.isFullArmorSet(player) != ArmorSetType.FISTER) return;
 
         if (player.getInventory().getItemInMainHand().getType() != Material.AIR) {
@@ -189,9 +335,9 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         // Allow blocks, check if block is on cooldown
         UUID uuid = player.getUniqueId();
         long now = System.currentTimeMillis();
-        if (cooldowns.containsKey(uuid) && now < cooldowns.get(uuid)) {
+        if (dodgeCooldowns.containsKey(uuid) && now < dodgeCooldowns.get(uuid)) {
             // Subtitle feedback
-            long remaining = (cooldowns.get(uuid) - now) / 1000;
+            long remaining = (dodgeCooldowns.get(uuid) - now) / 1000;
             String message = ChatColor.RED + "You have " + remaining + " seconds before you can block again.";
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
             return;
@@ -205,7 +351,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
                 cancel();
             }
         }.runTaskLater(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), 10);
-        cooldowns.put(uuid, now + COOLDOWN_TICKS * 50);
+        dodgeCooldowns.put(uuid, now + DODGING_COOLDOWN_TICKS * 50);
 
     }
 
