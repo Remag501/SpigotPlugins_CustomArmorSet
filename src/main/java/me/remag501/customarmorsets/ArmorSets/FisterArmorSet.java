@@ -6,6 +6,8 @@ import me.remag501.customarmorsets.Utils.ArmorUtil;
 import me.remag501.customarmorsets.Utils.AttributesUtil;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 //import org.bukkit.entity.;
 import org.bukkit.entity.*;
@@ -16,6 +18,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
@@ -30,6 +33,11 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
     private static Map<UUID, NPC> afterImagesOne = new HashMap<>();
     private static Map<UUID, NPC> afterImagesTwo = new HashMap<>();
+
+    private static Map<UUID, Long> cooldowns = new HashMap<>();
+    private static Map<UUID, Entity> dodging = new HashMap<>();
+
+    private static final int COOLDOWN_TICKS = 2 * 20;
 
     public FisterArmorSet() {
         super(ArmorSetType.FISTER);
@@ -66,7 +74,21 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
     @EventHandler
     public void playerAttack(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Player damaged && dodging.getOrDefault(damaged.getUniqueId(), null) == event.getDamager()) {
+            event.setCancelled(true);
+            // Subtitle feedback
+            String message = ChatColor.GRAY + "You dodged the hit!";
+            damaged.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
+            // Sound effect
+            damaged.getWorld().playSound(damaged.getLocation(), Sound.ENTITY_IRON_GOLEM_REPAIR, 1f, 1.2f);
+            // Particle effect
+            damaged.getWorld().spawnParticle(Particle.SWEEP_ATTACK, damaged.getLocation().add(0, 1, 0), 10, 0.3, 0.3, 0.3, 0);
+            return;
+        }
         if (!(event.getDamager() instanceof Player player)) return;
+        // Check if damaged entity is invulerable
+
+        // Check if player is wearing armor and apply after image passive
         if (ArmorUtil.isFullArmorSet(player) != ArmorSetType.FISTER) return;
 
         if (player.getInventory().getItemInMainHand().getType() != Material.AIR) {
@@ -94,7 +116,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
                 if (tick == 15) {
                     afterImageOne.despawn();
                 }
-                if (tick == 40) {
+                if (tick == 20) {
                     afterImageTwo.despawn();
                     cancel();
                 }
@@ -149,6 +171,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
         Entity clicked = event.getRightClicked();
 
+        // Handle npc case
         for (NPC npc : afterImagesOne.values()) {
             if (npc.isSpawned() && npc.getEntity().getUniqueId().equals(clicked.getUniqueId())) {
                 swapLocation(player, npc);
@@ -162,6 +185,28 @@ public class FisterArmorSet extends ArmorSet implements Listener {
                 return;
             }
         }
+
+        // Allow blocks, check if block is on cooldown
+        UUID uuid = player.getUniqueId();
+        long now = System.currentTimeMillis();
+        if (cooldowns.containsKey(uuid) && now < cooldowns.get(uuid)) {
+            // Subtitle feedback
+            long remaining = (cooldowns.get(uuid) - now) / 1000;
+            String message = ChatColor.RED + "You have " + remaining + " seconds before you can block again.";
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
+            return;
+        }
+        // Player is invulnerable for half a second
+        dodging.put(uuid, clicked);
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                dodging.remove(uuid);
+                cancel();
+            }
+        }.runTaskLater(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), 10);
+        cooldowns.put(uuid, now + COOLDOWN_TICKS * 50);
+
     }
 
     private void swapLocation(Player player, NPC npc) {
@@ -172,17 +217,22 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
     @EventHandler
     public void onSwing(PlayerAnimationEvent event) {
-//        if (event.getAnimationType() != PlayerAnimationType.ARM_SWING) return;
-//
-//        Player player = event.getPlayer();
-//        Entity target = getTargetedEntity(player, 4); // up to 4 blocks
-//
-//        if (target instanceof Boat) {
-//            player.sendMessage("You swung at a boat!");
-//        } else if (target instanceof Arrow) {
-//            player.sendMessage("You swung at an arrow!");
-//        }
+        if (event.getAnimationType() != PlayerAnimationType.ARM_SWING) return;
+
+        Player player = event.getPlayer();
+        Entity target = getTargetedEntity(player, 4);
+
+        if (target instanceof Arrow arrow) {
+            arrow.remove();
+            Location loc = arrow.getLocation();
+
+            loc.getWorld().playSound(loc, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.2f);
+
+            loc.getWorld().spawnParticle(Particle.ITEM_CRACK, loc, 10, 0.1, 0.1, 0.1, new ItemStack(Material.ARROW));
+            player.sendMessage("Arrow shattered!");
+        }
     }
+
 
     private Entity getTargetedEntity(Player player, double maxDistance) {
         Location eye = player.getEyeLocation();
