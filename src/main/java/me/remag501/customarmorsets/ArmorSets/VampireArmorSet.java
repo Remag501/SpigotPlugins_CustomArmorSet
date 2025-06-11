@@ -74,18 +74,6 @@ public class VampireArmorSet extends ArmorSet implements Listener {
 
         Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
 
-        if (player.isSneaking()) {
-            // Bat form logic
-            enterBatForm(player);
-            spawnBatStorm(player);
-
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                if (batForm.contains(uuid)) cancelBatForm(player);
-            }, DURATION_TICKS);
-
-            return;
-        }
-
         // Check for vampire orb in 5 block radius
         for (Entity entity : player.getNearbyEntities(RADIUS, RADIUS, RADIUS)) {
             if (entity instanceof ArmorStand stand) {
@@ -94,11 +82,25 @@ public class VampireArmorSet extends ArmorSet implements Listener {
                         && stand.getLocation().distanceSquared(player.getLocation()) <= RADIUS * RADIUS) {
                     stand.remove(); // destroy the orb
                     player.sendMessage(ChatColor.DARK_RED + "You absorb the vampire orb!");
-                    if (player.getHealth() / 10.0 >= 0.75)
-                        player.setAbsorptionAmount(4.0 + player.getAbsorptionAmount());
-                    else
-                        player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, DURATION_TICKS, 3));
-                    return;
+
+                    // Logic for morphing or healing
+                    if (player.isSneaking()) {
+                        // Bat form logic
+                        enterBatForm(player);
+                        spawnBatStorm(player);
+                        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                            if (batForm.contains(uuid)) cancelBatForm(player);
+                        }, DURATION_TICKS);
+                        return;
+
+                    } else {
+                        if (player.getHealth() / 10.0 >= 0.75)
+                            player.setAbsorptionAmount(4.0 + player.getAbsorptionAmount());
+                        else
+                            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, DURATION_TICKS, 3));
+                        return;
+                    }
+
                 }
             }
         }
@@ -141,7 +143,7 @@ public class VampireArmorSet extends ArmorSet implements Listener {
         }.runTaskTimer(plugin, 0L, INTERVAL_TICKS);
 
         // Store cooldown
-        cooldowns.put(uuid, now + COOLDOWN_TICKS);
+        cooldowns.put(uuid, now + COOLDOWN_TICKS * 50);
         CooldownBarUtil.startCooldownBar(plugin, player, COOLDOWN_TICKS / 20);
 
     }
