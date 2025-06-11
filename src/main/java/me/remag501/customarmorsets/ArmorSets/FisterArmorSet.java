@@ -366,6 +366,8 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         if (event.getAnimationType() != PlayerAnimationType.ARM_SWING) return;
 
         Player player = event.getPlayer();
+        if (ArmorUtil.isFullArmorSet(player) != ArmorSetType.FISTER) return;
+
         Entity target = getTargetedEntity(player, 4);
 
         if (target instanceof Arrow arrow) {

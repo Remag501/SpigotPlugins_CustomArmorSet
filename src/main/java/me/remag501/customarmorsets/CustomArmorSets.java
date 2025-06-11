@@ -43,6 +43,7 @@ public final class CustomArmorSets extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new WorldGuardianArmorSet(), this);
         getServer().getPluginManager().registerEvents(new VampireArmorSet(), this);
         getServer().getPluginManager().registerEvents(new FisterArmorSet(), this);
+        getServer().getPluginManager().registerEvents(new ArcherArmorSet(), this);
         // Libraries
         getServer().getPluginManager().registerEvents(new ArmorListener(getConfig().getStringList("blocked")), this);
         getServer().getPluginManager().registerEvents(new DispenserArmorListener(), this);
