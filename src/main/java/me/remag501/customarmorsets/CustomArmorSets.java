@@ -2,13 +2,19 @@ package me.remag501.customarmorsets;
 
 import me.remag501.customarmorsets.ArmorSets.*;
 import me.remag501.customarmorsets.Commands.CustomArmorSetCommand;
+import me.remag501.customarmorsets.Core.ArmorSet;
+import me.remag501.customarmorsets.Core.CustomArmorSetsCore;
 import me.remag501.customarmorsets.Listeners.*;
 import me.remag501.customarmorsets.Utils.InvisibilityUtil;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorListener;
 import me.remag501.customarmorsets.lib.armorequipevent.DispenserArmorListener;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.UUID;
 
 public final class CustomArmorSets extends JavaPlugin {
 
@@ -36,6 +42,7 @@ public final class CustomArmorSets extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new RoyalKnightArmorSet(), this);
         getServer().getPluginManager().registerEvents(new WorldGuardianArmorSet(), this);
         getServer().getPluginManager().registerEvents(new VampireArmorSet(), this);
+        getServer().getPluginManager().registerEvents(new FisterArmorSet(), this);
         // Libraries
         getServer().getPluginManager().registerEvents(new ArmorListener(getConfig().getStringList("blocked")), this);
         getServer().getPluginManager().registerEvents(new DispenserArmorListener(), this);
@@ -45,6 +52,12 @@ public final class CustomArmorSets extends JavaPlugin {
     public void onDisable() {
         // Plugin shutdown logic
         getLogger().info("Custom Armor Sets have shut down!");
+        // Disable any kits that a player has equipped
+        for (UUID uuid: CustomArmorSetsCore.equippedArmor.keySet()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null)
+                CustomArmorSetsCore.unequipArmor(player);
+        }
     }
 
     public static Plugin getInstance() {
