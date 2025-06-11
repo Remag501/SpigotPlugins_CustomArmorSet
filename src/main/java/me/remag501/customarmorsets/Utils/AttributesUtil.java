@@ -113,4 +113,43 @@ public class AttributesUtil {
         });
     }
 
+    public static void applyAttackSpeed(Player player, double mult) {
+        getBootsOnDelay(player, boots -> {
+            if (boots == null || !boots.hasItemMeta()) return;
+
+            ItemMeta meta = boots.getItemMeta();
+            if (meta == null) return;
+
+            // Remove existing attack speed modifiers to prevent stacking
+            meta.removeAttributeModifier(Attribute.GENERIC_ATTACK_SPEED);
+
+            double baseAttackSpeed = player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).getValue(); // Usually 4.0
+            double bonusSpeed = baseAttackSpeed * (mult - 1); // e.g., mult = 1.5 → +2 attack speed
+
+            AttributeModifier modifier = new AttributeModifier(
+                    UUID.randomUUID(),
+                    "custom_attack_speed_bonus",
+                    bonusSpeed,
+                    AttributeModifier.Operation.ADD_NUMBER,
+                    EquipmentSlot.FEET
+            );
+
+            meta.addAttributeModifier(Attribute.GENERIC_ATTACK_SPEED, modifier);
+            boots.setItemMeta(meta);
+        });
+    }
+
+    public static void removeAttackSpeed(Player player) {
+        getBootsOnDelay(player, boots -> {
+            if (boots == null || !boots.hasItemMeta()) return;
+
+            ItemMeta meta = boots.getItemMeta();
+            if (meta == null) return;
+
+            // Remove all attack speed modifiers from the boots
+            meta.removeAttributeModifier(Attribute.GENERIC_ATTACK_SPEED);
+            boots.setItemMeta(meta);
+        });
+    }
+
 }

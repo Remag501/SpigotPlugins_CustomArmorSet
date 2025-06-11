@@ -3,6 +3,7 @@ package me.remag501.customarmorsets.ArmorSets;
 import me.remag501.customarmorsets.Core.ArmorSet;
 import me.remag501.customarmorsets.Core.ArmorSetType;
 import me.remag501.customarmorsets.Utils.ArmorUtil;
+import me.remag501.customarmorsets.Utils.AttributesUtil;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.*;
@@ -14,6 +15,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
@@ -34,35 +36,12 @@ public class FisterArmorSet extends ArmorSet implements Listener {
     }
 
     public void applyPassive(Player player) {
-        // Give player haste
+        // Give player attack speed
+        AttributesUtil.applyAttackSpeed(player, 3.0);
 
         // Create npc after images
         NPC afterImageOne = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, player.getName());
         NPC afterImageTwo = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, player.getName());
-
-        // Register Sentinel trait
-//        afterImageOne.addTrait(SentinelTrait.class);
-//        afterImageTwo.addTrait(SentinelTrait.class);
-
-//        SentinelTrait sentinelOne = afterImageOne.getOrAddTrait(SentinelTrait.class);
-//        SentinelTrait sentinelTwo = afterImageTwo.getOrAddTrait(SentinelTrait.class);
-//
-//        // Make them attack everything (monsters, animals, other players)
-//        sentinelOne.addTarget("players");
-//        sentinelOne.addTarget("monsters");
-//        sentinelOne.addTarget("passivemobs");
-////
-////        // Avoid attacking their summoner
-//        sentinelOne.addIgnore("player:" + player.getName());
-////        sentinelTwo.addIgnore("player:" + player.getName());
-////
-////        // Optional behavior tuning
-//        sentinelOne.invincible = true;
-//        sentinelOne.speed = 0;
-//        sentinelOne.accuracy = 0;
-//        sentinelOne.attackRate = 2; // attacks every 1 second
-////        sentinelOne.chaseRange = 20; // how far they chase targets
-//        sentinelOne.range = 5;      // how far they can hit
 
         afterImagesOne.put(player.getUniqueId(), afterImageOne);
         afterImagesTwo.put(player.getUniqueId(), afterImageTwo);
@@ -70,7 +49,9 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void removePassive(Player player) {
-        // TODO: Remove potion effects and any overshield
+        // Remove player attack speed
+        AttributesUtil.removeAttackSpeed(player);
+
         NPC afterImageOne = afterImagesOne.remove(player.getUniqueId());
         NPC afterImageTwo = afterImagesTwo.remove(player.getUniqueId());
         afterImageOne.destroy();
@@ -94,7 +75,6 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         }
 
         Entity target = event.getEntity();
-        Location baseLoc = target.getLocation().add(0, 0.5, 0);
 
         NPC afterImageOne = afterImagesOne.get(player.getUniqueId());
         NPC afterImageTwo = afterImagesTwo.get(player.getUniqueId());
@@ -114,7 +94,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
                 if (tick == 15) {
                     afterImageOne.despawn();
                 }
-                if (tick == 20) {
+                if (tick == 40) {
                     afterImageTwo.despawn();
                     cancel();
                 }
@@ -133,7 +113,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         Vector right = new Vector(-toTarget.getZ(), 0, toTarget.getX()).normalize();
 
         // Scale left (-1) or right (+1) with some jitter
-        Vector offset = right.multiply(0.8 * side); // ~0.8 blocks to each side
+        Vector offset = right.multiply(1.2 * side); // ~0.8 blocks to each side
         offset.add(new Vector(
                 (Math.random() - 0.5) * 0.2, // small XZ jitter
                 0.4 + Math.random() * 0.2,    // vertical lift
@@ -149,6 +129,10 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         npcEntity.setVelocity(new Vector(0, 0, 0)); // upward hop
         target.getWorld().spawnParticle(Particle.CRIT, npcEntity.getLocation(), 10);
 
+        // Rotate the NPC to look at the target
+        npc.faceLocation(target.getLocation());
+
+        // Optional: deal damage
         if (target instanceof LivingEntity victim) {
             victim.damage(3, npcEntity);
         }
@@ -157,8 +141,33 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
     @EventHandler
     public void playerInteract(PlayerInteractAtEntityEvent event) {
-//        event.getPlayer().sendMessage("blocks when click on entity");
+        // Filter out off-hand interactions
+        if (event.getHand() != EquipmentSlot.HAND) return;
 
+        Player player = event.getPlayer();
+        if (ArmorUtil.isFullArmorSet(player) != ArmorSetType.FISTER) return;
+
+        Entity clicked = event.getRightClicked();
+
+        for (NPC npc : afterImagesOne.values()) {
+            if (npc.isSpawned() && npc.getEntity().getUniqueId().equals(clicked.getUniqueId())) {
+                swapLocation(player, npc);
+                return;
+            }
+        }
+
+        for (NPC npc : afterImagesTwo.values()) {
+            if (npc.isSpawned() && npc.getEntity().getUniqueId().equals(clicked.getUniqueId())) {
+                swapLocation(player, npc);
+                return;
+            }
+        }
+    }
+
+    private void swapLocation(Player player, NPC npc) {
+        Location oldLocation = player.getLocation();
+        player.teleport(npc.getEntity().getLocation());
+        npc.teleport(oldLocation, PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 
     @EventHandler
