@@ -1,15 +1,12 @@
 package me.remag501.customarmorsets;
 
-import me.remag501.customarmorsets.ArmorSets.*;
-import me.remag501.customarmorsets.Commands.CustomArmorSetCommand;
-import me.remag501.customarmorsets.Core.ArmorSet;
-import me.remag501.customarmorsets.Core.CustomArmorSetsCore;
-import me.remag501.customarmorsets.Listeners.*;
-import me.remag501.customarmorsets.Utils.InvisibilityUtil;
+import me.remag501.customarmorsets.armorsets.*;
+import me.remag501.customarmorsets.commands.CustomArmorSetCommand;
+import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.listeners.*;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorListener;
 import me.remag501.customarmorsets.lib.armorequipevent.DispenserArmorListener;
 import org.bukkit.Bukkit;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -34,6 +31,7 @@ public final class CustomArmorSets extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new WorldChangeListener(), this);
         // Listener for broken items
         getServer().getPluginManager().registerEvents(new BrokenItemListener(), this);
+        getServer().getPluginManager().registerEvents(new RepairListener(), this);
         // Register listeners for armor sets
         getServer().getPluginManager().registerEvents(new SnowmanArmorSet(), this);
         getServer().getPluginManager().registerEvents(new InfernusArmorSet(), this);
