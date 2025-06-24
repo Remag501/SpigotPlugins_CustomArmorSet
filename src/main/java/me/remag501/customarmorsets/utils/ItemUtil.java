@@ -16,22 +16,31 @@ public class ItemUtil {
     private static final NamespacedKey REPAIR_KIT_KEY = new NamespacedKey("customarmorsets", "is_repair_kit");
 
    // int amount, int strength
-    public static ItemStack createRepairKit() {
-        ItemStack kit = new ItemStack(Material.SHULKER_SHELL);
-        ItemMeta meta = kit.getItemMeta();
+   public static ItemStack createRepairKit(int amount, int tier) {
+       ItemStack kit = new ItemStack(Material.SHULKER_SHELL, amount);
+       ItemMeta meta = kit.getItemMeta();
 
-        meta.setDisplayName(ChatColor.GOLD + "Repair Kit");
-        meta.setLore(Arrays.asList(
-                ChatColor.GRAY + "Drag and drop on a damaged piece",
-                ChatColor.GRAY + "to restore durability."
-        ));
+       String name;
+       switch (tier) {
+           case 0 -> name = ChatColor.YELLOW + "Weak Repair Kit";
+           case 2 -> name = ChatColor.RED + "Strong Repair Kit";
+           default -> name = ChatColor.GOLD + "Repair Kit"; // Tier 1 or fallback
+       }
 
-        // Tag it as a repair kit
-        meta.getPersistentDataContainer().set(REPAIR_KIT_KEY, PersistentDataType.BYTE, (byte) 1);
-        kit.setItemMeta(meta);
+       meta.setDisplayName(name);
+       meta.setLore(Arrays.asList(
+               ChatColor.GRAY + "Drag and drop on a damaged piece",
+               ChatColor.GRAY + "to restore durability.",
+               ChatColor.DARK_GRAY + "Tier: " + tier
+       ));
 
-        return kit;
-    }
+       PersistentDataContainer container = meta.getPersistentDataContainer();
+       container.set(REPAIR_KIT_KEY, PersistentDataType.BYTE, (byte) 1); // identifies as repair kit
+       container.set(new NamespacedKey("customarmorsets", "repair_kit_tier"), PersistentDataType.INTEGER, tier); // stores tier
+
+       kit.setItemMeta(meta);
+       return kit;
+   }
 
     public static boolean isRepairKit(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;

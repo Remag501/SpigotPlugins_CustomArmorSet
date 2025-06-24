@@ -86,7 +86,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
         }
 
         else if (args.length == 1 && args[0].equalsIgnoreCase("getrepairkit") && sender instanceof Player player) {
-            ItemStack repairKit = ItemUtil.createRepairKit();
+            ItemStack repairKit = ItemUtil.createRepairKit(1, 0);
             player.getInventory().addItem(repairKit);
             player.sendMessage(ChatColor.GREEN + "You received an Armor Repair Kit!");
             return true;
@@ -99,9 +99,56 @@ public class CustomArmorSetCommand implements CommandExecutor {
                 return true;
             }
 
-            target.getInventory().addItem(ItemUtil.createRepairKit());
+            target.getInventory().addItem(ItemUtil.createRepairKit(1, 0));
             sender.sendMessage(ChatColor.GREEN + "Repair kit given to " + target.getName() + "!");
             target.sendMessage(ChatColor.GREEN + "You received an Armor Repair Kit!");
+            return true;
+        }
+
+        else if (args.length == 3 && args[0].equalsIgnoreCase("getrepairkit") && sender instanceof Player player) {
+            // Give to self
+            try {
+                int amount = Integer.parseInt(args[1]);
+                int tier = Integer.parseInt(args[2]);
+
+                if (amount <= 0 || tier < 0) {
+                    sender.sendMessage(ChatColor.RED + "Amount must be positive and tier must be non-negative.");
+                    return true;
+                }
+
+                ItemStack repairKit = ItemUtil.createRepairKit(amount, tier);
+                player.getInventory().addItem(repairKit);
+                player.sendMessage(ChatColor.GREEN + "You received " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ")!");
+            } catch (NumberFormatException e) {
+                sender.sendMessage(ChatColor.RED + "Usage: /customarmorsets getrepairkit <amount> <tier> [player]");
+            }
+            return true;
+        }
+
+        else if (args.length == 4 && args[0].equalsIgnoreCase("getrepairkit")) {
+            // Give to another player
+            try {
+                int amount = Integer.parseInt(args[1]);
+                int tier = Integer.parseInt(args[2]);
+
+                if (amount <= 0 || tier < 0) {
+                    sender.sendMessage(ChatColor.RED + "Amount must be positive and tier must be non-negative.");
+                    return true;
+                }
+
+                Player target = Bukkit.getPlayerExact(args[3]);
+                if (target == null) {
+                    sender.sendMessage(ChatColor.RED + "Player not found.");
+                    return true;
+                }
+
+                ItemStack repairKit = ItemUtil.createRepairKit(amount, tier);
+                target.getInventory().addItem(repairKit);
+                sender.sendMessage(ChatColor.GREEN + "Gave " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ") to " + target.getName() + "!");
+                target.sendMessage(ChatColor.GREEN + "You received " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ")!");
+            } catch (NumberFormatException e) {
+                sender.sendMessage(ChatColor.RED + "Usage: /customarmorsets getrepairkit <amount> <tier> [player]");
+            }
             return true;
         }
 

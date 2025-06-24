@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.listeners;
 
+import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.utils.ArmorUtil;
 import me.remag501.customarmorsets.utils.HelmetCosmeticUtil;
 import me.remag501.customarmorsets.utils.ItemUtil;
@@ -36,15 +37,31 @@ public class RepairListener implements Listener {
         ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
-        if (tryRepair(player, clickedItem)) {
+        Material type = clickedItem.getType();
+        if (type.getMaxDurability() <= 0 || !(clickedItem.getItemMeta() instanceof Damageable))
+            return;
+
+        // Get tier and corresponding repair amount
+        ItemMeta meta = cursor.getItemMeta();
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+        int tier = container.getOrDefault(new NamespacedKey("customarmorsets", "repair_kit_tier"), PersistentDataType.INTEGER, 0);
+
+        int repairAmount = switch (tier) {
+            case 0 -> 10; // Weak
+            case 1 -> 25; // Normal
+            case 2 -> 100; // Strong
+            default -> 0;
+        };
+
+        if (tryRepair(player, clickedItem, repairAmount)) {
             event.setCancelled(true);
         }
     }
 
-    private boolean tryRepair(Player player, ItemStack item) {
+    private boolean tryRepair(Player player, ItemStack item, int repairAmount) {
         if (item == null || item.getType() == Material.AIR) return false;
         if (ArmorUtil.isCustomArmorPiece(item)) {
-            return customRepair(player, item);
+            return customRepair(player, item, repairAmount);
         }
 
         if (!(item.getItemMeta() instanceof Damageable damageable)) return false;
@@ -54,9 +71,9 @@ public class RepairListener implements Listener {
         }
 
         // Logic to repair gear
-        damageable.setDamage(Math.max(0, damageable.getDamage() - 10)); // Heal 10 durability
+        damageable.setDamage(Math.max(0, damageable.getDamage() - repairAmount)); // Heal 10 durability
         item.setItemMeta(damageable);
-        player.sendMessage(ChatColor.GREEN + "Durability restored by 10!");
+        player.sendMessage(ChatColor.GREEN + "Durability restored by " + repairAmount + "!");
 
         // Reduce repair kit by one
         ItemStack cursor = player.getItemOnCursor();
@@ -66,7 +83,7 @@ public class RepairListener implements Listener {
         return true;
     }
 
-    private boolean customRepair(Player player, ItemStack item) {
+    private boolean customRepair(Player player, ItemStack item, int repairAmount) {
         if (!ArmorUtil.isCustomArmorPiece(item)) {
             player.sendMessage(ChatColor.RED + "This is not a custom armor piece.");
             return false;
@@ -86,7 +103,6 @@ public class RepairListener implements Listener {
             return false;
         }
 
-        int repairAmount = 10;
         int newDurability = Math.min(maxDurability, currentDurability + repairAmount);
         container.set(durabilityKey, PersistentDataType.INTEGER, newDurability);
 
