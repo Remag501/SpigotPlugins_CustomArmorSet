@@ -1,6 +1,8 @@
 package me.remag501.customarmorsets.listeners;
 
+import me.remag501.customarmorsets.core.ArmorSet;
 import me.remag501.customarmorsets.core.ArmorSetType;
+import me.remag501.customarmorsets.core.CustomArmorSetsCore;
 import me.remag501.customarmorsets.utils.ArmorUtil;
 import me.remag501.customarmorsets.utils.HelmetCosmeticUtil;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorEquipEvent;
@@ -13,6 +15,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -20,10 +23,13 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static me.remag501.customarmorsets.utils.HelmetCosmeticUtil.sendCosmeticHelmet;
 
 public class DurabilityListener implements Listener {
     @EventHandler
@@ -68,56 +74,53 @@ public class DurabilityListener implements Listener {
         String durabilityLine = ChatColor.GRAY + "Durability: " + ChatColor.WHITE + newDurability + " / " + maxDurability;
         List<String> appendedLore = Collections.singletonList(durabilityLine);
 
-        // Reset visible damage by stopping event
-//        if (meta instanceof Damageable damageable) {
-//            damageable.setDamage(0); // 0 = fully repaired visually
-//            damagedItem.setItemMeta((ItemMeta) damageable);
-//        }
         event.setCancelled(true);
 
         damagedItem.setItemMeta(meta); // Save internal durability
 
-        if (damagedItem.getType() == Material.PLAYER_HEAD) {
-            HelmetCosmeticUtil.updateCosmeticHelmetLoreSafely(damagedItem, appendedLore);
-        } else {
-            List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
-            lore.removeIf(line -> ChatColor.stripColor(line).contains("Durability"));
-            lore.addAll(appendedLore);
-            meta.setLore(lore);
-            damagedItem.setItemMeta(meta);
-        }
+        List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+        lore.removeIf(line -> ChatColor.stripColor(line).contains("Durability"));
+        lore.addAll(appendedLore);
+        meta.setLore(lore);
+        damagedItem.setItemMeta(meta);
 
         // Break item if needed
         if (newDurability == 0)
             unequipAndBreakArmorPiece(player, damagedItem);
 
+        // REMOVE? Update the player helmet packet
+//        if (event.getItem().getType().name().endsWith("_HELMET")) {
+//            HelmetCosmeticUtil.updateCosmeticHelmetLoreSafely(player);
+//        }
+
         // Mirror head durability update manually only when leggings are damaged
-        if (damagedItem.getType().name().endsWith("_LEGGINGS") && ArmorUtil.isFullArmorSet(player) != null) {
-            ItemStack helmet = player.getInventory().getHelmet();
-
-            if (helmet != null && helmet.getType() == Material.PLAYER_HEAD && helmet.hasItemMeta()) {
-                ItemMeta headMeta = helmet.getItemMeta();
-                PersistentDataContainer headContainer = headMeta.getPersistentDataContainer();
-
-                int headDurability = headContainer.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 100);
-                int headMaxDurability = headContainer.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 100);
-
-                unbreakingLevel = helmet.getEnchantmentLevel(Enchantment.DURABILITY);
-                shouldTakeDamage = shouldTakeDurabilityLoss(unbreakingLevel);
-
-                int newHeadDurability = shouldTakeDamage ? Math.max(0, headDurability - 1) : headDurability;
-
-                headContainer.set(durabilityKey, PersistentDataType.INTEGER, newHeadDurability);
-
-                String headDurabilityLine = ChatColor.GRAY + "Durability: " + ChatColor.WHITE + newHeadDurability + " / " + headMaxDurability;
-                helmet.setItemMeta(headMeta); // Save updated container first
-                HelmetCosmeticUtil.updateCosmeticHelmetLoreSafely(helmet, Collections.singletonList(headDurabilityLine));
-
-                // Break head if needed
-                if (newHeadDurability == 0)
-                    unequipAndBreakArmorPiece(player, helmet);
-            }
-        }
+//        if (damagedItem.getType().name().endsWith("_LEGGINGS") && ArmorUtil.isFullArmorSet(player) != null) {
+//            ItemStack helmet = player.getInventory().getHelmet();
+//
+//            if (helmet != null && helmet.getType() == Material.PLAYER_HEAD && helmet.hasItemMeta()) {
+//                ItemMeta headMeta = helmet.getItemMeta();
+//                PersistentDataContainer headContainer = headMeta.getPersistentDataContainer();
+//
+//                int headDurability = headContainer.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 100);
+//                int headMaxDurability = headContainer.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 100);
+//
+//                unbreakingLevel = helmet.getEnchantmentLevel(Enchantment.DURABILITY);
+//                shouldTakeDamage = shouldTakeDurabilityLoss(unbreakingLevel);
+//
+//                int newHeadDurability = shouldTakeDamage ? Math.max(0, headDurability - 1) : headDurability;
+//
+//                headContainer.set(durabilityKey, PersistentDataType.INTEGER, newHeadDurability);
+//
+//                String headDurabilityLine = ChatColor.GRAY + "Durability: " + ChatColor.WHITE + newHeadDurability + " / " + headMaxDurability;
+//                helmet.setItemMeta(headMeta); // Save updated container first
+//                HelmetCosmeticUtil.updateCosmeticHelmetLoreSafely(helmet, Collections.singletonList(headDurabilityLine));
+//
+//                // Break head if needed
+//                if (newHeadDurability == 0)
+//                    unequipAndBreakArmorPiece(player, helmet);
+//                player.sendMessage("reached");
+//            }
+//        }
     }
 
     private boolean shouldTakeDurabilityLoss(int unbreakingLevel) {
@@ -173,6 +176,21 @@ public class DurabilityListener implements Listener {
 
     private String formatMaterialName(Material material) {
         return material.name().toLowerCase().replace("_", " ");
+    }
+
+    @EventHandler
+    public void onPlayerAnimation(PlayerAnimationEvent event) {
+//        Player player = event.getPlayer();
+////        String url = cachedCosmeticHeads.get(player.getUniqueId());
+//        ArmorSet set = CustomArmorSetsCore.getArmorSet(player);
+//        if (set == null)
+//            return;
+//        String url = set.getType().getHeadUrl();
+//        if (url != null) {
+//            for (Player viewer : Bukkit.getOnlinePlayers()) {
+//                sendCosmeticHelmet(player, viewer, url);
+//            }
+//        }
     }
 
 }

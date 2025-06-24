@@ -6,6 +6,7 @@ import me.remag501.customarmorsets.core.CustomArmorSetsCore;
 import me.remag501.customarmorsets.listeners.*;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorListener;
 import me.remag501.customarmorsets.lib.armorequipevent.DispenserArmorListener;
+//import me.remag501.customarmorsets.utils.PacketDebugger;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -16,6 +17,8 @@ import java.util.UUID;
 public final class CustomArmorSets extends JavaPlugin {
 
     private static Plugin plugin;
+    private CosmeticHelmetInterceptor helmetInterceptor;
+
     @Override
     public void onEnable() {
         // Plugin startup logic
@@ -45,6 +48,10 @@ public final class CustomArmorSets extends JavaPlugin {
         // Libraries
         getServer().getPluginManager().registerEvents(new ArmorListener(getConfig().getStringList("blocked")), this);
         getServer().getPluginManager().registerEvents(new DispenserArmorListener(), this);
+        // Init helmet interceptor
+//        PacketDebugger.registerAllPacketDebuggers(this);
+        helmetInterceptor = new CosmeticHelmetInterceptor();
+        helmetInterceptor.init(this);
     }
 
     @Override
@@ -62,4 +69,9 @@ public final class CustomArmorSets extends JavaPlugin {
     public static Plugin getInstance() {
         return plugin;
     }
+
+    public CosmeticHelmetInterceptor getHelmetInterceptor() {
+        return helmetInterceptor;
+    }
+
 }
