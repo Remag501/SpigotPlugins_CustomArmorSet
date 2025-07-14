@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armorsets;
 
+import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.core.ArmorSet;
 import me.remag501.customarmorsets.core.ArmorSetType;
 import me.remag501.customarmorsets.core.CustomArmorSetsCore;
@@ -236,19 +237,24 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
         // Check if player is wearing armor and apply after image passive
         if (!(event.getDamager() instanceof Player player)) return;
-        if (ArmorUtil.isFullArmorSet(player) != ArmorSetType.FISTER) return;
+        if (!(CustomArmorSetsCore.getArmorSet(player) instanceof FisterArmorSet)) return;
 
         if (player.getInventory().getItemInMainHand().getType() != Material.AIR) {
             event.setCancelled(true);
             return;
         }
 
+//        if (true) {
+//            player.sendMessage("you can fist");
+//            return;
+//        }
+
         Entity target = event.getEntity();
 
         NPC afterImageOne = afterImagesOne.get(player.getUniqueId());
         NPC afterImageTwo = afterImagesTwo.get(player.getUniqueId());
 
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
+        Plugin plugin = CustomArmorSets.getInstance();
 
         new BukkitRunnable() {
             int tick = 0;

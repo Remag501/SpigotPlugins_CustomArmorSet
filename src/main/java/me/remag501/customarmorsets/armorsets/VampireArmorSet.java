@@ -3,8 +3,10 @@ package me.remag501.customarmorsets.armorsets;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
+import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.core.ArmorSet;
 import me.remag501.customarmorsets.core.ArmorSetType;
+import me.remag501.customarmorsets.core.CustomArmorSetsCore;
 import me.remag501.customarmorsets.utils.ArmorUtil;
 import me.remag501.customarmorsets.utils.AttributesUtil;
 import me.remag501.customarmorsets.utils.CooldownBarUtil;
@@ -310,8 +312,7 @@ public class VampireArmorSet extends ArmorSet implements Listener {
         }
 
         // Confirm player is wearing Vampire set
-        ArmorSetType set = ArmorUtil.isFullArmorSet(damager);
-        if (set != ArmorSetType.VAMPIRE) return;
+        if (!(CustomArmorSetsCore.getArmorSet(damager) instanceof VampireArmorSet)) return;
 
         // Heal the player by a portion of the damage dealt
         double newHealth = Math.min(
