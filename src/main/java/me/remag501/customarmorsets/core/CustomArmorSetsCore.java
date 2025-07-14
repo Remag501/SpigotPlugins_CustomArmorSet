@@ -15,16 +15,11 @@ import java.util.UUID;
 public class CustomArmorSetsCore {
 
     public static Map<UUID, ArmorSet> equippedArmor = new HashMap<>();
+    public static Map<UUID, ArmorSetType> equippedHelmet = new HashMap<>();
 
     private static List<String> allowedWorlds = List.of("kuroko", "icecaverns", "sahara", "test");
 
     public static boolean equipArmor(Player player, ArmorSetType type) {
-        // Check if player is pvp world
-        World world = player.getWorld();
-        if (!allowedWorlds.contains(world.getName())) {
-            return false;
-        }
-
         // Equip player head
         Bukkit.getScheduler().runTask(CustomArmorSets.getInstance(), () -> {
             ItemStack helmet = player.getInventory().getHelmet();
@@ -32,6 +27,13 @@ public class CustomArmorSetsCore {
                 player.getInventory().setHelmet(HelmetCosmeticUtil.makeCosmeticHelmet(helmet, type.getHeadUrl()));
             }
         });
+        equippedHelmet.put(player.getUniqueId(), type);
+
+        // Check if player is pvp world
+        World world = player.getWorld();
+        if (!allowedWorlds.contains(world.getName())) {
+            return false;
+        }
 
         // Create armor set instance, map it to player, and activate passive
         ArmorSet set = type.create();
@@ -41,39 +43,22 @@ public class CustomArmorSetsCore {
     }
 
     public static void unequipArmor(Player player) {
-
+        // Get set and helmet instances
         ArmorSet set = equippedArmor.remove(player.getUniqueId());
+        ArmorSetType type = equippedHelmet.get(player.getUniqueId());
+        // First check player has a set
         if (set != null) {
+            // Remove armor set instance from player map and deactivate passive
+            set.removePassive(player);
+        }
 
-            // Unequip player head
-            ArmorSetType type = set.getType();
+        // Unequip player head
+        if (type != null) {
             ItemStack helmet = player.getInventory().getHelmet();
             if (helmet != null) {
                 player.getInventory().setHelmet(HelmetCosmeticUtil.restoreOriginalHelmet(helmet, type.getLeatherColor()));
             }
-
-            // Remove armor set instance from player map and deactivate passive
-            set.removePassive(player);
-
-        }
-
-    }
-
-    public static void unequipArmorAbilities(Player player) {
-
-        ArmorSet set = equippedArmor.remove(player.getUniqueId());
-        if (set != null) {
-
-//            // Unequip player head
-//            ArmorSetType type = set.getType();
-//            ItemStack helmet = player.getInventory().getHelmet();
-//            if (helmet != null) {
-//                player.getInventory().setHelmet(HelmetCosmeticUtil.restoreOriginalHelmet(helmet, type.getLeatherColor()));
-//            }
-
-            // Remove armor set instance from player map and deactivate passive
-            set.removePassive(player);
-
+            equippedHelmet.remove(player.getUniqueId());
         }
 
     }

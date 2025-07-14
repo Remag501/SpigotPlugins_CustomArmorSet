@@ -62,7 +62,7 @@ public final class CustomArmorSets extends JavaPlugin {
         for (UUID uuid: CustomArmorSetsCore.equippedArmor.keySet()) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null)
-                CustomArmorSetsCore.unequipArmorAbilities(player); // Won't work since events can't get registered
+                CustomArmorSetsCore.unequipArmor(player); // Won't work since events can't get registered
         }
         getLogger().info("Custom Armor Sets have shut down!");
     }
