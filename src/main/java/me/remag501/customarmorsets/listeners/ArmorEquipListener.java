@@ -103,18 +103,18 @@ public class ArmorEquipListener implements Listener {
 
 
 
-    @EventHandler
-    public void helmetBlockRemoval(InventoryClickEvent event) {
+//    @EventHandler
+//    public void helmetBlockRemoval(InventoryClickEvent event) {
 
-        HumanEntity player = event.getWhoClicked();
-
-        if (event.getSlotType() == InventoryType.SlotType.ARMOR) {
-            if (player.getInventory().getHelmet() == null)
-                return; // Player does not have helmet equipped
-            if (!player.getInventory().getHelmet().getType().name().startsWith("LEATHER_")) {
-                player.getInventory().setHelmet(HelmetCosmeticUtil.restoreOriginalHelmet(player.getInventory().getHelmet(), Color.WHITE));
-            }
-        }
-    }
+//        HumanEntity player = event.getWhoClicked();
+//
+//        if (event.getSlotType() == InventoryType.SlotType.ARMOR) {
+//            if (player.getInventory().getHelmet() == null)
+//                return; // Player does not have helmet equipped
+//            if (!player.getInventory().getHelmet().getType().name().startsWith("LEATHER_")) {
+//                player.getInventory().setHelmet(HelmetCosmeticUtil.restoreOriginalHelmet(player.getInventory().getHelmet(), Color.WHITE));
+//            }
+//        }
+//    }
 
 }

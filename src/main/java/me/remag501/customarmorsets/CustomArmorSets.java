@@ -15,6 +15,13 @@ import java.util.UUID;
 
 public final class CustomArmorSets extends JavaPlugin {
 
+    private static volatile boolean isServerShuttingDown = false;
+
+    // Getter for the shutdown status
+    public static boolean isServerShuttingDown() {
+        return isServerShuttingDown;
+    }
+
     private static Plugin plugin;
     @Override
     public void onEnable() {
@@ -50,13 +57,14 @@ public final class CustomArmorSets extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
-        getLogger().info("Custom Armor Sets have shut down!");
+        isServerShuttingDown = true;
         // Disable any kits that a player has equipped
         for (UUID uuid: CustomArmorSetsCore.equippedArmor.keySet()) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null)
-                CustomArmorSetsCore.unequipArmor(player);
+                CustomArmorSetsCore.unequipArmorAbilities(player); // Won't work since events can't get registered
         }
+        getLogger().info("Custom Armor Sets have shut down!");
     }
 
     public static Plugin getInstance() {

@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.utils;
 
+import me.remag501.customarmorsets.CustomArmorSets;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -15,20 +16,25 @@ import java.util.UUID;
 
 public class AttributesUtil {
 
-    private static final UUID HEALTH_MODIFIER_UUID = UUID.fromString("12345678-1234-1234-1234-1234567890ab");
-    private static final UUID SPEED_MODIFIER_UUID = UUID.fromString("abcdefab-cdef-1234-5678-abcdefabcdef");
-
     public static void getBootsOnDelay(Player player, Consumer<ItemStack> callback) {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                ItemStack boots = player.getInventory().getBoots();
-                if (boots != null && boots.getType() != Material.AIR) {
-                    callback.accept(boots);
-                    cancel();
-                }
+        boolean shouldBeSynchronous = CustomArmorSets.isServerShuttingDown();
+        if (shouldBeSynchronous) {
+            ItemStack boots = player.getInventory().getBoots();
+            if (boots != null && boots.getType() != Material.AIR) {
+                callback.accept(boots);
             }
-        }.runTaskTimer(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), 1L, 1L);
+        } else {
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    ItemStack boots = player.getInventory().getBoots();
+                    if (boots != null && boots.getType() != Material.AIR) {
+                        callback.accept(boots);
+                        cancel();
+                    }
+                }
+            }.runTaskTimer(CustomArmorSets.getInstance(), 1L, 1L);
+        }
     }
 
 
