@@ -1,7 +1,5 @@
 package me.remag501.customarmorsets.core;
 
-import me.remag501.customarmorsets.CustomArmorSets;
-import me.remag501.customarmorsets.listeners.CosmeticHelmetInterceptor;
 import me.remag501.customarmorsets.utils.HelmetCosmeticUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -27,21 +25,12 @@ public class CustomArmorSetsCore {
         }
 
         // Equip player head
-//        Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), () -> {
-//            ItemStack helmet = player.getInventory().getHelmet();
-//            if (helmet != null) {
-////                player.getInventory().setHelmet(HelmetCosmeticUtil.makeCosmeticHelmet(helmet, type.getHeadUrl()));
-//                for (Player viewer : Bukkit.getOnlinePlayers()) {
-//                    if (viewer.canSee(player)) {
-//                        HelmetCosmeticUtil.sendCosmeticHelmet(player, viewer, type.getHeadUrl());
-//                    }
-//                }
-//            }
-//        });
-//        applyCosmeticHelmet()
-//        CustomArmorSets plugin = (CustomArmorSets) CustomArmorSets.getInstance();
-//        plugin.getHelmetInterceptor().applyCosmeticHelmet(player, type.getHeadUrl());
-        HelmetCosmeticUtil.applyCosmeticHelmet(player, type.getHeadUrl());
+        Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), () -> {
+            ItemStack helmet = player.getInventory().getHelmet();
+            if (helmet != null) {
+                player.getInventory().setHelmet(HelmetCosmeticUtil.makeCosmeticHelmet(helmet, type.getHeadUrl()));
+            }
+        });
 
         // Create armor set instance, map it to player, and activate passive
         ArmorSet set = type.create();
@@ -59,10 +48,7 @@ public class CustomArmorSetsCore {
             ArmorSetType type = set.getType();
             ItemStack helmet = player.getInventory().getHelmet();
             if (helmet != null) {
-//                player.getInventory().setHelmet(HelmetCosmeticUtil.restoreOriginalHelmet(helmet, type.getLeatherColor()));
-//                CustomArmorSets plugin = (CustomArmorSets) CustomArmorSets.getInstance();
-//                plugin.getHelmetInterceptor().removeCosmetic(player);
-                HelmetCosmeticUtil.removeCosmetic(player);
+                player.getInventory().setHelmet(HelmetCosmeticUtil.restoreOriginalHelmet(helmet, type.getLeatherColor()));
             }
 
             // Remove armor set instance from player map and deactivate passive
