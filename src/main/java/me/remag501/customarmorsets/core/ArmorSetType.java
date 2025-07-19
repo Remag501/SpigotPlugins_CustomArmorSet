@@ -93,7 +93,39 @@ public enum ArmorSetType {
             Arrays.asList("§6Ability: §eArrow slash and knockback", "§6Passive: §eSpeed, Half HP, 25% more bow damage"),
             new int[]{1, 3, 2, 1},
             new int[]{45, 160, 140, 120},
-            new int[]{0, 0, 0, 0});
+            new int[]{0, 0, 0, 0}),
+    NECROMANCER("necromancer", "Necromancer", Color.PURPLE,
+            "http://textures.minecraft.net/texture/30d5d1d1c0a7de4fef5b6cf32c27e9f378279b11c372ce4cd0112a742556fc",
+            NecromancerArmorSet::new,
+            Arrays.asList(
+                    "§6Ability: §ePress F to revive mythic mobs, Ctrl+F to control them",
+                    "§6Passive: §eResurrect yourself every two minutes"
+            ),
+            new int[]{1, 3, 3, 1},
+            new int[]{50, 190, 190, 130},
+            new int[]{1, 1, 0, 0}),
+
+    ICEMAN("iceman", "Iceman", Color.AQUA,
+            "http://textures.minecraft.net/texture/4d7c1651a7853e9bb96126b57ecae3f926c9ff29c0f9fbb5ff5e9f7740ebc7",
+            IcemanArmorSet::new,
+            Arrays.asList(
+                    "§6Ability: §ePress F to summon ice ring around you dealing DoT to mobs",
+                    "§6Passive: §eFreeze mobs you hit, Faster movement"
+            ),
+            new int[]{1, 3, 2, 1},
+            new int[]{45, 170, 150, 120},
+            new int[]{0, 0, 0, 1}),
+
+    GOLEM_BUSTER("golem_buster", "Golem Buster", Color.ORANGE,
+            "http://textures.minecraft.net/texture/b69cfce1b1b7ac08a176bc16dfd9fc3d3707398f72319b45e8970bc64a510e",
+            GolemBusterArmorSet::new,
+            Arrays.asList(
+                    "§6Ability: §eF to use battery gun, Ctrl+F to transform into a golem (F to stun)",
+                    "§6Passive: §eReduced damage to mobs and projectiles, Gain battery on kills"
+            ),
+            new int[]{2, 4, 3, 1},
+            new int[]{55, 200, 180, 130},
+            new int[]{1, 1, 0, 0});
 
     private final String id;
     private final String displayName;
