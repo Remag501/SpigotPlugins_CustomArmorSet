@@ -39,6 +39,8 @@ public final class CustomArmorSets extends JavaPlugin {
         // Listener for broken items
         getServer().getPluginManager().registerEvents(new BrokenItemListener(), this);
         getServer().getPluginManager().registerEvents(new RepairListener(), this);
+        // Listener for damage stats
+        getServer().getPluginManager().registerEvents(new DamageStatsListener(), this);
         // Register listeners for armor sets
         getServer().getPluginManager().registerEvents(new SnowmanArmorSet(), this);
         getServer().getPluginManager().registerEvents(new InfernusArmorSet(), this);
