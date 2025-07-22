@@ -124,7 +124,7 @@ public class CooldownBarUtil {
 //        }
     }
 
-    private static void restorePlayerBar(Player player) {
+    public static void restorePlayerBar(Player player) {
         UUID uuid = player.getUniqueId();
 
         if (originalLevels.containsKey(uuid)) {
@@ -138,5 +138,15 @@ public class CooldownBarUtil {
         } else {
             player.setExp(0);
         }
+    }
+
+    public static void setLevel(Player player, int level) {
+        UUID uuid = player.getUniqueId();
+        if (!originalXp.containsKey(uuid)) {
+            originalXp.put(uuid, player.getExp());
+            originalLevels.put(uuid, player.getLevel());
+        }
+        player.setLevel(level);
+        player.setExp(0);
     }
 }
