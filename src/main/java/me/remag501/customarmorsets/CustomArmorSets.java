@@ -41,6 +41,8 @@ public final class CustomArmorSets extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new RepairListener(), this);
         // Listener for damage stats
         getServer().getPluginManager().registerEvents(new DamageStatsListener(), this);
+        // Mythic mobs
+        getServer().getPluginManager().registerEvents(new MythicMobsYamlGenerator(), this);
         // Register listeners for armor sets
         getServer().getPluginManager().registerEvents(new SnowmanArmorSet(), this);
         getServer().getPluginManager().registerEvents(new InfernusArmorSet(), this);
@@ -51,8 +53,8 @@ public final class CustomArmorSets extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new VampireArmorSet(), this);
         getServer().getPluginManager().registerEvents(new FisterArmorSet(), this);
         getServer().getPluginManager().registerEvents(new ArcherArmorSet(), this);
-//        getServer().getPluginManager().registerEvents(new NecromancerArmorSet(), this);
-//        getServer().getPluginManager().registerEvents(new IcemanArmorSet(), this);
+        getServer().getPluginManager().registerEvents(new NecromancerArmorSet(), this);
+        getServer().getPluginManager().registerEvents(new IcemanArmorSet(), this);
         getServer().getPluginManager().registerEvents(new GolemBusterArmorSet(), this);
         // Libraries
         getServer().getPluginManager().registerEvents(new ArmorListener(getConfig().getStringList("blocked")), this);
