@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armorsets;
 
+import io.lumine.mythic.api.adapters.AbstractEntity;
 import io.lumine.mythic.api.mobs.MythicMob;
 import io.lumine.mythic.api.mobs.entities.SpawnReason;
 import io.lumine.mythic.bukkit.BukkitAdapter;
@@ -11,12 +12,10 @@ import me.remag501.customarmorsets.core.ArmorSetType;
 import me.remag501.customarmorsets.core.CustomArmorSetsCore;
 import me.remag501.customarmorsets.listeners.MythicMobsYamlGenerator;
 import org.bukkit.*;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
@@ -27,6 +26,8 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -37,7 +38,9 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, Long> resurrectionCooldowns = new HashMap<>();
     private static final long RESURRECTION_COOLDOWN = 120 * 1000; // 2 minutes
     private static final Map<ArmorStand, MythicMob> killedMobs = new HashMap<>();
-    private static final Map<UUID, List<MythicMob>> summonedMobs = new HashMap<>();
+    private static final Map<UUID, List<ActiveMob>> summonedMobs = new HashMap<>();
+    private static final Map<UUID, BukkitTask> summonsTask = new HashMap<>();
+    private static final Map<ActiveMob, Long> summonTime = new HashMap<>();
 
     private static final String RESURRECTED_MOB_PREFIX = MythicMobsYamlGenerator.getPrefix();
 
@@ -47,18 +50,96 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void applyPassive(Player player) {
-        player.sendMessage("✅ You equipped the Necromancer set");
+        player.sendMessage("You equipped the Necromancer set");
+        summonedMobs.put(player.getUniqueId(), new ArrayList<>());
+        summonsTask.put(player.getUniqueId(), new BukkitRunnable() {
+            @Override
+            public void run() {
+                UUID uuid = player.getUniqueId();
+                List<ActiveMob> mobs = summonedMobs.get(uuid);
+                if (mobs == null || mobs.isEmpty()) return;
+
+                for (int i = 0; i < mobs.size(); i++) {
+                    ActiveMob activeMob = mobs.get(i);
+                    if (activeMob == null || activeMob.getEntity() == null || !activeMob.getEntity().isValid())
+                        continue;
+
+                    AbstractEntity abstractEntity = activeMob.getEntity();
+                    if (abstractEntity == null) continue;
+
+                    // Check time entity is alive
+                    long oldTime = summonTime.get(activeMob);
+                    long newTime = System.currentTimeMillis();
+                    int secondsPassed = (int) ((newTime - oldTime) / 1000);
+
+                    if (secondsPassed > 15) {
+                        despawnMob(activeMob);
+                        i--;
+                        continue;
+                    }
+
+                    Entity entity = abstractEntity.getBukkitEntity();
+
+                    // Slowly kill off mobs over 5 seconds
+                    if (secondsPassed >= 10) {
+                        // Hurt gradually
+                        double newHealth = Math.max(0, abstractEntity.getHealth() * 0.8); // heal 0.5 heart per tick
+                        abstractEntity.setHealth(newHealth);
+
+                        abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 100, 2, false, false));
+                        abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 100, 2, false, false));
+                        abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 100, 2, false, false));
+                        entity.getWorld().spawnParticle(
+                                Particle.SMOKE_LARGE,
+                                entity.getLocation().add(0, 0.5, 0),
+                                10, 0.3, 0.3, 0.3, 0.01
+                        );
+                    } else {
+
+                        // Heal gradually
+                        double maxHealth = abstractEntity.getMaxHealth();
+                        double newHealth = Math.min(maxHealth, abstractEntity.getHealth() + 1.0); // heal 0.5 heart per tick
+                        abstractEntity.setHealth(newHealth);
+
+                        // Normal Particle trail
+                        entity.getWorld().spawnParticle(
+                                Particle.SOUL,
+                                entity.getLocation().add(0, 0.5, 0),
+                                5, 0.3, 0.3, 0.3, 0.01
+                        );
+                    }
+
+                    // Teleport if too far
+                    if (entity.getLocation().distanceSquared(player.getLocation()) > 400) { // 20 blocks squared
+                        Location safeLoc = player.getLocation().clone().add(0, 1, 0);
+                        entity.teleport(safeLoc);
+                    }
+                }
+            }
+        }.runTaskTimer(CustomArmorSets.getInstance(), 0, 10));
     }
 
     @Override
     public void removePassive(Player player) {
-        player.sendMessage("❌ You removed the Necromancer set");
+        player.sendMessage("You removed the Necromancer set");
+        List<ActiveMob> mobs = summonedMobs.get(player.getUniqueId());
+        while (!mobs.isEmpty()) {
+            despawnMob(mobs.get(0));
+        }
+        summonedMobs.remove(player.getUniqueId());
+        summonsTask.get(player.getUniqueId()).cancel();
     }
 
     @Override
     public void triggerAbility(Player player) {
         // Check PDC matches up
         Plugin plugin = CustomArmorSets.getInstance();
+        // Check player has capacity for revival
+        List<ActiveMob> mobs = summonedMobs.get(player.getUniqueId());
+        if (mobs.size() >= 5) {
+            player.sendMessage("Max summons capacity reached!");
+            return;
+        }
         // Check for vampire orb in 5 block radius
         final int RADIUS = 4;
         for (Entity entity : player.getNearbyEntities(RADIUS, RADIUS, RADIUS)) {
@@ -68,13 +149,14 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                         && stand.getLocation().distanceSquared(player.getLocation()) <= RADIUS * RADIUS) {
                     stand.remove(); // destroy the orb
                     player.sendMessage(ChatColor.GOLD + "Born Again!");
-                    MythicMob resMob = killedMobs.get(entity);
-                    player.sendMessage("Maybe? " + resMob.getDisplayName());
-                    reviveMob(player, resMob);
+                    // Add mob to set
+                    ActiveMob revivedMob = reviveMob(player, killedMobs.get(entity));
+                    mobs.add(revivedMob);
+                    long now = System.currentTimeMillis();
+                    summonTime.put(revivedMob, now);
                 }
             }
         }
-
     }
 
     public ActiveMob reviveMob(Player player, MythicMob originalMythicMob) {
@@ -96,9 +178,6 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         Optional<MythicMob> optResurrectedMobType = MythicBukkit.inst().getMobManager().getMythicMob(resurrectedMobInternalName);
 
         if (optResurrectedMobType.isEmpty()) {
-//            player.sendMessage("§cError: No resurrected version found for " + originalMythicMob.getDisplayName() + " (§e" + resurrectedMobInternalName + "§c).");
-//            player.sendMessage("§cPlease ensure you have generated and moved the '" + resurrectedMobInternalName + ".yml' file.");
-//            player.sendMessage("§cIf you just started the server, trigger a MythicMobs reload and move files first.");
             player.sendMessage("§cResurrection has failed!");
             return null;
         }
@@ -116,10 +195,6 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         ActiveMob activeMob = resurrectedMobType.spawn(
                 BukkitAdapter.adapt(spawnLocation),
                 1.0 // Mob level (adjust as needed, 1.0 is default)
-                // Or whatever spawn reason is appropriate for your system
-                // prespawnFunc (not typically needed here)
-                // MythicSpawner (not typically needed here)
-                // Pass owner data. MythicMobs will set the owner from this.
         );
 
         if (activeMob == null) {
@@ -128,7 +203,6 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         }
 
         // --- 5. Explicitly set owner (redundant with spawnData but harmless and adds robustness) ---
-        // Some older MythicMobs versions or specific setups might benefit from this explicit call.
         activeMob.setOwner(ownerUUID);
 
         // Set name of the mob
@@ -154,11 +228,74 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         if (optActiveMob.isEmpty()) return; // Not a mythic mob
         // Logic for mythic mob
         optActiveMob.ifPresent(activeMob -> {
-
-            player.sendMessage("That was a Mythic Mob called " + activeMob.getDisplayName());
             spawnCosmeticHead(event.getEntity().getLocation(), activeMob, String.valueOf(player.getUniqueId()));
-
         });
+    }
+
+    @EventHandler
+    public void beforeEntityDeath(EntityDamageEvent event) {
+        // First, check if the entity is actually dying from this damage.
+        // We only intervene if the final damage is lethal (would bring health to 0 or less).
+        if (!(event.getEntity() instanceof LivingEntity livingEntity)) return; // Just to be safe
+        if (event.getFinalDamage() < livingEntity.getHealth()) {
+            return; // Not a lethal blow, let the event proceed normally
+        }
+
+        // 1. Check if the entity is an ActiveMythicMob
+        Optional<ActiveMob> optActiveMob =MythicBukkit.inst().getMobManager().getActiveMob(event.getEntity().getUniqueId());
+        if (optActiveMob.isEmpty()) {
+            return; // Not a MythicMob, do not interfere
+        }
+
+        ActiveMob activeMob = optActiveMob.get();
+        if (despawnMob(activeMob)) event.setCancelled(true);
+
+    }
+
+    private boolean despawnMob(ActiveMob activeMob) {
+        // Iterate through the summonedMobs map to find and remove the mob
+        boolean foundAndRemoved = false;
+        // Use an iterator to safely remove elements from the map if a player's list becomes empty
+        Iterator<Map.Entry<UUID, List<ActiveMob>>> mapIterator = summonedMobs.entrySet().iterator();
+
+        while (mapIterator.hasNext()) {
+            Map.Entry<UUID, List<ActiveMob>> entry = mapIterator.next();
+            List<ActiveMob> mobsOwnedByPlayer = entry.getValue();
+
+            // Attempt to remove the current activeMob from this player's list.
+            // CopyOnWriteArrayList's .remove() is thread-safe for this operation.
+            if (mobsOwnedByPlayer.remove(activeMob)) {
+                foundAndRemoved = true;
+                if (mobsOwnedByPlayer.isEmpty()) {
+//                    mapIterator.remove(); // Remove player's entry from the main map if their list is now empty
+                    Bukkit.getLogger().info("Player " + entry.getKey() + " no longer has active summoned mobs.");
+                }
+                break; // Mob found and removed, no need to check other players' lists
+            }
+        }
+
+        if (foundAndRemoved) {
+            // Despawn the mob gracefully
+            activeMob.despawn();
+
+            // Leave a particle effect to signal its disappearance
+            Entity entity = activeMob.getEntity().getBukkitEntity();
+            Location mobLoc = entity.getLocation();
+            mobLoc.getWorld().spawnParticle(
+                    Particle.CLOUD, // A cloud or smoke effect is good for despawning
+                    mobLoc.add(0, entity.getHeight() / 2.0, 0), // Spawn particles at the center of the mob's height
+                    50, // Number of particles
+                    0.4, 0.4, 0.4, // Offset (spread) on X, Y, Z axes
+                    0.01 // Speed of particles (often low for static effects like smoke/cloud)
+            );
+
+            // Add a sound effect for better feedback
+            mobLoc.getWorld().playSound(mobLoc, Sound.ENTITY_ILLUSIONER_MIRROR_MOVE, 0.7f, 1.2f); // Example sound
+
+            Bukkit.getLogger().info("Summoned mob " + activeMob.getDisplayName() + " (" + activeMob.getUniqueId() + ") despawned due to lethal damage.");
+            return true;
+        }
+        return false;
     }
 
     public void spawnCosmeticHead(Location loc, ActiveMob activeMob, String uuid) {
