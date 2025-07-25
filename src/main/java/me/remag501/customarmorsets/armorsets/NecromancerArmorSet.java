@@ -5,7 +5,15 @@ import io.lumine.mythic.api.mobs.MythicMob;
 import io.lumine.mythic.api.mobs.entities.SpawnReason;
 import io.lumine.mythic.bukkit.BukkitAdapter;
 import io.lumine.mythic.bukkit.MythicBukkit;
+import io.lumine.mythic.bukkit.compatibility.CompatibilityManager;
+import io.lumine.mythic.bukkit.compatibility.LibsDisguisesSupport;
+import io.lumine.mythic.bukkit.compatibility.MythicLibSupport;
 import io.lumine.mythic.core.mobs.ActiveMob;
+import me.libraryaddict.disguise.DisguiseAPI;
+import me.libraryaddict.disguise.disguisetypes.Disguise;
+import me.libraryaddict.disguise.disguisetypes.DisguiseType;
+import me.libraryaddict.disguise.disguisetypes.FlagWatcher;
+import me.libraryaddict.disguise.disguisetypes.MobDisguise;
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.core.ArmorSet;
 import me.remag501.customarmorsets.core.ArmorSetType;
@@ -28,6 +36,7 @@ import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -41,6 +50,8 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, List<ActiveMob>> summonedMobs = new HashMap<>();
     private static final Map<UUID, BukkitTask> summonsTask = new HashMap<>();
     private static final Map<ActiveMob, Long> summonTime = new HashMap<>();
+    private static final Map<UUID, ActiveMob> controlledMobs = new HashMap<>();
+    private static final Map<UUID, BukkitTask> controlTasks = new HashMap<>();
 
     private static final String RESURRECTED_MOB_PREFIX = MythicMobsYamlGenerator.getPrefix();
 
@@ -72,7 +83,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                     long newTime = System.currentTimeMillis();
                     int secondsPassed = (int) ((newTime - oldTime) / 1000);
 
-                    if (secondsPassed > 15) {
+                    if (secondsPassed > 30) {
                         despawnMob(activeMob);
                         i--;
                         continue;
@@ -81,7 +92,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                     Entity entity = abstractEntity.getBukkitEntity();
 
                     // Slowly kill off mobs over 5 seconds
-                    if (secondsPassed >= 10) {
+                    if (secondsPassed >= 25) {
                         // Hurt gradually
                         double newHealth = Math.max(0, abstractEntity.getHealth() * 0.8); // heal 0.5 heart per tick
                         abstractEntity.setHealth(newHealth);
@@ -132,19 +143,61 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void triggerAbility(Player player) {
-        // Check PDC matches up
+        // Relevant variables
         Plugin plugin = CustomArmorSets.getInstance();
-        // Check player has capacity for revival
         List<ActiveMob> mobs = summonedMobs.get(player.getUniqueId());
+        // Let player stop controlling their mob
+        if (controlledMobs.containsKey(player.getUniqueId()))
+            stopControlling(player);
+
+        // Check if player is trying to control mob
+        if (player.isSneaking() && mobs != null && !mobs.isEmpty()) {
+            ActiveMob selectedMob;
+            Location eyeLoc = player.getEyeLocation();
+            Vector direction = eyeLoc.getDirection().normalize();
+
+            double maxDistance = 20; // configurable range
+            double threshold = 1.5;  // max distance from ray to mob center
+
+            ActiveMob closestMob = null;
+            double closestDistance = maxDistance;
+
+            for (ActiveMob mob : mobs) {
+                if (mob == null || mob.getEntity() == null || !mob.getEntity().isValid()) continue;
+
+                Location mobLoc = mob.getEntity().getBukkitEntity().getLocation().add(0, mob.getEntity().getBukkitEntity().getHeight() / 2, 0);
+                Vector toMob = mobLoc.toVector().subtract(eyeLoc.toVector());
+
+                double projection = toMob.dot(direction); // how far along the ray
+                if (projection < 0 || projection > maxDistance) continue; // behind or too far
+
+                Vector closestPoint = eyeLoc.toVector().add(direction.multiply(projection));
+                double distanceToRay = mobLoc.toVector().distance(closestPoint);
+
+                if (distanceToRay <= threshold && projection < closestDistance) {
+                    closestDistance = projection;
+                    closestMob = mob;
+                }
+            }
+
+            selectedMob = closestMob;
+            if (selectedMob != null) {
+                player.sendMessage("You will control " + selectedMob.getDisplayName());
+                controlMob(player, selectedMob);
+            }
+        }
+
+        // Check player has capacity for revival
         if (mobs.size() >= 5) {
             player.sendMessage("Max summons capacity reached!");
             return;
         }
+
         // Check for vampire orb in 5 block radius
         final int RADIUS = 4;
         for (Entity entity : player.getNearbyEntities(RADIUS, RADIUS, RADIUS)) {
             if (entity instanceof ArmorStand stand) {
-                NamespacedKey key = new NamespacedKey(plugin, "necromancer_" + player.getUniqueId());
+                NamespacedKey key = new NamespacedKey(plugin, "necromancer_" + player.getUniqueId()); // Check PDC lines up
                 if (stand.getPersistentDataContainer().has(key, PersistentDataType.BYTE)
                         && stand.getLocation().distanceSquared(player.getLocation()) <= RADIUS * RADIUS) {
                     stand.remove(); // destroy the orb
@@ -157,6 +210,123 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                 }
             }
         }
+    }
+
+    private void controlMob(Player player, ActiveMob controlledMob) {
+        UUID uuid = player.getUniqueId();
+
+        // Prevent duplicates
+        if (controlledMobs.containsKey(uuid)) {
+            player.sendMessage(ChatColor.RED + "You are already controlling a mob!");
+            return;
+        }
+
+        // 1. Store the mob
+        controlledMobs.put(uuid, controlledMob);
+
+        // 2. Make the mob invisible and disable its AI
+        Entity mobEntity = controlledMob.getEntity().getBukkitEntity();
+        mobEntity.setInvulnerable(true);
+        mobEntity.setSilent(true);
+
+        // Disguise api stuff
+//        Disguise currentDisguise = DisguiseAPI.getDisguise(mobEntity);
+//        if (currentDisguise != null) {
+//            FlagWatcher watcher = currentDisguise.getWatcher();
+//            watcher.setInvisible(true);
+//            watcher.setCustomNameVisible(false); // Also good practice to hide custom names
+//            DisguiseAPI.disguiseEntity(mobEntity, currentDisguise);
+//        }
+//        DisguiseAPI.disguiseEntity(mobEntity, currentDisguise);
+        ;
+
+        LibsDisguisesSupport support = CompatibilityManager.LibsDisguises;
+        String disguiseStr = controlledMob.getType().getDisguise();
+        if (disguiseStr == null)
+            disguiseStr = "falling_block barrier setInvisible true";
+        else
+            disguiseStr += "setInvisible true";
+        player.sendMessage("The disguise is " + disguiseStr);
+        support.setDisguise(controlledMob, disguiseStr);
+
+        // If available, disable AI in MythicMobs
+//        try {
+//            mobEntity.setAI(false); // Vanilla API (for mobs that support AI)
+//        } catch (Exception ignored) {}
+
+        // 3. Apply disguise to player (visual)
+        MobDisguise disguise = new MobDisguise(DisguiseType.getType(controlledMob.getEntity().getBukkitEntity()));
+        disguise.setViewSelfDisguise(true); // Let player see themselves
+        disguise.setHideArmorFromSelf(true);
+        disguise.getWatcher().setCustomName(controlledMob.getDisplayName());
+        disguise.getWatcher().setCustomNameVisible(true);
+        disguise.setNotifyBar(null); // Hide "currently disguised as"
+        DisguiseAPI.disguiseToAll(player, disguise);
+
+        // 4. Start sync task
+        BukkitTask task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!player.isOnline() || !controlledMobs.containsKey(uuid)) {
+                    cancel();
+                    return;
+                }
+
+                // Teleport mob to player's position
+                mobEntity.teleport(player.getLocation());
+
+                // Sync health (player HP → mob HP)
+                controlledMob.getEntity().setHealth(player.getHealth());
+
+                // Optional: Sync mob health back to player
+                 player.setHealth(Math.min(player.getMaxHealth(), controlledMob.getEntity().getHealth()));
+            }
+        }.runTaskTimer(CustomArmorSets.getInstance(), 0L, 2L); // update every 2 ticks
+
+        controlTasks.put(uuid, task);
+
+        player.sendMessage(ChatColor.GREEN + "You are now controlling " + controlledMob.getDisplayName() + "!");
+    }
+
+    private void stopControlling(Player player) {
+        UUID uuid = player.getUniqueId();
+
+        if (!controlledMobs.containsKey(uuid)) {
+            player.sendMessage(ChatColor.RED + "You are not controlling any mob.");
+            return;
+        }
+
+        // 1. Cancel control loop
+        if (controlTasks.containsKey(uuid)) {
+            controlTasks.get(uuid).cancel();
+            controlTasks.remove(uuid);
+        }
+
+        // 2. Remove disguise
+        DisguiseAPI.undisguiseToAll(player);
+
+        // 3. Restore mob visibility & AI
+        ActiveMob mob = controlledMobs.remove(uuid);
+        if (mob != null && mob.getEntity() != null) {
+            Entity mobEntity = mob.getEntity().getBukkitEntity();
+            DisguiseAPI.undisguiseToAll(mobEntity);
+            mobEntity.setSilent(false);
+
+            // Disguise api stuff
+            Disguise currentDisguise = DisguiseAPI.getDisguise(mobEntity);
+            if (currentDisguise != null) {
+                FlagWatcher watcher = currentDisguise.getWatcher();
+                watcher.setInvisible(false);
+                watcher.setCustomNameVisible(false); // Also good practice to hide custom names
+                DisguiseAPI.disguiseEntity(mobEntity, currentDisguise);
+            }
+            DisguiseAPI.disguiseEntity(mobEntity, currentDisguise);
+//            try {
+//                mobEntity.setAI(true);
+//            } catch (Exception ignored) {}
+        }
+
+        player.sendMessage(ChatColor.YELLOW + "You are no longer controlling a mob.");
     }
 
     public ActiveMob reviveMob(Player player, MythicMob originalMythicMob) {
@@ -266,10 +436,10 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             // CopyOnWriteArrayList's .remove() is thread-safe for this operation.
             if (mobsOwnedByPlayer.remove(activeMob)) {
                 foundAndRemoved = true;
-                if (mobsOwnedByPlayer.isEmpty()) {
+//                if (mobsOwnedByPlayer.isEmpty()) {
 //                    mapIterator.remove(); // Remove player's entry from the main map if their list is now empty
-                    Bukkit.getLogger().info("Player " + entry.getKey() + " no longer has active summoned mobs.");
-                }
+//                    Bukkit.getLogger().info("Player " + entry.getKey() + " no longer has active summoned mobs.");
+//                }
                 break; // Mob found and removed, no need to check other players' lists
             }
         }
