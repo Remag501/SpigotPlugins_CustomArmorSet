@@ -83,7 +83,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                     long newTime = System.currentTimeMillis();
                     int secondsPassed = (int) ((newTime - oldTime) / 1000);
 
-                    if (secondsPassed > 30) {
+                    if (secondsPassed > 1000) {
                         despawnMob(activeMob);
                         i--;
                         continue;
@@ -92,7 +92,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                     Entity entity = abstractEntity.getBukkitEntity();
 
                     // Slowly kill off mobs over 5 seconds
-                    if (secondsPassed >= 25) {
+                    if (secondsPassed >= 1000) {
                         // Hurt gradually
                         double newHealth = Math.max(0, abstractEntity.getHealth() * 0.8); // heal 0.5 heart per tick
                         abstractEntity.setHealth(newHealth);
@@ -227,26 +227,13 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         // 2. Make the mob invisible and disable its AI
         Entity mobEntity = controlledMob.getEntity().getBukkitEntity();
         mobEntity.setInvulnerable(true);
-        mobEntity.setSilent(true);
+        mobEntity.setSilent(true); // Just being safe, disguise should this
 
         // Disguise api stuff
-//        Disguise currentDisguise = DisguiseAPI.getDisguise(mobEntity);
-//        if (currentDisguise != null) {
-//            FlagWatcher watcher = currentDisguise.getWatcher();
-//            watcher.setInvisible(true);
-//            watcher.setCustomNameVisible(false); // Also good practice to hide custom names
-//            DisguiseAPI.disguiseEntity(mobEntity, currentDisguise);
-//        }
-//        DisguiseAPI.disguiseEntity(mobEntity, currentDisguise);
-        ;
-
         LibsDisguisesSupport support = CompatibilityManager.LibsDisguises;
-        String disguiseStr = controlledMob.getType().getDisguise();
-        if (disguiseStr == null)
-            disguiseStr = "falling_block barrier setInvisible true";
-        else
-            disguiseStr += "setInvisible true";
-        player.sendMessage("The disguise is " + disguiseStr);
+//        String disguiseStr = controlledMob.getType().getDisguise();
+        String disguiseStr = "Block_Display barrier setInvisible true setBurning false setReplaceSounds false setPlayIdleSounds false setCustomNameVisible false";
+//        player.sendMessage("The disguise is " + disguiseStr);
         support.setDisguise(controlledMob, disguiseStr);
 
         // If available, disable AI in MythicMobs
@@ -256,6 +243,8 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
 
         // 3. Apply disguise to player (visual)
         MobDisguise disguise = new MobDisguise(DisguiseType.getType(controlledMob.getEntity().getBukkitEntity()));
+//        MobDisguise disguise = new MobDisguise(DisguiseType.CAVE_SPIDER);
+        disguise.setHearSelfDisguise(true);
         disguise.setViewSelfDisguise(true); // Let player see themselves
         disguise.setHideArmorFromSelf(true);
         disguise.getWatcher().setCustomName(controlledMob.getDisplayName());
@@ -263,23 +252,30 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         disguise.setNotifyBar(null); // Hide "currently disguised as"
         DisguiseAPI.disguiseToAll(player, disguise);
 
+        // First sync player with the mob
+        player.teleport(mobEntity.getLocation());
+        player.setHealth(Math.min(player.getMaxHealth(), controlledMob.getEntity().getHealth()));
+        // Sync other attributes eventually
+
         // 4. Start sync task
         BukkitTask task = new BukkitRunnable() {
             @Override
             public void run() {
                 if (!player.isOnline() || !controlledMobs.containsKey(uuid)) {
                     cancel();
-                    return;
                 }
 
                 // Teleport mob to player's position
-                mobEntity.teleport(player.getLocation());
+                Vector velocity = player.getLocation().toVector()
+                        .subtract(mobEntity.getLocation().toVector())
+                        .multiply(0.5); // follow speed
+                mobEntity.setVelocity(velocity);
 
                 // Sync health (player HP → mob HP)
-                controlledMob.getEntity().setHealth(player.getHealth());
+//                controlledMob.getEntity().setHealth(player.getHealth());
 
                 // Optional: Sync mob health back to player
-                 player.setHealth(Math.min(player.getMaxHealth(), controlledMob.getEntity().getHealth()));
+//                 player.setHealth(Math.min(player.getMaxHealth(), controlledMob.getEntity().getHealth()));
             }
         }.runTaskTimer(CustomArmorSets.getInstance(), 0L, 2L); // update every 2 ticks
 
@@ -423,6 +419,19 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     }
 
     private boolean despawnMob(ActiveMob activeMob) {
+        // To remove 'activeMob' from the map and get the Player UUID before removal:
+        for (Map.Entry<UUID, ActiveMob> entry : controlledMobs.entrySet()) {
+            if (entry.getValue().equals(activeMob)) { // Check if the ActiveMob object matches
+                UUID playerUUID = entry.getKey(); // Get the Player UUID (the key)
+                Player player = Bukkit.getPlayer(playerUUID); // Get the Bukkit Player object (can be null if offline)
+
+                if (player != null) {
+                    stopControlling(player); // Call your stopControlling method with the Player object
+                }
+//                iterator.remove(); // Safely remove the entry (Player UUID -> ActiveMob)
+                break; // Assuming each ActiveMob instance is only mapped once
+            }
+        }
         // Iterate through the summonedMobs map to find and remove the mob
         boolean foundAndRemoved = false;
         // Use an iterator to safely remove elements from the map if a player's list becomes empty

@@ -1,12 +1,13 @@
 package me.remag501.customarmorsets.armorsets;
 
+import me.libraryaddict.disguise.DisguiseAPI;
+import me.libraryaddict.disguise.disguisetypes.DisguiseType;
+import me.libraryaddict.disguise.disguisetypes.MobDisguise;
 import me.remag501.customarmorsets.core.ArmorSet;
 import me.remag501.customarmorsets.core.ArmorSetType;
 import me.remag501.customarmorsets.core.CustomArmorSetsCore;
 import org.bukkit.*;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Snowball;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -36,18 +37,36 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void triggerAbility(Player player) {
-        long now = System.currentTimeMillis();
+//        long now = System.currentTimeMillis();
+//
+//        if (now - cooldown < 5000) {
+//            player.sendMessage("⏳ Ability on cooldown!");
+//            return;
+//        }
+//
+//        Snowball snowball = player.launchProjectile(Snowball.class);
+//        snowball.setShooter(player);
+//        snowball.setVelocity(player.getLocation().getDirection().multiply(1.5));
+//        player.sendMessage("❄️ Snowball launched!");
+//        cooldown = now;
 
-        if (now - cooldown < 5000) {
-            player.sendMessage("⏳ Ability on cooldown!");
-            return;
-        }
+//        MobDisguise disguise = new MobDisguise(DisguiseType.CAVE_SPIDER);
+//        disguise.setHearSelfDisguise(true);
+//        disguise.setViewSelfDisguise(true); // Let player see themselves
+//        disguise.setHideArmorFromSelf(true);
+//        disguise.getWatcher().setCustomName(player.getDisplayName());
+//        disguise.getWatcher().setCustomNameVisible(true);
+//        disguise.setNotifyBar(null); // Hide "currently disguised as"
+//        DisguiseAPI.disguiseToAll(player, disguise);
 
-        Snowball snowball = player.launchProjectile(Snowball.class);
-        snowball.setShooter(player);
-        snowball.setVelocity(player.getLocation().getDirection().multiply(1.5));
-        player.sendMessage("❄️ Snowball launched!");
-        cooldown = now;
+        Location location = player.getLocation();
+        World world = location.getWorld();
+
+        // Spawn the zombie entity at the specified location
+        // The spawnEntity method returns the spawned entity, which can be cast to Zombie.
+        Zombie zombie = (Zombie) world.spawnEntity(location, EntityType.ZOMBIE);
+        zombie.setInvulnerable(true);
+//        zombie.setAI(false);
     }
 
     @EventHandler
@@ -63,6 +82,9 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
 
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
+        if (true)
+            return;
+
         Player player = event.getPlayer();
         ArmorSet set = CustomArmorSetsCore.getArmorSet(player);
         if (!(set instanceof SnowmanArmorSet)) return;
