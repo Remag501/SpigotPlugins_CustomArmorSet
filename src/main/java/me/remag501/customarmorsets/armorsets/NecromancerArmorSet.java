@@ -2,12 +2,10 @@ package me.remag501.customarmorsets.armorsets;
 
 import io.lumine.mythic.api.adapters.AbstractEntity;
 import io.lumine.mythic.api.mobs.MythicMob;
-import io.lumine.mythic.api.mobs.entities.SpawnReason;
 import io.lumine.mythic.bukkit.BukkitAdapter;
 import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.bukkit.compatibility.CompatibilityManager;
 import io.lumine.mythic.bukkit.compatibility.LibsDisguisesSupport;
-import io.lumine.mythic.bukkit.compatibility.MythicLibSupport;
 import io.lumine.mythic.core.mobs.ActiveMob;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.Disguise;
@@ -19,13 +17,17 @@ import me.remag501.customarmorsets.core.ArmorSet;
 import me.remag501.customarmorsets.core.ArmorSetType;
 import me.remag501.customarmorsets.core.CustomArmorSetsCore;
 import me.remag501.customarmorsets.listeners.MythicMobsYamlGenerator;
+import me.remag501.customarmorsets.utils.AttributesUtil;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -41,6 +43,8 @@ import org.bukkit.util.Vector;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+
+import static me.remag501.customarmorsets.utils.PlayerSyncUtil.*;
 
 public class NecromancerArmorSet extends ArmorSet implements Listener {
 
@@ -83,16 +87,26 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                     long newTime = System.currentTimeMillis();
                     int secondsPassed = (int) ((newTime - oldTime) / 1000);
 
-                    if (secondsPassed > 1000) {
+                    if (secondsPassed > 20) {
                         despawnMob(activeMob);
                         i--;
                         continue;
                     }
 
                     Entity entity = abstractEntity.getBukkitEntity();
+                    // Check if player is controlling entity
+                    boolean isControlledByPlayer = false;
+                    ActiveMob controlledMob = controlledMobs.get(player.getUniqueId());
+                    if (controlledMob != null && controlledMob.equals(activeMob))
+                        isControlledByPlayer = true;
 
                     // Slowly kill off mobs over 5 seconds
-                    if (secondsPassed >= 1000) {
+                    if (secondsPassed >= 15) {
+                        //
+                        if (isControlledByPlayer) {
+                            player.sendMessage("You cannot control decaying mobs");
+                            stopControlling(player);
+                        }
                         // Hurt gradually
                         double newHealth = Math.max(0, abstractEntity.getHealth() * 0.8); // heal 0.5 heart per tick
                         abstractEntity.setHealth(newHealth);
@@ -106,11 +120,13 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                                 10, 0.3, 0.3, 0.3, 0.01
                         );
                     } else {
-
-                        // Heal gradually
                         double maxHealth = abstractEntity.getMaxHealth();
                         double newHealth = Math.min(maxHealth, abstractEntity.getHealth() + 1.0); // heal 0.5 heart per tick
-                        abstractEntity.setHealth(newHealth);
+                        // Heal gradually
+                        if (isControlledByPlayer)
+                            player.setHealth(newHealth);
+                        else
+                            abstractEntity.setHealth(newHealth);
 
                         // Normal Particle trail
                         entity.getWorld().spawnParticle(
@@ -147,8 +163,10 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         Plugin plugin = CustomArmorSets.getInstance();
         List<ActiveMob> mobs = summonedMobs.get(player.getUniqueId());
         // Let player stop controlling their mob
-        if (controlledMobs.containsKey(player.getUniqueId()))
+        if (controlledMobs.containsKey(player.getUniqueId())) {
             stopControlling(player);
+            return;
+        }
 
         // Check if player is trying to control mob
         if (player.isSneaking() && mobs != null && !mobs.isEmpty()) {
@@ -231,15 +249,8 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
 
         // Disguise api stuff
         LibsDisguisesSupport support = CompatibilityManager.LibsDisguises;
-//        String disguiseStr = controlledMob.getType().getDisguise();
         String disguiseStr = "Block_Display barrier setInvisible true setBurning false setReplaceSounds false setPlayIdleSounds false setCustomNameVisible false";
-//        player.sendMessage("The disguise is " + disguiseStr);
         support.setDisguise(controlledMob, disguiseStr);
-
-        // If available, disable AI in MythicMobs
-//        try {
-//            mobEntity.setAI(false); // Vanilla API (for mobs that support AI)
-//        } catch (Exception ignored) {}
 
         // 3. Apply disguise to player (visual)
         MobDisguise disguise = new MobDisguise(DisguiseType.getType(controlledMob.getEntity().getBukkitEntity()));
@@ -252,10 +263,58 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         disguise.setNotifyBar(null); // Hide "currently disguised as"
         DisguiseAPI.disguiseToAll(player, disguise);
 
-        // First sync player with the mob
+        // First sync player with the mob's location
         player.teleport(mobEntity.getLocation());
-        player.setHealth(Math.min(player.getMaxHealth(), controlledMob.getEntity().getHealth()));
-        // Sync other attributes eventually
+        // Get attribute values
+        double speed = controlledMob.getType().getMovementSpeed(controlledMob);
+        // MythicMobs config didn’t define speed
+        if (speed == -1.0) {
+            if (mobEntity instanceof LivingEntity living) {
+                AttributeInstance attr = living.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
+                if (attr != null) {
+                    speed = attr.getValue() / 0.1;
+                } else {
+                    speed = 1.0; // Default speed
+                }
+            } else {
+                speed = 1.0; // Non-living mobs default to normal speed
+            }
+        }
+        // Handle flight case
+        if (controlledMob.getEntity().isFlyingMob()) {
+            player.setAllowFlight(true);
+            player.setFlying(true);
+            float flySpeed = (float) controlledMob.getType().getFlyingSpeed(controlledMob);
+            if (flySpeed == -1) { // Not setup in config
+                if (mobEntity instanceof LivingEntity living) {
+                    AttributeInstance attr = living.getAttribute(Attribute.GENERIC_FLYING_SPEED);
+                    if (attr != null) {
+                        flySpeed = (float) (attr.getValue());
+                    } else {
+                        flySpeed = (float) 0.1; // Default speed
+                        player.sendMessage("Default Speed");
+                    }
+                } else {
+                    flySpeed = (float) 0.1; // Non-living mobs default to normal speed
+                }
+            }
+            player.setFlySpeed(flySpeed);
+            player.sendMessage(" " + flySpeed);
+        }
+        // Apply attributes
+        AttributesUtil.applyHealthDirect(player, controlledMob.getEntity().getMaxHealth() / 20.0);
+        AttributesUtil.applySpeedDirect(player, speed); // get speed here
+        AttributesUtil.applyDamageDirect(player, controlledMob.getType().getDamage(controlledMob) / 1.0);
+        // Util functions for major syncs
+        if (mobEntity instanceof LivingEntity livingEntity) {
+            syncPotionEffects(player, livingEntity);
+            syncInventory(player, livingEntity);
+            syncHealth(player, livingEntity);
+        }
+
+        Bukkit.getScheduler().runTaskLater(CustomArmorSets.getInstance(), () -> {
+            player.setHealth(controlledMob.getEntity().getHealth()); // Prevent bugs where health doesn't sync in time
+        }, 2L);
 
         // 4. Start sync task
         BukkitTask task = new BukkitRunnable() {
@@ -271,11 +330,11 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                         .multiply(0.5); // follow speed
                 mobEntity.setVelocity(velocity);
 
-                // Sync health (player HP → mob HP)
-//                controlledMob.getEntity().setHealth(player.getHealth());
+//                 Sync health (player HP → mob HP)
+                controlledMob.getEntity().setHealth(player.getHealth());
 
-                // Optional: Sync mob health back to player
-//                 player.setHealth(Math.min(player.getMaxHealth(), controlledMob.getEntity().getHealth()));
+                // Optional: Sync mob health back to player (technically won't work due to multiple threads overriding)
+//                 player.setHealth(controlledMob.getEntity().getHealth());
             }
         }.runTaskTimer(CustomArmorSets.getInstance(), 0L, 2L); // update every 2 ticks
 
@@ -317,10 +376,15 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                 DisguiseAPI.disguiseEntity(mobEntity, currentDisguise);
             }
             DisguiseAPI.disguiseEntity(mobEntity, currentDisguise);
-//            try {
-//                mobEntity.setAI(true);
-//            } catch (Exception ignored) {}
         }
+
+        // Reset attributes
+        AttributesUtil.restoreDefaults(player);
+
+        // Major util syncs
+        restorePotionEffects(player);
+        restoreInventory(player);
+        restoreHealth(player);
 
         player.sendMessage(ChatColor.YELLOW + "You are no longer controlling a mob.");
     }
@@ -383,6 +447,15 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerDeath(PlayerDeathEvent event) {
+    }
+
+    @EventHandler
+    public void onPlayerCancelFlight(PlayerToggleFlightEvent event) {
+        ActiveMob activeMob = controlledMobs.get(event.getPlayer().getUniqueId());
+        if (activeMob == null)
+            return; // We can assume if a player is controlling a mob they have the set
+        if (activeMob.getEntity().isFlyingMob() && event.getPlayer().isFlying()) // Player quit flight while controlling flight mob
+            stopControlling(event.getPlayer()); // Stop player from controlling mob
     }
 
     @EventHandler
