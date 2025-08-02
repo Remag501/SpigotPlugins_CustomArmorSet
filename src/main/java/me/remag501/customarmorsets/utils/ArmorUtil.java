@@ -23,7 +23,7 @@ import java.util.UUID;
 public class ArmorUtil {
 
     public static ItemStack createLeatherArmorPiece(JavaPlugin plugin, Material material, String displayName, List<String> lore,
-                                                    Color color, String armorSetId, int armorPoints, int durability, int armorToughness) {
+                                                    int color, int customModelData, String armorSetId, int armorPoints, int durability, int armorToughness) {
         if (!material.name().startsWith("LEATHER_")) {
             throw new IllegalArgumentException("Material must be a leather armor piece!");
         }
@@ -68,8 +68,9 @@ public class ArmorUtil {
         meta.setDisplayName(ChatColor.RESET + displayName);
         meta.setLore(lore);
 
-        // Set dye color
-        meta.setColor(color);
+        // Set dye color and cmd
+        meta.setColor(Color.fromRGB(color));
+        meta.setCustomModelData(customModelData);
 
         // Tag with armor family ID
         PersistentDataContainer container = meta.getPersistentDataContainer();
@@ -93,13 +94,13 @@ public class ArmorUtil {
         return item;
     }
 
-    public static ItemStack[] createLeatherArmorSet(JavaPlugin plugin, String displayName, List<String> lore, Color color,
+    public static ItemStack[] createLeatherArmorSet(JavaPlugin plugin, String displayName, List<String> lore, int color, int customModelData,
                                                     String armorSetId, int[] armorPoints, int[] durability, int[] armorToughness) {
         return new ItemStack[]{
-                createLeatherArmorPiece(plugin, Material.LEATHER_HELMET, displayName + " Helmet", lore, color, armorSetId, armorPoints[0], durability[0], armorToughness[0]),
-                createLeatherArmorPiece(plugin, Material.LEATHER_CHESTPLATE, displayName + " Chestplate", lore, color, armorSetId, armorPoints[1], durability[1], armorToughness[1]),
-                createLeatherArmorPiece(plugin, Material.LEATHER_LEGGINGS, displayName + " Leggings", lore, color, armorSetId, armorPoints[2], durability[2], armorToughness[2]),
-                createLeatherArmorPiece(plugin, Material.LEATHER_BOOTS, displayName + " Boots", lore, color, armorSetId, armorPoints[3], durability[3], armorToughness[3])
+                createLeatherArmorPiece(plugin, Material.LEATHER_HELMET, displayName + " Helmet", lore, color, customModelData, armorSetId, armorPoints[0], durability[0], armorToughness[0]),
+                createLeatherArmorPiece(plugin, Material.LEATHER_CHESTPLATE, displayName + " Chestplate", lore, color, customModelData, armorSetId, armorPoints[1], durability[1], armorToughness[1]),
+                createLeatherArmorPiece(plugin, Material.LEATHER_LEGGINGS, displayName + " Leggings", lore, color, customModelData, armorSetId, armorPoints[2], durability[2], armorToughness[2]),
+                createLeatherArmorPiece(plugin, Material.LEATHER_BOOTS, displayName + " Boots", lore, color, customModelData, armorSetId, armorPoints[3], durability[3], armorToughness[3])
         };
     }
 

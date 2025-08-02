@@ -3,6 +3,7 @@ package me.remag501.customarmorsets.core;
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.utils.HelmetCosmeticUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -56,7 +57,7 @@ public class CustomArmorSetsCore {
         if (type != null) {
             ItemStack helmet = player.getInventory().getHelmet();
             if (helmet != null) {
-                player.getInventory().setHelmet(HelmetCosmeticUtil.restoreOriginalHelmet(helmet, type.getLeatherColor()));
+                player.getInventory().setHelmet(HelmetCosmeticUtil.restoreOriginalHelmet(helmet, Color.fromRGB(type.getLeatherColor())));
             }
             equippedHelmet.remove(player.getUniqueId());
         }

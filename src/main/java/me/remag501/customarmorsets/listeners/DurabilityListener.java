@@ -5,10 +5,7 @@ import me.remag501.customarmorsets.utils.ArmorUtil;
 import me.remag501.customarmorsets.utils.HelmetCosmeticUtil;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorEquipEvent;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorType;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -140,7 +137,7 @@ public class DurabilityListener implements Listener {
             // Handle cosmetic case
             ArmorSetType armorSetType = ArmorUtil.isFullArmorSet(player);
             if (armorSetType != null) // Revert cosmetic
-                HelmetCosmeticUtil.restoreOriginalHelmet(storage, armorSetType.getLeatherColor());
+                HelmetCosmeticUtil.restoreOriginalHelmet(storage, Color.fromRGB(armorSetType.getLeatherColor()));
             // Handle normally
             inventory.setHelmet(null);
             armorType = ArmorType.HELMET;
