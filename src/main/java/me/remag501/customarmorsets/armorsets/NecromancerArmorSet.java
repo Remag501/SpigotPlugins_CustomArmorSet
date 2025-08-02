@@ -26,8 +26,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
+import org.bukkit.event.player.PlayerToggleSprintEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -381,6 +384,11 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         // Reset attributes
         AttributesUtil.restoreDefaults(player);
 
+        // Make mob vulnerable again
+        Entity mobEntity = mob.getEntity().getBukkitEntity();
+        mobEntity.setInvulnerable(false);
+        mobEntity.setSilent(false); // Just being safe, disguise should this
+
         // Major util syncs
         restorePotionEffects(player);
         restoreInventory(player);
@@ -489,6 +497,32 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         ActiveMob activeMob = optActiveMob.get();
         if (despawnMob(activeMob)) event.setCancelled(true);
 
+    }
+
+    @EventHandler
+    public void beforePlayerDeath(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        ActiveMob controlledMob = controlledMobs.get(player.getUniqueId());
+        if (controlledMob == null) return;
+        if (event.getFinalDamage() > player.getHealth()) {
+            // Player is about to die
+            event.setCancelled(true);
+            despawnMob(controlledMob);
+        }
+
+    }
+
+    @EventHandler
+    public void onSprint(PlayerToggleSprintEvent event){ // Don't let players get faster when controlling mobs
+        if (controlledMobs.get(event.getPlayer().getUniqueId()) != null)
+            event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onPickup(EntityPickupItemEvent event){
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (controlledMobs.get(player.getUniqueId()) != null)
+            event.setCancelled(true);
     }
 
     private boolean despawnMob(ActiveMob activeMob) {

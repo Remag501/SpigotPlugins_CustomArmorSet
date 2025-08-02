@@ -3,6 +3,9 @@ package me.remag501.customarmorsets.armorsets;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
+import me.libraryaddict.disguise.disguisetypes.PlayerDisguise;
+import me.libraryaddict.disguise.disguisetypes.watchers.PlayerWatcher;
+import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.core.ArmorSet;
 import me.remag501.customarmorsets.core.ArmorSetType;
 import me.remag501.customarmorsets.core.CustomArmorSetsCore;
@@ -14,6 +17,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class SnowmanArmorSet extends ArmorSet implements Listener {
 
@@ -35,49 +39,70 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
         player.sendMessage("❌ You removed the snowman set");
     }
 
-    @Override
     public void triggerAbility(Player player) {
-//        long now = System.currentTimeMillis();
-//
-//        if (now - cooldown < 5000) {
-//            player.sendMessage("⏳ Ability on cooldown!");
-//            return;
-//        }
-//
-//        Snowball snowball = player.launchProjectile(Snowball.class);
-//        snowball.setShooter(player);
-//        snowball.setVelocity(player.getLocation().getDirection().multiply(1.5));
-//        player.sendMessage("❄️ Snowball launched!");
-//        cooldown = now;
-
-//        MobDisguise disguise = new MobDisguise(DisguiseType.CAVE_SPIDER);
-//        disguise.setHearSelfDisguise(true);
-//        disguise.setViewSelfDisguise(true); // Let player see themselves
-//        disguise.setHideArmorFromSelf(true);
-//        disguise.getWatcher().setCustomName(player.getDisplayName());
-//        disguise.getWatcher().setCustomNameVisible(true);
-//        disguise.setNotifyBar(null); // Hide "currently disguised as"
-//        DisguiseAPI.disguiseToAll(player, disguise);
-
         Location location = player.getLocation();
         World world = location.getWorld();
 
-        // Spawn the zombie entity at the specified location
-        // The spawnEntity method returns the spawned entity, which can be cast to Zombie.
-        Zombie zombie = (Zombie) world.spawnEntity(location, EntityType.ZOMBIE);
-        zombie.setInvulnerable(true);
-//        zombie.setAI(false);
+        // 1. Spawn decoy (use ArmorStand disguised as player)
+        ArmorStand decoy = (ArmorStand) world.spawnEntity(location, EntityType.ARMOR_STAND);
+//        decoy.setVisible(false);
+        decoy.setGravity(false);
+        decoy.setMarker(false); // small hitbox
+//        decoy.setInvulnerable(true);
+
+        // Apply disguise (optional)
+        PlayerDisguise disguise = new PlayerDisguise(player.getName());
+        PlayerWatcher watcher = disguise.getWatcher();
+
+        // Copy each armor slot
+        watcher.setHelmet(player.getInventory().getHelmet());
+        watcher.setChestplate(player.getInventory().getChestplate());
+        watcher.setLeggings(player.getInventory().getLeggings());
+        watcher.setBoots(player.getInventory().getBoots());
+
+        // Optional: copy held item
+        watcher.setItemInMainHand(player.getInventory().getItemInMainHand());
+        watcher.setItemInOffHand(player.getInventory().getItemInOffHand());
+
+        // Apply disguise
+        DisguiseAPI.disguiseToAll(decoy, disguise);
+
+        // 2. Run AI task
+        BukkitRunnable task = new BukkitRunnable() {
+            int lifetime = 200; // 10 seconds
+
+            @Override
+            public void run() {
+                if (!decoy.isValid() || lifetime <= 0) {
+                    decoy.remove();
+                    cancel();
+                    return;
+                }
+
+                for (Entity nearby : decoy.getNearbyEntities(20, 20, 20)) {
+                    if (nearby instanceof Mob mob) {
+                        if (mob.getTarget() == null || mob.getTarget().equals(player)) {
+                            mob.setTarget(decoy); // force target only if free/targeting player
+                        }
+                    }
+                }
+
+                lifetime -= 20; // decrease lifetime
+            }
+        };
+        task.runTaskTimer(CustomArmorSets.getInstance(), 0L, 20L); // check every second
     }
+
 
     @EventHandler
     public void onEntityHit(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player player)) return;
-        if (!(event.getEntity() instanceof LivingEntity target)) return;
-
-        ArmorSet set = CustomArmorSetsCore.getArmorSet(player);
-        if (!(set instanceof SnowmanArmorSet)) return;
-
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 60, 1)); // 3 seconds of Slowness II
+//        if (!(event.getDamager() instanceof Player player)) return;
+//        if (!(event.getEntity() instanceof LivingEntity target)) return;
+        if (event.getEntity() instanceof ArmorStand) {
+            event.getEntity().playEffect(EntityEffect.TOTEM_RESURRECT);
+            CustomArmorSets.getInstance().getLogger().info("Somthing");
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
