@@ -46,8 +46,9 @@ import static me.remag501.customarmorsets.utils.PlayerSyncUtil.*;
 
 public class NecromancerArmorSet extends ArmorSet implements Listener {
 
+    private static final Long RESURRECTION_COOLDOWN = 12 * 1000L;
     private static final Map<UUID, Long> resurrectionCooldowns = new HashMap<>();
-    private static final long RESURRECTION_COOLDOWN = 120 * 1000; // 2 minutes
+//    private static final Map<UUID, BukkitTask> resurrectingTask = new HashMap<>();
     private static final Map<ArmorStand, MythicMob> killedMobs = new HashMap<>();
     private static final Map<UUID, List<ActiveMob>> summonedMobs = new HashMap<>();
     private static final Map<UUID, BukkitTask> summonsTask = new HashMap<>();
@@ -66,12 +67,38 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     @Override
     public void applyPassive(Player player) {
         player.sendMessage("You equipped the Necromancer set");
-        summonedMobs.put(player.getUniqueId(), new ArrayList<>());
-        summonsTask.put(player.getUniqueId(), new BukkitRunnable() {
+        UUID uuid = player.getUniqueId();
+        summonedMobs.put(uuid, new ArrayList<>());
+        summonsTask.put(uuid, new BukkitRunnable() {
+            private boolean notified = false;
+            private long lastStartTime = 0L;
             @Override
             public void run() {
-                UUID uuid = player.getUniqueId();
                 List<ActiveMob> mobs = summonedMobs.get(uuid);
+
+                // Skip if cooldown is not running
+                if (!resurrectionCooldowns.containsKey(uuid)) {
+                    notified = false; // Reset when cooldown not present
+                    lastStartTime = 0L;
+                    return;
+                }
+
+                long startTime = resurrectionCooldowns.get(uuid);
+                long now = System.currentTimeMillis();
+
+                // Detect passive reset: start time changed (new cooldown started)
+                if (startTime > lastStartTime) {
+                    notified = false; // Allow next notification
+                    lastStartTime = startTime;
+                }
+
+                // If cooldown has expired and player wasn't notified yet
+                if (!notified && now - startTime >= RESURRECTION_COOLDOWN) {
+                    player.sendMessage(ChatColor.GREEN + "Your resurrection is ready!");
+                    notified = true; // Prevent spam until reset
+                }
+
+
                 if (mobs == null || mobs.isEmpty()) return;
 
                 for (int i = 0; i < mobs.size(); i++) {
@@ -489,14 +516,32 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             }
         }
 
-        // Handle player death while controlling a mob
+        // Handle player death while controlling a mob and passive
         if (event.getEntity() instanceof Player player) {
             ActiveMob controlled = controlledMobs.get(player.getUniqueId());
             if (controlled != null && event.getFinalDamage() >= player.getHealth()) {
                 event.setCancelled(true);
                 despawnMob(controlled);
+            } else if (CustomArmorSetsCore.getArmorSet(player) instanceof NecromancerArmorSet && event.getFinalDamage() >= player.getHealth()) { // Ressurection Passive: final hit to player
+                    event.setCancelled(resurrectionPassive(player));
             }
         }
+    }
+
+    private boolean resurrectionPassive(Player player) {
+        // Check if cooldown for resurrection exists
+        UUID uuid = player.getUniqueId();
+        long now = System.currentTimeMillis();
+        if (resurrectionCooldowns.containsKey(uuid) && now - resurrectionCooldowns.get(uuid) < RESURRECTION_COOLDOWN) {
+            long timeLeft = (RESURRECTION_COOLDOWN - (now - resurrectionCooldowns.get(uuid))) / 1000;
+            player.sendMessage("§cAbility is on cooldown for " + timeLeft + " more seconds!");
+            return false;
+        }
+
+        resurrectionCooldowns.put(uuid, now);
+        player.sendMessage("Will implement this better later");
+        player.setHealth(15);
+        return true;
     }
 
     @EventHandler
