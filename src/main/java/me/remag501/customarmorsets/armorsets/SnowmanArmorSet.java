@@ -33,7 +33,6 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
         player.sendMessage("✅ You equipped the snowman set");
     }
 
-
     @Override
     public void removePassive(Player player) {
         player.sendMessage("❌ You removed the snowman set");
@@ -93,16 +92,15 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
         task.runTaskTimer(CustomArmorSets.getInstance(), 0L, 20L); // check every second
     }
 
-
     @EventHandler
     public void onEntityHit(EntityDamageByEntityEvent event) {
 //        if (!(event.getDamager() instanceof Player player)) return;
 //        if (!(event.getEntity() instanceof LivingEntity target)) return;
-        if (event.getEntity() instanceof ArmorStand) {
-            event.getEntity().playEffect(EntityEffect.TOTEM_RESURRECT);
-            CustomArmorSets.getInstance().getLogger().info("Somthing");
-            event.setCancelled(true);
-        }
+//        if (event.getEntity() instanceof ArmorStand) {
+//            event.getEntity().playEffect(EntityEffect.TOTEM_RESURRECT);
+//            CustomArmorSets.getInstance().getLogger().info("Somthing");
+//            event.setCancelled(true);
+//        }
     }
 
     @EventHandler

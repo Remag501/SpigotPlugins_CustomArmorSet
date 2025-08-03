@@ -8,10 +8,8 @@ import io.lumine.mythic.bukkit.compatibility.CompatibilityManager;
 import io.lumine.mythic.bukkit.compatibility.LibsDisguisesSupport;
 import io.lumine.mythic.core.mobs.ActiveMob;
 import me.libraryaddict.disguise.DisguiseAPI;
-import me.libraryaddict.disguise.disguisetypes.Disguise;
-import me.libraryaddict.disguise.disguisetypes.DisguiseType;
-import me.libraryaddict.disguise.disguisetypes.FlagWatcher;
-import me.libraryaddict.disguise.disguisetypes.MobDisguise;
+import me.libraryaddict.disguise.disguisetypes.*;
+import me.libraryaddict.disguise.disguisetypes.watchers.PlayerWatcher;
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.core.ArmorSet;
 import me.remag501.customarmorsets.core.ArmorSetType;
@@ -24,10 +22,7 @@ import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.event.player.PlayerToggleSprintEvent;
@@ -59,6 +54,8 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     private static final Map<ActiveMob, Long> summonTime = new HashMap<>();
     private static final Map<UUID, ActiveMob> controlledMobs = new HashMap<>();
     private static final Map<UUID, BukkitTask> controlTasks = new HashMap<>();
+    private static final Map<UUID, ArmorStand> decoys = new HashMap<>();
+    private static final Map<UUID, BukkitRunnable> decoyTasks = new HashMap<>();
 
     private static final String RESURRECTED_MOB_PREFIX = MythicMobsYamlGenerator.getPrefix();
 
@@ -90,7 +87,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                     long newTime = System.currentTimeMillis();
                     int secondsPassed = (int) ((newTime - oldTime) / 1000);
 
-                    if (secondsPassed > 20) {
+                    if (secondsPassed > 30) {
                         despawnMob(activeMob);
                         i--;
                         continue;
@@ -104,7 +101,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                         isControlledByPlayer = true;
 
                     // Slowly kill off mobs over 5 seconds
-                    if (secondsPassed >= 15) {
+                    if (secondsPassed >= 25) {
                         //
                         if (isControlledByPlayer) {
                             player.sendMessage("You cannot control decaying mobs");
@@ -266,6 +263,9 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         disguise.setNotifyBar(null); // Hide "currently disguised as"
         DisguiseAPI.disguiseToAll(player, disguise);
 
+        // Setup decoy
+        createDecoy(player);
+
         // First sync player with the mob's location
         player.teleport(mobEntity.getLocation());
         // Get attribute values
@@ -381,13 +381,14 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             DisguiseAPI.disguiseEntity(mobEntity, currentDisguise);
         }
 
-        // Reset attributes
+        // Reset attributes and remove decoy
         AttributesUtil.restoreDefaults(player);
+        removeDecoy(player);
 
         // Make mob vulnerable again
         Entity mobEntity = mob.getEntity().getBukkitEntity();
         mobEntity.setInvulnerable(false);
-        mobEntity.setSilent(false); // Just being safe, disguise should this
+        mobEntity.setSilent(false);
 
         // Major util syncs
         restorePotionEffects(player);
@@ -525,6 +526,22 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             event.setCancelled(true);
     }
 
+    @EventHandler
+    public void onEntityHit(EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof ArmorStand armorStand)) return;
+        String armorStandName = armorStand.getCustomName();
+        if (armorStandName == null) return;
+        UUID uuid = UUID.fromString(armorStandName);
+        ArmorStand decoy = decoys.get(uuid);
+        Player player = Bukkit.getPlayer(uuid);
+        if (decoy == null || player == null) return;
+        event.setCancelled(true);
+        if (event.getDamager().equals(controlledMobs.get(uuid).getEntity().getBukkitEntity()))
+            return;
+        stopControlling(player);
+        player.sendMessage(ChatColor.RED + "You are being attacked. Mental connection broke.");
+    }
+
     private boolean despawnMob(ActiveMob activeMob) {
         // To remove 'activeMob' from the map and get the Player UUID before removal:
         for (Map.Entry<UUID, ActiveMob> entry : controlledMobs.entrySet()) {
@@ -582,6 +599,67 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             return true;
         }
         return false;
+    }
+
+    private void createDecoy(Player player) {
+        Location location = player.getLocation();
+        World world = location.getWorld();
+        UUID uuid = player.getUniqueId();
+
+        ArmorStand decoy = (ArmorStand) world.spawnEntity(location, EntityType.ARMOR_STAND);
+        decoy.setCustomName(player.getUniqueId().toString());
+        decoys.put(uuid, decoy);
+
+        // Apply disguise (optional)
+        PlayerDisguise disguise = new PlayerDisguise(player.getName());
+        PlayerWatcher watcher = disguise.getWatcher();
+
+        // Copy each armor slot
+        watcher.setHelmet(player.getInventory().getHelmet());
+        watcher.setChestplate(player.getInventory().getChestplate());
+        watcher.setLeggings(player.getInventory().getLeggings());
+        watcher.setBoots(player.getInventory().getBoots());
+
+        // Optional: copy held item
+        watcher.setItemInMainHand(player.getInventory().getItemInMainHand());
+        watcher.setItemInOffHand(player.getInventory().getItemInOffHand());
+
+        // Apply disguise
+        DisguiseAPI.disguiseToAll(decoy, disguise);
+
+        // 2. Run AI task
+        BukkitRunnable task = new BukkitRunnable() {
+
+            @Override
+            public void run() {
+                if (!decoy.isValid()) {
+                    decoy.remove();
+                    cancel();
+                    return;
+                }
+
+                for (Entity nearby : decoy.getNearbyEntities(20, 20, 20)) {
+                    if (nearby instanceof Mob mob) {
+                        if (mob.getTarget() == null || mob.getTarget().equals(player)) {
+                            mob.setTarget(decoy); // force target only if free/targeting player
+                        }
+                    }
+                }
+
+            }
+        };
+
+        task.runTaskTimer(CustomArmorSets.getInstance(), 0L, 20L); // check every second
+        decoyTasks.put(uuid, task);
+    }
+
+    private void removeDecoy(Player player) {
+        ArmorStand decoy = decoys.get(player.getUniqueId());
+        if (decoy == null) return;
+        player.teleport(decoy.getLocation());
+        decoy.remove();
+        decoyTasks.get(player.getUniqueId()).cancel();
+
     }
 
     public void spawnCosmeticHead(Location loc, ActiveMob activeMob, String uuid) {
