@@ -454,10 +454,6 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         return activeMob;
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerDeath(PlayerDeathEvent event) {
-    }
-
     @EventHandler
     public void onPlayerCancelFlight(PlayerToggleFlightEvent event) {
         ActiveMob activeMob = controlledMobs.get(event.getPlayer().getUniqueId());
@@ -514,19 +510,6 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     }
 
     @EventHandler
-    public void onSprint(PlayerToggleSprintEvent event){ // Don't let players get faster when controlling mobs
-        if (controlledMobs.get(event.getPlayer().getUniqueId()) != null)
-            event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onPickup(EntityPickupItemEvent event){
-        if (!(event.getEntity() instanceof Player player)) return;
-        if (controlledMobs.get(player.getUniqueId()) != null)
-            event.setCancelled(true);
-    }
-
-    @EventHandler
     public void onEntityHit(EntityDamageByEntityEvent event) {
         if (!(event.getEntity() instanceof ArmorStand armorStand)) return;
         String armorStandName = armorStand.getCustomName();
@@ -540,6 +523,19 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             return;
         stopControlling(player);
         player.sendMessage(ChatColor.RED + "You are being attacked. Mental connection broke.");
+    }
+
+    @EventHandler
+    public void onSprint(PlayerToggleSprintEvent event){ // Don't let players get faster when controlling mobs
+        if (controlledMobs.get(event.getPlayer().getUniqueId()) != null)
+            event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onPickup(EntityPickupItemEvent event){
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (controlledMobs.get(player.getUniqueId()) != null)
+            event.setCancelled(true);
     }
 
     private boolean despawnMob(ActiveMob activeMob) {
