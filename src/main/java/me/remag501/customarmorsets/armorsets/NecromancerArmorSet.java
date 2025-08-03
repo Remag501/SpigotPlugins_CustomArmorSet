@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armorsets;
 
+import com.github.retrooper.packetevents.protocol.particle.type.ParticleTypes;
 import io.lumine.mythic.api.adapters.AbstractEntity;
 import io.lumine.mythic.api.mobs.MythicMob;
 import io.lumine.mythic.bukkit.BukkitAdapter;
@@ -9,6 +10,7 @@ import io.lumine.mythic.bukkit.compatibility.LibsDisguisesSupport;
 import io.lumine.mythic.core.mobs.ActiveMob;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.*;
+import me.libraryaddict.disguise.disguisetypes.watchers.AreaEffectCloudWatcher;
 import me.libraryaddict.disguise.disguisetypes.watchers.PlayerWatcher;
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.core.ArmorSet;
@@ -46,9 +48,8 @@ import static me.remag501.customarmorsets.utils.PlayerSyncUtil.*;
 
 public class NecromancerArmorSet extends ArmorSet implements Listener {
 
-    private static final Long RESURRECTION_COOLDOWN = 12 * 1000L;
+    private static final Long RESURRECTION_COOLDOWN = 30 * 1000L;
     private static final Map<UUID, Long> resurrectionCooldowns = new HashMap<>();
-//    private static final Map<UUID, BukkitTask> resurrectingTask = new HashMap<>();
     private static final Map<ArmorStand, MythicMob> killedMobs = new HashMap<>();
     private static final Map<UUID, List<ActiveMob>> summonedMobs = new HashMap<>();
     private static final Map<UUID, BukkitTask> summonsTask = new HashMap<>();
@@ -195,6 +196,12 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             return;
         }
 
+        if (resurrectionCooldowns.get(player.getUniqueId()) != null && resurrectionCooldowns.get(player.getUniqueId()) == -1) {
+            player.sendMessage("You cannot use abilities while dead");
+            return;
+        }
+
+
         // Check if player is trying to control mob
         if (player.isSneaking() && mobs != null && !mobs.isEmpty()) {
             ActiveMob selectedMob;
@@ -291,7 +298,9 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         DisguiseAPI.disguiseToAll(player, disguise);
 
         // Setup decoy
-        createDecoy(player);
+        Long cooldown = resurrectionCooldowns.get(player.getUniqueId());
+        if (cooldown == null || cooldown != -1)
+            createDecoy(player);
 
         // First sync player with the mob's location
         player.teleport(mobEntity.getLocation());
@@ -410,7 +419,11 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
 
         // Reset attributes and remove decoy
         AttributesUtil.restoreDefaults(player);
-        removeDecoy(player);
+
+        // Setup decoy
+        Long cooldown = resurrectionCooldowns.get(player.getUniqueId());
+        if (cooldown == null || cooldown != -1)
+            removeDecoy(player);
 
         // Make mob vulnerable again
         Entity mobEntity = mob.getEntity().getBukkitEntity();
@@ -484,6 +497,10 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     @EventHandler
     public void onPlayerCancelFlight(PlayerToggleFlightEvent event) {
         ActiveMob activeMob = controlledMobs.get(event.getPlayer().getUniqueId());
+        if (resurrectionCooldowns.getOrDefault(event.getPlayer().getUniqueId(), 0L) == -1) {
+            event.setCancelled(true);
+            return;
+        }
         if (activeMob == null)
             return; // We can assume if a player is controlling a mob they have the set
         if (activeMob.getEntity().isFlyingMob() && event.getPlayer().isFlying()) // Player quit flight while controlling flight mob
@@ -538,9 +555,64 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             return false;
         }
 
-        resurrectionCooldowns.put(uuid, now);
-        player.sendMessage("Will implement this better later");
-        player.setHealth(15);
+        resurrectionCooldowns.put(uuid, -1L); // Let rest of plugin know that player is in dead state
+        player.sendMessage(ChatColor.LIGHT_PURPLE + "Your body has crumbled but you can mold a new one quickly!");
+        player.setAllowFlight(true);
+        player.setFlying(true);
+        player.setInvulnerable(true);
+        player.teleport(player.getLocation().add(0, 3, 0));
+        // Add disguise so particles look clean
+        MiscDisguise disguise = new MiscDisguise(DisguiseType.AREA_EFFECT_CLOUD);
+        AreaEffectCloudWatcher watcher = (AreaEffectCloudWatcher) disguise.getWatcher();
+        watcher.setParticle(new com.github.retrooper.packetevents.protocol.particle.Particle(ParticleTypes.SOUL_FIRE_FLAME));
+        watcher.setRadius((float) 0.75);
+        disguise.setWatcher(watcher);
+        DisguiseAPI.disguiseToAll(player, disguise);
+        // Start scheduler to handle lots revival logic
+        new BukkitRunnable() {
+            int timeLeft = 10;
+            int timeControl = 5;
+            @Override
+            public void run() {
+                if (timeControl <= 0) {
+                    cancel();
+                    despawnMob(controlledMobs.get(player.getUniqueId()));
+                    resurrectionCooldowns.put(uuid, now);
+                    player.setAllowFlight(false);
+                    player.setInvulnerable(false);
+                    player.sendMessage(ChatColor.GOLD + "Back from the dead!");
+                    return;
+                } else if (timeLeft <= 0) {
+                    cancel();
+                    player.sendMessage(ChatColor.RED + "Your soul decays away without a host!");
+                    player.setAllowFlight(false);
+                    player.setInvulnerable(false);
+                    player.setHealth(0.0);
+                    resurrectionCooldowns.remove(player.getUniqueId());
+                    return;
+                } else if (controlledMobs.get(player.getUniqueId()) != null) { // Player is possesing mob
+                    player.sendMessage(ChatColor.GREEN + "Possess this host for " + timeControl + " to resurrect yourself.");
+                    timeControl--;
+                } else {
+                    player.sendMessage(ChatColor.RED + "Find a host for your soul to possess. You will decay in " + timeLeft);
+                    timeLeft--;
+                    timeControl = 5; // Reset if player left host
+
+                    // Check for nearby MythicMobs to possess
+                    for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
+                        // Ensure the entity is a MythicMob
+                        Optional<ActiveMob> activeMob = MythicBukkit.inst().getMobManager().getActiveMob(entity.getUniqueId());
+                        if (activeMob.isPresent() && summonedMobs.get(player.getUniqueId()).contains(activeMob.get())) {
+                            // Call your method to control the mob
+                            controlMob(player, activeMob.get());
+                            break; // Stop after finding the first mob
+                        }
+                    }
+
+                }
+
+            }
+        }.runTaskTimer(CustomArmorSets.getInstance(), 0, 20); // Every second
         return true;
     }
 

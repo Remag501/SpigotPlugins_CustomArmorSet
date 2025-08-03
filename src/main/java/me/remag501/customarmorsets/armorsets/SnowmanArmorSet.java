@@ -1,15 +1,19 @@
 package me.remag501.customarmorsets.armorsets;
 
+import com.github.retrooper.packetevents.protocol.particle.type.ParticleType;
+import com.github.retrooper.packetevents.protocol.particle.type.ParticleTypes;
 import me.libraryaddict.disguise.DisguiseAPI;
-import me.libraryaddict.disguise.disguisetypes.DisguiseType;
-import me.libraryaddict.disguise.disguisetypes.MobDisguise;
-import me.libraryaddict.disguise.disguisetypes.PlayerDisguise;
+import me.libraryaddict.disguise.disguisetypes.*;
+import me.libraryaddict.disguise.disguisetypes.watchers.AreaEffectCloudWatcher;
+import me.libraryaddict.disguise.disguisetypes.watchers.ArmorStandWatcher;
+import me.libraryaddict.disguise.disguisetypes.watchers.FallingBlockWatcher;
 import me.libraryaddict.disguise.disguisetypes.watchers.PlayerWatcher;
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.core.ArmorSet;
 import me.remag501.customarmorsets.core.ArmorSetType;
 import me.remag501.customarmorsets.core.CustomArmorSetsCore;
 import org.bukkit.*;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -39,57 +43,21 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
     }
 
     public void triggerAbility(Player player) {
-        Location location = player.getLocation();
-        World world = location.getWorld();
+        // Create a MiscDisguise for an Armor Stand.
+        MiscDisguise disguise = new MiscDisguise(DisguiseType.AREA_EFFECT_CLOUD);
 
-        // 1. Spawn decoy (use ArmorStand disguised as player)
-        ArmorStand decoy = (ArmorStand) world.spawnEntity(location, EntityType.ARMOR_STAND);
-//        decoy.setVisible(false);
-        decoy.setGravity(false);
-        decoy.setMarker(false); // small hitbox
-//        decoy.setInvulnerable(true);
+        // Get the watcher for the disguise to modify its properties.
+        AreaEffectCloudWatcher watcher = (AreaEffectCloudWatcher) disguise.getWatcher();
 
-        // Apply disguise (optional)
-        PlayerDisguise disguise = new PlayerDisguise(player.getName());
-        PlayerWatcher watcher = disguise.getWatcher();
+        // This is the key: set the particle type to SOUL.
+        watcher.setParticle(new com.github.retrooper.packetevents.protocol.particle.Particle(ParticleTypes.SOUL_FIRE_FLAME));
+        watcher.setRadius((float) 0.75);
 
-        // Copy each armor slot
-        watcher.setHelmet(player.getInventory().getHelmet());
-        watcher.setChestplate(player.getInventory().getChestplate());
-        watcher.setLeggings(player.getInventory().getLeggings());
-        watcher.setBoots(player.getInventory().getBoots());
+        // Set the watcher back on the disguise.
+        disguise.setWatcher(watcher);
 
-        // Optional: copy held item
-        watcher.setItemInMainHand(player.getInventory().getItemInMainHand());
-        watcher.setItemInOffHand(player.getInventory().getItemInOffHand());
-
-        // Apply disguise
-        DisguiseAPI.disguiseToAll(decoy, disguise);
-
-        // 2. Run AI task
-        BukkitRunnable task = new BukkitRunnable() {
-            int lifetime = 200; // 10 seconds
-
-            @Override
-            public void run() {
-                if (!decoy.isValid() || lifetime <= 0) {
-                    decoy.remove();
-                    cancel();
-                    return;
-                }
-
-                for (Entity nearby : decoy.getNearbyEntities(20, 20, 20)) {
-                    if (nearby instanceof Mob mob) {
-                        if (mob.getTarget() == null || mob.getTarget().equals(player)) {
-                            mob.setTarget(decoy); // force target only if free/targeting player
-                        }
-                    }
-                }
-
-                lifetime -= 20; // decrease lifetime
-            }
-        };
-        task.runTaskTimer(CustomArmorSets.getInstance(), 0L, 20L); // check every second
+        // Apply the disguise. The player's model will be replaced with the particle cloud.
+        DisguiseAPI.disguiseToAll(player, disguise);
     }
 
     @EventHandler
