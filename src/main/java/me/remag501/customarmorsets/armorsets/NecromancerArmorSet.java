@@ -477,36 +477,26 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     }
 
     @EventHandler
-    public void beforeEntityDeath(EntityDamageEvent event) {
-        // First, check if the entity is actually dying from this damage.
-        // We only intervene if the final damage is lethal (would bring health to 0 or less).
-        if (!(event.getEntity() instanceof LivingEntity livingEntity)) return; // Just to be safe
-        if (event.getFinalDamage() < livingEntity.getHealth()) {
-            return; // Not a lethal blow, let the event proceed normally
+    public void onEntityDamage(EntityDamageEvent event) {
+        // Handle all MythicMobs deaths (ActiveMobs)
+        if (event.getEntity() instanceof LivingEntity living) {
+            if (event.getFinalDamage() >= living.getHealth()) {
+                Optional<ActiveMob> mob = MythicBukkit.inst().getMobManager().getActiveMob(living.getUniqueId());
+                if (mob.isPresent() && despawnMob(mob.get())) {
+                    event.setCancelled(true);
+                    return; // Exit early to avoid double-handling
+                }
+            }
         }
 
-        // 1. Check if the entity is an ActiveMythicMob
-        Optional<ActiveMob> optActiveMob =MythicBukkit.inst().getMobManager().getActiveMob(event.getEntity().getUniqueId());
-        if (optActiveMob.isEmpty()) {
-            return; // Not a MythicMob, do not interfere
+        // Handle player death while controlling a mob
+        if (event.getEntity() instanceof Player player) {
+            ActiveMob controlled = controlledMobs.get(player.getUniqueId());
+            if (controlled != null && event.getFinalDamage() >= player.getHealth()) {
+                event.setCancelled(true);
+                despawnMob(controlled);
+            }
         }
-
-        ActiveMob activeMob = optActiveMob.get();
-        if (despawnMob(activeMob)) event.setCancelled(true);
-
-    }
-
-    @EventHandler
-    public void beforePlayerDeath(EntityDamageEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
-        ActiveMob controlledMob = controlledMobs.get(player.getUniqueId());
-        if (controlledMob == null) return;
-        if (event.getFinalDamage() > player.getHealth()) {
-            // Player is about to die
-            event.setCancelled(true);
-            despawnMob(controlledMob);
-        }
-
     }
 
     @EventHandler
