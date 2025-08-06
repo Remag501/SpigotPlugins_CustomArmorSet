@@ -58,23 +58,22 @@ public class DamageStatsListener implements Listener {
         if (target instanceof Player) {
             return DamageStats.TargetCategory.PLAYERS;
         }
-        if (target instanceof Monster) {
-            if (target instanceof Zombie || target instanceof Skeleton || target instanceof Wither) {
-                return DamageStats.TargetCategory.UNDEAD;
-            }
-            if (target instanceof Spider || target instanceof CaveSpider || target instanceof Silverfish) {
-                return DamageStats.TargetCategory.ARTHROPOD;
-            }
-            if (target instanceof Vindicator || target instanceof Evoker || target instanceof Pillager || target instanceof Illusioner) {
-                return DamageStats.TargetCategory.ILLAGER;
-            }
-            if (target instanceof EnderDragon || target instanceof Wither) {
-                return DamageStats.TargetCategory.BOSS;
-            }
-            return DamageStats.TargetCategory.GENERIC; // Generic hostile mob
+
+        // Non-player mobs get specific category, but can also benefit from NON_PLAYER fallback
+        if (target instanceof Zombie || target instanceof Skeleton || target instanceof Wither) {
+            return DamageStats.TargetCategory.UNDEAD;
+        }
+        if (target instanceof Spider || target instanceof CaveSpider || target instanceof Silverfish) {
+            return DamageStats.TargetCategory.ARTHROPOD;
+        }
+        if (target instanceof Vindicator || target instanceof Evoker || target instanceof Pillager || target instanceof Illusioner) {
+            return DamageStats.TargetCategory.ILLAGER;
+        }
+        if (target instanceof EnderDragon || target instanceof Wither) {
+            return DamageStats.TargetCategory.BOSS;
         }
 
-        // Passive mobs or misc
-        return DamageStats.TargetCategory.GENERIC;
+        return DamageStats.TargetCategory.GENERIC; // Default for other mobs
     }
+
 }

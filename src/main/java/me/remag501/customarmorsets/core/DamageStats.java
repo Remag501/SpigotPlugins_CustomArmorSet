@@ -19,13 +19,14 @@ public class DamageStats {
     }
 
     public enum TargetCategory {
-        ALL,
+        ALL,          // Applies to everything
+        PLAYERS,      // PvP
+        NON_PLAYER,   // Any non-player entity
         UNDEAD,
         ARTHROPOD,
         ILLAGER,
         BOSS,
-        GENERIC,
-        PLAYERS
+        GENERIC
     }
 
     // ----- STORAGE -----
@@ -84,8 +85,20 @@ public class DamageStats {
         Map<TargetCategory, Float> map = mobMultipliers.get(player);
         if (map == null) return 1.0f;
 
-        // Exact category or fallback to ALL
-        return map.getOrDefault(category, map.getOrDefault(TargetCategory.ALL, 1.0f));
+        // Try exact category first
+        Float multiplier = map.get(category);
+
+        // If no exact match and NOT a player category, fallback to NON_PLAYER
+        if (multiplier == null && category != TargetCategory.PLAYERS) {
+            multiplier = map.get(TargetCategory.NON_PLAYER);
+        }
+
+        // Fallback to ALL or default 1.0
+        if (multiplier == null) {
+            multiplier = map.getOrDefault(TargetCategory.ALL, 1.0f);
+        }
+
+        return multiplier;
     }
 
     public static boolean hasMobMultiplier(UUID player, TargetCategory category) {
