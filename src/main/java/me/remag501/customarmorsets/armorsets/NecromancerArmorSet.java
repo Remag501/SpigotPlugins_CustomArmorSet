@@ -48,7 +48,7 @@ import static me.remag501.customarmorsets.utils.PlayerSyncUtil.*;
 
 public class NecromancerArmorSet extends ArmorSet implements Listener {
 
-    private static final Long RESURRECTION_COOLDOWN = 30 * 1000L;
+    private static final Long RESURRECTION_COOLDOWN = 120 * 1000L;
     private static final Map<UUID, Long> resurrectionCooldowns = new HashMap<>();
     private static final Map<ArmorStand, MythicMob> killedMobs = new HashMap<>();
     private static final Map<UUID, List<ActiveMob>> summonedMobs = new HashMap<>();
@@ -81,22 +81,21 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                 if (!resurrectionCooldowns.containsKey(uuid)) {
                     notified = false; // Reset when cooldown not present
                     lastStartTime = 0L;
-                    return;
-                }
+                } else {
+                    long startTime = resurrectionCooldowns.get(uuid);
+                    long now = System.currentTimeMillis();
 
-                long startTime = resurrectionCooldowns.get(uuid);
-                long now = System.currentTimeMillis();
+                    // Detect passive reset: start time changed (new cooldown started)
+                    if (startTime > lastStartTime) {
+                        notified = false; // Allow next notification
+                        lastStartTime = startTime;
+                    }
 
-                // Detect passive reset: start time changed (new cooldown started)
-                if (startTime > lastStartTime) {
-                    notified = false; // Allow next notification
-                    lastStartTime = startTime;
-                }
-
-                // If cooldown has expired and player wasn't notified yet
-                if (!notified && now - startTime >= RESURRECTION_COOLDOWN) {
-                    player.sendMessage(ChatColor.GREEN + "Your resurrection is ready!");
-                    notified = true; // Prevent spam until reset
+                    // If cooldown has expired and player wasn't notified yet
+                    if (!notified && now - startTime >= RESURRECTION_COOLDOWN) {
+                        player.sendMessage(ChatColor.GREEN + "Your resurrection is ready!");
+                        notified = true; // Prevent spam until reset
+                    }
                 }
 
 
@@ -132,7 +131,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                     if (secondsPassed >= 25) {
                         //
                         if (isControlledByPlayer) {
-                            player.sendMessage("You cannot control decaying mobs");
+                            player.sendMessage("This summon is decaying, it cannot be controlled.");
                             stopControlling(player);
                         }
                         // Hurt gradually
@@ -147,6 +146,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                                 entity.getLocation().add(0, 0.5, 0),
                                 10, 0.3, 0.3, 0.3, 0.01
                         );
+                        entity.addScoreboardTag("isDecaying");
                     } else {
                         double maxHealth = abstractEntity.getMaxHealth();
                         double newHealth = Math.min(maxHealth, abstractEntity.getHealth() + 1.0); // heal 0.5 heart per tick
@@ -190,14 +190,15 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         // Relevant variables
         Plugin plugin = CustomArmorSets.getInstance();
         List<ActiveMob> mobs = summonedMobs.get(player.getUniqueId());
-        // Let player stop controlling their mob
-        if (controlledMobs.containsKey(player.getUniqueId())) {
-            stopControlling(player);
-            return;
-        }
 
         if (resurrectionCooldowns.get(player.getUniqueId()) != null && resurrectionCooldowns.get(player.getUniqueId()) == -1) {
             player.sendMessage("You cannot use abilities while dead");
+            return;
+        }
+
+        // Let player stop controlling their mob
+        if (controlledMobs.containsKey(player.getUniqueId())) {
+            stopControlling(player);
             return;
         }
 
@@ -273,6 +274,12 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             return;
         }
 
+        // Check if trying to control decaying mob
+        if (controlledMob.getEntity().getBukkitEntity().getScoreboardTags().contains("isDecaying")) {
+            player.sendMessage("You cannot control a decaying summon");
+            return;
+        }
+
         // 1. Store the mob
         controlledMobs.put(uuid, controlledMob);
 
@@ -319,6 +326,11 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                 speed = 1.0; // Non-living mobs default to normal speed
             }
         }
+
+        // Set up player effects before controlling (flying from creative, etc.)
+        player.setAllowFlight(false);
+        player.setInvulnerable(false);
+
         // Handle flight case
         if (controlledMob.getEntity().isFlyingMob()) {
             player.setAllowFlight(true);
@@ -420,6 +432,10 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         // Reset attributes and remove decoy
         AttributesUtil.restoreDefaults(player);
 
+        // Remove flight if not in creative or coming back from dead
+        if (player.getGameMode() != GameMode.CREATIVE || resurrectionCooldowns.getOrDefault(player.getUniqueId(), 0L) == -1)
+            player.setAllowFlight(false);
+
         // Setup decoy
         Long cooldown = resurrectionCooldowns.get(player.getUniqueId());
         if (cooldown == null || cooldown != -1)
@@ -489,6 +505,10 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         if (mobName == null)
             mobName = activeMob.getEntity().getName();
         activeMob.setDisplayName(player.getDisplayName() + "'s Resurrected " + ChatColor.BOLD + mobName);
+
+        // 6 flashy ligtning effect
+        Location playerLocation = player.getLocation();
+        playerLocation.getWorld().strikeLightningEffect(playerLocation);
 
         player.sendMessage("§aYou have successfully revived a loyal " + activeMob.getDisplayName() + "!");
         return activeMob;
@@ -560,6 +580,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         player.setAllowFlight(true);
         player.setFlying(true);
         player.setInvulnerable(true);
+        player.setFireTicks(0);
         player.teleport(player.getLocation().add(0, 3, 0));
         // Add disguise so particles look clean
         MiscDisguise disguise = new MiscDisguise(DisguiseType.AREA_EFFECT_CLOUD);
@@ -578,16 +599,32 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                     cancel();
                     despawnMob(controlledMobs.get(player.getUniqueId()));
                     resurrectionCooldowns.put(uuid, now);
-                    player.setAllowFlight(false);
-                    player.setInvulnerable(false);
+                    // Play a bunch of particles, sound and lightning
+                    World world = player.getWorld();
+                    Location playerLocation = player.getLocation();
+                    world.spawnParticle(Particle.PORTAL, playerLocation, 50, 0.5, 1.5, 0.5, 0.1);
+                    world.spawnParticle(Particle.SOUL_FIRE_FLAME, playerLocation, 25, 0.5, 1.0, 0.5, 0.1);
+                    world.spawnParticle(Particle.SMOKE_NORMAL, playerLocation, 100, 0.5, 1.5, 0.5, 0.1);
+                    world.spawnParticle(Particle.FLASH, playerLocation, 1);
+                    world.playSound(player, Sound.ENTITY_WITHER_SPAWN, 1, 2); // Sound
+                    playerLocation.getWorld().strikeLightningEffect(playerLocation);
+                    // Remove potion effects
+                    for (PotionEffect effect : player.getActivePotionEffects()) {
+                        if (effect.getDuration() != PotionEffect.INFINITE_DURATION) { // Prevent perk potions from getting removed
+                            player.removePotionEffect(effect.getType());
+                        }
+                    }
+                    // Set to half hp
+                    player.setHealth(10);
                     player.sendMessage(ChatColor.GOLD + "Back from the dead!");
                     return;
                 } else if (timeLeft <= 0) {
                     cancel();
                     player.sendMessage(ChatColor.RED + "Your soul decays away without a host!");
+                    player.setHealth(0.0);
                     player.setAllowFlight(false);
                     player.setInvulnerable(false);
-                    player.setHealth(0.0);
+                    DisguiseAPI.undisguiseToAll(player);
                     resurrectionCooldowns.remove(player.getUniqueId());
                     return;
                 } else if (controlledMobs.get(player.getUniqueId()) != null) { // Player is possesing mob
@@ -618,6 +655,15 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
 
     @EventHandler
     public void onEntityHit(EntityDamageByEntityEvent event) {
+        // Prevent dead players from attacking
+        if (event.getDamager() instanceof Player damager) {
+            if (resurrectionCooldowns.getOrDefault(damager.getUniqueId(), 0L) == -1) { // Player is dead
+                event.setCancelled(true);
+                return;
+            }
+        }
+
+        // Handle case of decoy getting attacked
         if (!(event.getEntity() instanceof ArmorStand armorStand)) return;
         String armorStandName = armorStand.getCustomName();
         if (armorStandName == null) return;
@@ -641,7 +687,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     @EventHandler
     public void onPickup(EntityPickupItemEvent event){
         if (!(event.getEntity() instanceof Player player)) return;
-        if (controlledMobs.get(player.getUniqueId()) != null)
+        if (controlledMobs.get(player.getUniqueId()) != null || resurrectionCooldowns.getOrDefault(player.getUniqueId(), 0L) == -1)
             event.setCancelled(true);
     }
 

@@ -98,12 +98,12 @@ public enum ArmorSetType {
             "http://textures.minecraft.net/texture/30d5d1d1c0a7de4fef5b6cf32c27e9f378279b11c372ce4cd0112a742556fc",
             NecromancerArmorSet::new,
             Arrays.asList(
-                    "§6Ability: §ePress F to revive mythic mobs, Ctrl+F to control them",
-                    "§6Passive: §eResurrect yourself every two minutes"
+                    "§6Ability: §ePress F to revive mythic mobs, Ctrl+F to ??",
+                    "§6Passive: §e?? every two minutes"
             ),
-            new int[]{1, 3, 3, 1},
-            new int[]{50, 190, 190, 130},
-            new int[]{1, 1, 0, 0}),
+            new int[]{3, 8, 6, 3},
+            new int[]{407, 592, 555, 481},
+            new int[]{3, 3, 3, 3}),
 
     ICEMAN("iceman", "Iceman", Color.AQUA.asRGB(),0,
             "http://textures.minecraft.net/texture/4d7c1651a7853e9bb96126b57ecae3f926c9ff29c0f9fbb5ff5e9f7740ebc7",

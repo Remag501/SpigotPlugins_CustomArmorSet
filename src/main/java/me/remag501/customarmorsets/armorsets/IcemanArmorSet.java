@@ -3,6 +3,7 @@ package me.remag501.customarmorsets.armorsets;
 import me.remag501.customarmorsets.core.ArmorSet;
 import me.remag501.customarmorsets.core.ArmorSetType;
 import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.core.DamageStats;
 import me.remag501.customarmorsets.utils.AttributesUtil;
 import org.bukkit.Location;
 import org.bukkit.Particle;
