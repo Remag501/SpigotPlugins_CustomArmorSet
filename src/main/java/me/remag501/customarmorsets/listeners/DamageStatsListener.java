@@ -1,6 +1,8 @@
 package me.remag501.customarmorsets.listeners;
 
 import me.remag501.customarmorsets.core.DamageStats;
+import me.remag501.customarmorsets.core.TargetCategory;
+import me.remag501.customarmorsets.core.WeaponType;
 import org.bukkit.Material;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -20,10 +22,10 @@ public class DamageStatsListener implements Listener {
         UUID playerId = player.getUniqueId();
 
         // --- 2. Determine weapon type ---
-        DamageStats.WeaponType weaponType = getWeaponType(player.getInventory().getItemInMainHand());
+        WeaponType weaponType = getWeaponType(player.getInventory().getItemInMainHand());
 
         // --- 3. Determine target category ---
-        DamageStats.TargetCategory targetCategory = getTargetCategory(event.getEntity());
+        TargetCategory targetCategory = getTargetCategory(event.getEntity());
 
         // --- 4. Get multipliers ---
         float weaponMult = DamageStats.getWeaponMultiplier(playerId, weaponType);
@@ -37,43 +39,43 @@ public class DamageStatsListener implements Listener {
     // ----------------------------
     // HELPER: Determine Weapon Type
     // ----------------------------
-    private DamageStats.WeaponType getWeaponType(ItemStack item) {
-        if (item == null || item.getType() == Material.AIR) return DamageStats.WeaponType.OTHER;
+    private WeaponType getWeaponType(ItemStack item) {
+        if (item == null || item.getType() == Material.AIR) return WeaponType.OTHER;
 
         Material mat = item.getType();
 
-        if (mat.name().endsWith("_SWORD")) return DamageStats.WeaponType.SWORD;
-        if (mat.name().endsWith("_AXE")) return DamageStats.WeaponType.AXE;
-        if (mat == Material.BOW) return DamageStats.WeaponType.BOW;
-        if (mat == Material.CROSSBOW) return DamageStats.WeaponType.CROSSBOW;
-        if (mat == Material.TRIDENT) return DamageStats.WeaponType.TRIDENT;
+        if (mat.name().endsWith("_SWORD")) return WeaponType.SWORD;
+        if (mat.name().endsWith("_AXE")) return WeaponType.AXE;
+        if (mat == Material.BOW) return WeaponType.BOW;
+        if (mat == Material.CROSSBOW) return WeaponType.CROSSBOW;
+        if (mat == Material.TRIDENT) return WeaponType.TRIDENT;
 
-        return DamageStats.WeaponType.OTHER;
+        return WeaponType.OTHER;
     }
 
     // ----------------------------
     // HELPER: Determine Target Category
     // ----------------------------
-    private DamageStats.TargetCategory getTargetCategory(Entity target) {
+    private TargetCategory getTargetCategory(Entity target) {
         if (target instanceof Player) {
-            return DamageStats.TargetCategory.PLAYERS;
+            return TargetCategory.PLAYERS;
         }
 
         // Non-player mobs get specific category, but can also benefit from NON_PLAYER fallback
         if (target instanceof Zombie || target instanceof Skeleton || target instanceof Wither) {
-            return DamageStats.TargetCategory.UNDEAD;
+            return TargetCategory.UNDEAD;
         }
         if (target instanceof Spider || target instanceof CaveSpider || target instanceof Silverfish) {
-            return DamageStats.TargetCategory.ARTHROPOD;
+            return TargetCategory.ARTHROPOD;
         }
         if (target instanceof Vindicator || target instanceof Evoker || target instanceof Pillager || target instanceof Illusioner) {
-            return DamageStats.TargetCategory.ILLAGER;
+            return TargetCategory.ILLAGER;
         }
         if (target instanceof EnderDragon || target instanceof Wither) {
-            return DamageStats.TargetCategory.BOSS;
+            return TargetCategory.BOSS;
         }
 
-        return DamageStats.TargetCategory.GENERIC; // Default for other mobs
+        return TargetCategory.GENERIC; // Default for other mobs
     }
 
 }

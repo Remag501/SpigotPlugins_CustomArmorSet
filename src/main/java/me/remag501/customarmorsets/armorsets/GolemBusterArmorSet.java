@@ -1,12 +1,11 @@
 package me.remag501.customarmorsets.armorsets;
 
+import io.lumine.mythic.core.mobs.MobType;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
 import me.remag501.customarmorsets.CustomArmorSets;
-import me.remag501.customarmorsets.core.ArmorSet;
-import me.remag501.customarmorsets.core.ArmorSetType;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.core.*;
 import me.remag501.customarmorsets.utils.AttributesUtil;
 import me.remag501.customarmorsets.utils.CooldownBarUtil;
 import org.bukkit.*;
@@ -48,7 +47,9 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         UUID uuid = player.getUniqueId();
         playerEnergy.put(uuid, 0);
         playerIsGolem.put(uuid, false);
-
+        // Apply Damage Stats
+        DamageStats.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.NON_PLAYER);
+        // Apply 1.8 pvp later
         energyLoop.put(this, new BukkitRunnable() {
 
             @Override
@@ -76,25 +77,31 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         transformBack(player);
         energyLoop.get(this).cancel();
         CooldownBarUtil.restorePlayerBar(player);
+        AttributesUtil.restoreDefaults(player); // Just in case
+        DamageStats.clearAll(player.getUniqueId());
     }
 
     @Override
     public void triggerAbility(Player player) {
+        UUID uuid = player.getUniqueId();
+        int battery = playerEnergy.get(uuid);
         // If player is golem transform them back
-        if (playerIsGolem.get(player.getUniqueId())) {
+        if (playerIsGolem.get(uuid)) {
             if (player.isSneaking()) {
+                // Set battery to max of 50 to prevent spam
+                playerEnergy.put(uuid, Math.min(battery, 50));
                 transformBack(player);
                 return;
             } else { // Separate ability
                 long now = System.currentTimeMillis();
-                long lastUsed = stunCooldown.getOrDefault(player.getUniqueId(), 0L);
+                long lastUsed = stunCooldown.getOrDefault(uuid, 0L);
 
                 if (now - lastUsed < 1000) {
                     player.sendMessage(ChatColor.RED + "Ability on cooldown!");
                     return;
                 }
 
-                stunCooldown.put(player.getUniqueId(), now);
+                stunCooldown.put(uuid, now);
 
                 // Play iron golem attack sound
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_IRON_GOLEM_DAMAGE, 1.0f, 1.0f);
@@ -137,10 +144,9 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
             }
         }
         // Check if player is trying to transform
-        int battery;
         if (player.isSneaking()) {
-            battery = consumePlayerEnergy(player, -50);
-            if (battery > -1) {
+//            battery = consumePlayerEnergy(player, -50);
+            if (battery >= 50) {
                 player.sendMessage("Golem Smash");
                 setLevel(player, battery);
                 golemTransform(player);
@@ -226,18 +232,20 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         // Start particle trail
         startParticleTrail(player);
 
-        // Give effects
+        // Give attributes and damage stats
         AttributesUtil.applyHealth(player, 2.0);
         AttributesUtil.applySpeed(player, 0.5);
+        DamageStats.setMobMultiplier(player.getUniqueId(), 2, TargetCategory.NON_PLAYER);
         Bukkit.getScheduler().runTaskLater(CustomArmorSets.getInstance(), () -> {
             player.setHealth(40.0);
         }, 2L);
     }
 
-    private void transformBack(Player player) {
-        // Remove effects
+    private void transformBack(Player player)  {
+        // Remove attributes and damage stats
         AttributesUtil.removeHealth(player);
         AttributesUtil.removeSpeed(player);
+        DamageStats.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.NON_PLAYER);
 
         // Make player a golem in map
         UUID uuid = player.getUniqueId();

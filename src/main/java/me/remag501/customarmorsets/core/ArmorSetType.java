@@ -83,9 +83,9 @@ public enum ArmorSetType {
             "http://textures.minecraft.net/texture/74c76d07417fb8cd3dcaed4ded98537131658c996ae2e5536bddd9aef752804c",
             FisterArmorSet::new,
             Arrays.asList("§6Ability: §eFist flurry", "§6Passive: §eInvulnerability, Overshield, Regen, No weapons"),
-            new int[]{1, 4, 3, 1},
-            new int[]{40, 210, 180, 150},
-            new int[]{0, 1, 1, 0}),
+            new int[]{3, 6, 5, 2},
+            new int[]{230, 240, 225, 195},
+            new int[]{2, 0, 0, 0}),
 
     ARCHER("archer", "Archer", Color.LIME.asRGB(),0,
             "http://textures.minecraft.net/texture/368d5d2eb8d5d01ecb88325e6b56d87d0b9be41721f128f89ba5f130aae89fa",
@@ -123,9 +123,9 @@ public enum ArmorSetType {
                     "§6Ability: §eF to use battery gun, Ctrl+F to transform into a golem (F to stun)",
                     "§6Passive: §eReduced damage to mobs and projectiles, Gain battery on kills"
             ),
-            new int[]{2, 4, 3, 1},
-            new int[]{55, 200, 180, 130},
-            new int[]{1, 1, 0, 0});
+            new int[]{2, 6, 5, 2},
+            new int[]{165, 240, 225, 195},
+            new int[]{0, 0, 0, 0});
 
     private final String id;
     private final String displayName;

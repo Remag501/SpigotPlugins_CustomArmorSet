@@ -9,10 +9,7 @@ import me.libraryaddict.disguise.disguisetypes.watchers.ArmorStandWatcher;
 import me.libraryaddict.disguise.disguisetypes.watchers.FallingBlockWatcher;
 import me.libraryaddict.disguise.disguisetypes.watchers.PlayerWatcher;
 import me.remag501.customarmorsets.CustomArmorSets;
-import me.remag501.customarmorsets.core.ArmorSet;
-import me.remag501.customarmorsets.core.ArmorSetType;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
-import me.remag501.customarmorsets.core.DamageStats;
+import me.remag501.customarmorsets.core.*;
 import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.*;
@@ -36,8 +33,8 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
     @Override
     public void applyPassive(Player player) {
         player.sendMessage("✅ You equipped the snowman set");
-        DamageStats.setMobMultiplier(player.getUniqueId(),2, DamageStats.TargetCategory.ALL);
-        DamageStats.setMobMultiplier(player.getUniqueId(),1, DamageStats.TargetCategory.UNDEAD);
+        DamageStats.setMobMultiplier(player.getUniqueId(),2, TargetCategory.ALL);
+        DamageStats.setMobMultiplier(player.getUniqueId(),1, TargetCategory.UNDEAD);
 //        DamageStats.setWeaponMultiplier(player.getUniqueId(),1.5f, DamageStats.WeaponType.OTHER);
     }
 

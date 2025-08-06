@@ -8,26 +8,26 @@ import java.util.UUID;
 public class DamageStats {
 
     // ----- ENUMS -----
-    public enum WeaponType {
-        ALL,
-        SWORD,
-        AXE,
-        BOW,
-        CROSSBOW,
-        TRIDENT,
-        OTHER
-    }
+//    public enum WeaponType {
+//        ALL,
+//        SWORD,
+//        AXE,
+//        BOW,
+//        CROSSBOW,
+//        TRIDENT,
+//        OTHER
+//    }
 
-    public enum TargetCategory {
-        ALL,          // Applies to everything
-        PLAYERS,      // PvP
-        NON_PLAYER,   // Any non-player entity
-        UNDEAD,
-        ARTHROPOD,
-        ILLAGER,
-        BOSS,
-        GENERIC
-    }
+//    public enum TargetCategory {
+//        ALL,          // Applies to everything
+//        PLAYERS,      // PvP
+//        NON_PLAYER,   // Any non-player entity
+//        UNDEAD,
+//        ARTHROPOD,
+//        ILLAGER,
+//        BOSS,
+//        GENERIC
+//    }
 
     // ----- STORAGE -----
     private static final Map<UUID, Map<WeaponType, Float>> weaponMultipliers = new HashMap<>();
