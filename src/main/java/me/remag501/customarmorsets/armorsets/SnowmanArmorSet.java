@@ -12,6 +12,7 @@ import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.core.ArmorSet;
 import me.remag501.customarmorsets.core.ArmorSetType;
 import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.core.DamageStats;
 import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.*;
@@ -35,29 +36,20 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
     @Override
     public void applyPassive(Player player) {
         player.sendMessage("✅ You equipped the snowman set");
+        DamageStats.setMobMultiplier(player.getUniqueId(),2, DamageStats.TargetCategory.ALL);
+        DamageStats.setMobMultiplier(player.getUniqueId(),1, DamageStats.TargetCategory.UNDEAD);
+//        DamageStats.setWeaponMultiplier(player.getUniqueId(),1.5f, DamageStats.WeaponType.OTHER);
     }
 
     @Override
     public void removePassive(Player player) {
+        DamageStats.clearAll(player.getUniqueId());
         player.sendMessage("❌ You removed the snowman set");
     }
 
     public void triggerAbility(Player player) {
-        // Create a MiscDisguise for an Armor Stand.
-        MiscDisguise disguise = new MiscDisguise(DisguiseType.AREA_EFFECT_CLOUD);
 
-        // Get the watcher for the disguise to modify its properties.
-        AreaEffectCloudWatcher watcher = (AreaEffectCloudWatcher) disguise.getWatcher();
 
-        // This is the key: set the particle type to SOUL.
-        watcher.setParticle(new com.github.retrooper.packetevents.protocol.particle.Particle(ParticleTypes.SOUL_FIRE_FLAME));
-        watcher.setRadius((float) 0.75);
-
-        // Set the watcher back on the disguise.
-        disguise.setWatcher(watcher);
-
-        // Apply the disguise. The player's model will be replaced with the particle cloud.
-        DisguiseAPI.disguiseToAll(player, disguise);
     }
 
     @EventHandler

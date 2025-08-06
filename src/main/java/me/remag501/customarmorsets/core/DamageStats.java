@@ -1,83 +1,123 @@
 package me.remag501.customarmorsets.core;
 
-import org.bukkit.entity.Player;
-
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class DamageStats {
 
+    // ----- ENUMS -----
     public enum WeaponType {
-        SWORD, AXE, BOW, CROSSBOW, TRIDENT, MELEE_GENERIC, PROJECTILE_GENERIC
+        ALL,
+        SWORD,
+        AXE,
+        BOW,
+        CROSSBOW,
+        TRIDENT,
+        OTHER
     }
 
-    // PvE and PvP aware maps for each weapon type
-    private static final Map<WeaponType, Map<UUID, Float>> pvpMultipliers = new EnumMap<>(WeaponType.class);
-    private static final Map<WeaponType, Map<UUID, Float>> pveMultipliers = new EnumMap<>(WeaponType.class);
-    private static final Map<UUID, Boolean> pveOld = new HashMap<>();
+    public enum TargetCategory {
+        ALL,
+        UNDEAD,
+        ARTHROPOD,
+        ILLAGER,
+        BOSS,
+        GENERIC,
+        PLAYERS
+    }
 
-    static {
-        for (WeaponType type : WeaponType.values()) {
-            pvpMultipliers.put(type, new ConcurrentHashMap<>());
-            pveMultipliers.put(type, new ConcurrentHashMap<>());
+    // ----- STORAGE -----
+    private static final Map<UUID, Map<WeaponType, Float>> weaponMultipliers = new HashMap<>();
+    private static final Map<UUID, Map<TargetCategory, Float>> mobMultipliers = new HashMap<>();
+
+    // -----------------------
+    // WEAPON MULTIPLIER LOGIC
+    // -----------------------
+
+    public static void setWeaponMultiplier(UUID player, float multiplier, WeaponType... types) {
+        weaponMultipliers.putIfAbsent(player, new EnumMap<>(WeaponType.class));
+        Map<WeaponType, Float> map = weaponMultipliers.get(player);
+        for (WeaponType type : types) {
+            map.put(type, multiplier);
         }
     }
 
-    // General setters
-    public static void setPvPMultiplier(WeaponType type, Player player, float multiplier) {
-        pvpMultipliers.get(type).put(player.getUniqueId(), multiplier);
+    public static float getWeaponMultiplier(UUID player, WeaponType type) {
+        Map<WeaponType, Float> map = weaponMultipliers.get(player);
+        if (map == null) return 1.0f;
+
+        // Exact type or fallback to ALL
+        return map.getOrDefault(type, map.getOrDefault(WeaponType.ALL, 1.0f));
     }
 
-    public static void setPvEMultiplier(WeaponType type, Player player, float multiplier) {
-        pveMultipliers.get(type).put(player.getUniqueId(), multiplier);
+    public static boolean hasWeaponMultiplier(UUID player, WeaponType type) {
+        Map<WeaponType, Float> map = weaponMultipliers.get(player);
+        return map != null && (map.containsKey(type) || map.containsKey(WeaponType.ALL));
     }
 
-    // Getters with default fallback of 1.0
-    public static float getPvPMultiplier(WeaponType type, Player player) {
-        return pvpMultipliers.get(type).getOrDefault(player.getUniqueId(), 1.0f);
-    }
-
-    public static float getPvEMultiplier(WeaponType type, Player player) {
-        return pveMultipliers.get(type).getOrDefault(player.getUniqueId(), 1.0f);
-    }
-
-    // Clearers (e.g. when armor is unequipped)
-    public static void clearPvPMultiplier(WeaponType type, Player player) {
-        pvpMultipliers.get(type).remove(player.getUniqueId());
-    }
-
-    public static void clearPvEMultiplier(WeaponType type, Player player) {
-        pveMultipliers.get(type).remove(player.getUniqueId());
-    }
-
-    // Full clear for player (on disconnect or armor set change)
-    public static void clearAll(Player player) {
-        UUID uuid = player.getUniqueId();
-        for (WeaponType type : WeaponType.values()) {
-            pvpMultipliers.get(type).remove(uuid);
-            pveMultipliers.get(type).remove(uuid);
+    public static void clearWeaponMultiplier(UUID player, WeaponType... types) {
+        Map<WeaponType, Float> map = weaponMultipliers.get(player);
+        if (map == null) return;
+        for (WeaponType type : types) {
+            map.remove(type);
         }
-        pveOld.remove(uuid);
+        if (map.isEmpty()) {
+            weaponMultipliers.remove(player);
+        }
     }
 
-    // Check if player has multiplier
-    public static boolean hasPvPMultiplier(WeaponType type, Player player) {
-        return pvpMultipliers.get(type).containsKey(player.getUniqueId());
+    // -----------------------
+    // MOB (TARGET) MULTIPLIER LOGIC
+    // -----------------------
+
+    public static void setMobMultiplier(UUID player, float multiplier, TargetCategory... categories) {
+        mobMultipliers.putIfAbsent(player, new EnumMap<>(TargetCategory.class));
+        Map<TargetCategory, Float> map = mobMultipliers.get(player);
+        for (TargetCategory category : categories) {
+            map.put(category, multiplier);
+        }
     }
 
-    public static boolean hasPvEMultiplier(WeaponType type, Player player) {
-        return pveMultipliers.get(type).containsKey(player.getUniqueId());
+    public static float getMobMultiplier(UUID player, TargetCategory category) {
+        Map<TargetCategory, Float> map = mobMultipliers.get(player);
+        if (map == null) return 1.0f;
+
+        // Exact category or fallback to ALL
+        return map.getOrDefault(category, map.getOrDefault(TargetCategory.ALL, 1.0f));
     }
 
-    // Setup old combat
-    public static void setOldCombat(Player player, boolean oldCombat) {
-        pveOld.put(player.getUniqueId(), oldCombat);
+    public static boolean hasMobMultiplier(UUID player, TargetCategory category) {
+        Map<TargetCategory, Float> map = mobMultipliers.get(player);
+        return map != null && (map.containsKey(category) || map.containsKey(TargetCategory.ALL));
     }
 
-    public static boolean hasOldCombat(Player player) {
-        return pveOld.getOrDefault(player.getUniqueId(), false);
+    public static void clearMobMultiplier(UUID player, TargetCategory... categories) {
+        Map<TargetCategory, Float> map = mobMultipliers.get(player);
+        if (map == null) return;
+        for (TargetCategory category : categories) {
+            map.remove(category);
+        }
+        if (map.isEmpty()) {
+            mobMultipliers.remove(player);
+        }
+    }
+
+    // -----------------------
+    // UTILITY
+    // -----------------------
+
+    public static void clearAll(UUID player) {
+        weaponMultipliers.remove(player);
+        mobMultipliers.remove(player);
+    }
+
+    public static Map<WeaponType, Float> getWeaponMultipliers(UUID player) {
+        return weaponMultipliers.getOrDefault(player, new EnumMap<>(WeaponType.class));
+    }
+
+    public static Map<TargetCategory, Float> getMobMultipliers(UUID player) {
+        return mobMultipliers.getOrDefault(player, new EnumMap<>(TargetCategory.class));
     }
 }
