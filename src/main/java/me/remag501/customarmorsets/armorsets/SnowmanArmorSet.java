@@ -21,6 +21,8 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.lang.annotation.Target;
+
 public class SnowmanArmorSet extends ArmorSet implements Listener {
 
 //    private final HashMap<UUID, Long> cooldowns = new HashMap<>();
@@ -35,12 +37,13 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
         player.sendMessage("✅ You equipped the snowman set");
         DamageStats.setMobMultiplier(player.getUniqueId(),2, TargetCategory.ALL);
         DamageStats.setMobMultiplier(player.getUniqueId(),1, TargetCategory.UNDEAD);
-//        DamageStats.setWeaponMultiplier(player.getUniqueId(),1.5f, DamageStats.WeaponType.OTHER);
+        DefenseStats.setSourceReduction(player.getUniqueId(), 0.2f, TargetCategory.ALL);
     }
 
     @Override
     public void removePassive(Player player) {
         DamageStats.clearAll(player.getUniqueId());
+        DefenseStats.clearAll(player.getUniqueId());
         player.sendMessage("❌ You removed the snowman set");
     }
 

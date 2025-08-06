@@ -40,7 +40,7 @@ public final class CustomArmorSets extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new BrokenItemListener(), this);
         getServer().getPluginManager().registerEvents(new RepairListener(), this);
         // Listener for damage stats
-        getServer().getPluginManager().registerEvents(new DamageStatsListener(), this);
+        getServer().getPluginManager().registerEvents(new DamageListener(), this);
         // Mythic mobs
         getServer().getPluginManager().registerEvents(new MythicMobsYamlGenerator(), this);
         // Register listeners for armor sets
