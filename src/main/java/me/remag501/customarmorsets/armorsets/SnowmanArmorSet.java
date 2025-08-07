@@ -2,6 +2,9 @@ package me.remag501.customarmorsets.armorsets;
 
 import com.github.retrooper.packetevents.protocol.particle.type.ParticleType;
 import com.github.retrooper.packetevents.protocol.particle.type.ParticleTypes;
+import kernitus.plugin.OldCombatMechanics.ModuleLoader;
+import kernitus.plugin.OldCombatMechanics.utilities.storage.PlayerData;
+import kernitus.plugin.OldCombatMechanics.utilities.storage.PlayerStorage;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.*;
 import me.libraryaddict.disguise.disguisetypes.watchers.AreaEffectCloudWatcher;
@@ -22,6 +25,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.lang.annotation.Target;
+import java.util.UUID;
 
 public class SnowmanArmorSet extends ArmorSet implements Listener {
 
@@ -38,6 +42,17 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
         DamageStats.setMobMultiplier(player.getUniqueId(),2, TargetCategory.ALL);
         DamageStats.setMobMultiplier(player.getUniqueId(),1, TargetCategory.UNDEAD);
         DefenseStats.setSourceReduction(player.getUniqueId(), 0.2f, TargetCategory.ALL);
+//        OCMMain.getInstance()
+
+        PlayerData playerData = PlayerStorage.getPlayerData(player.getUniqueId());
+        UUID worldId = player.getWorld().getUID();
+        String modesetName = "new";
+        playerData.setModesetForWorld(worldId, modesetName);
+        PlayerStorage.setPlayerData(player.getUniqueId(), playerData);
+        PlayerStorage.scheduleSave();
+
+        ModuleLoader.getModules().forEach(module -> module.onModesetChange(player));
+
     }
 
     @Override
