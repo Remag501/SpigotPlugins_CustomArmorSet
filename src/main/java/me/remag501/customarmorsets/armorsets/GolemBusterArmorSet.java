@@ -49,6 +49,8 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         playerIsGolem.put(uuid, false);
         // Apply Damage Stats
         DamageStats.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.NON_PLAYER);
+        DefenseStats.setSourceReduction(player.getUniqueId(), 0.75f, TargetCategory.NON_PLAYER);
+//        DefenseStats.setWeaponReduction(player.getUniqueId(), 0.25f, WeaponType.);
         // Apply 1.8 pvp later
         energyLoop.put(this, new BukkitRunnable() {
 
@@ -79,6 +81,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         CooldownBarUtil.restorePlayerBar(player);
         AttributesUtil.restoreDefaults(player); // Just in case
         DamageStats.clearAll(player.getUniqueId());
+        DefenseStats.clearAll(player.getUniqueId());
     }
 
     @Override
@@ -236,6 +239,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         AttributesUtil.applyHealth(player, 2.0);
         AttributesUtil.applySpeed(player, 0.5);
         DamageStats.setMobMultiplier(player.getUniqueId(), 2, TargetCategory.NON_PLAYER);
+        DefenseStats.setSourceReduction(player.getUniqueId(), 0.25f, TargetCategory.NON_PLAYER);
         Bukkit.getScheduler().runTaskLater(CustomArmorSets.getInstance(), () -> {
             player.setHealth(40.0);
         }, 2L);
@@ -246,6 +250,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         AttributesUtil.removeHealth(player);
         AttributesUtil.removeSpeed(player);
         DamageStats.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.NON_PLAYER);
+        DefenseStats.setSourceReduction(player.getUniqueId(), 0.75f, TargetCategory.NON_PLAYER);
 
         // Make player a golem in map
         UUID uuid = player.getUniqueId();
