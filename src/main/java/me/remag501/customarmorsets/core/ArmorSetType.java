@@ -71,7 +71,7 @@ public enum ArmorSetType {
             new int[]{3, 8, 7, 3},
             new int[]{80, 600, 570, 250},
             new int[]{2, 3, 2, 1}),
-    VAMPIRE("vampire", "Vampire", Color.PURPLE.asRGB(),0,
+    VAMPIRE("vampire", "Vampire", Color.fromRGB(3,1,7).asRGB(),2017,
             "http://textures.minecraft.net/texture/560ee6543960fe2538e1d412b55edcec2dc0f34637fa2fb6d34e60660aecf95b",
             VampireArmorSet::new,
             Arrays.asList("§6Ability: §eDrain HP or transform on kill", "§6Passive: §eHeal when attacking living entities"),
@@ -87,14 +87,14 @@ public enum ArmorSetType {
             new int[]{230, 240, 225, 195},
             new int[]{2, 0, 0, 0}),
 
-    ARCHER("archer", "Archer", Color.LIME.asRGB(),0,
+    ARCHER("archer", "Archer", Color.fromRGB(4, 2, 7).asRGB(),2013,
             "http://textures.minecraft.net/texture/368d5d2eb8d5d01ecb88325e6b56d87d0b9be41721f128f89ba5f130aae89fa",
             ArcherArmorSet::new,
             Arrays.asList("§6Ability: §eArrow slash and knockback", "§6Passive: §eSpeed, Half HP, 25% more bow damage"),
             new int[]{1, 3, 2, 1},
             new int[]{45, 160, 140, 120},
             new int[]{0, 0, 0, 0}),
-    NECROMANCER("necromancer", "Necromancer", Color.PURPLE.asRGB(),0,
+    NECROMANCER("necromancer", "Necromancer", Color.fromRGB(2,0,7).asRGB(),1009,
             "http://textures.minecraft.net/texture/30d5d1d1c0a7de4fef5b6cf32c27e9f378279b11c372ce4cd0112a742556fc",
             NecromancerArmorSet::new,
             Arrays.asList(
@@ -116,7 +116,7 @@ public enum ArmorSetType {
             new int[]{45, 170, 150, 120},
             new int[]{0, 0, 0, 1}),
 
-    GOLEM_BUSTER("golem_buster", "Golem Buster", Color.ORANGE.asRGB(),0,
+    GOLEM_BUSTER("golem_buster", "Golem Buster", Color.fromRGB(4,1,7).asRGB(),2012,
             "http://textures.minecraft.net/texture/b69cfce1b1b7ac08a176bc16dfd9fc3d3707398f72319b45e8970bc64a510e",
             GolemBusterArmorSet::new,
             Arrays.asList(
