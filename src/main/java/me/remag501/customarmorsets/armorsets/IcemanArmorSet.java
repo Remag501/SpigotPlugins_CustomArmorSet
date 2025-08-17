@@ -49,7 +49,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     // Map to store freeze stacks for each mob
     private static final Map<UUID, Integer> freezeStacks = new ConcurrentHashMap<>();
     private static final Map<UUID, Boolean> playerIceBeam = new ConcurrentHashMap<>();
-
+    private static final Map<UUID, Boolean> playerInUlt = new ConcurrentHashMap<>();
 
 
     public IcemanArmorSet() {
@@ -67,6 +67,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         freezeCharges.put(uuid, 0);
         playerBlocksToReset.put(uuid, new HashMap<>());
         playerIceBeam.put(uuid, false);
+        playerInUlt.put(uuid, false);
         // Start task for ult
         startTask(player);
 
@@ -82,7 +83,8 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         snowCharge.remove(uuid);
         freezeCharges.remove(uuid);
         playerBlocksToReset.remove(uuid);
-        playerIceBeam.remove(uuid, false);
+        playerIceBeam.remove(uuid);
+        playerIceBeam.remove(uuid);
         player.sendMessage("❄ You removed the Iceman set");
         CooldownBarUtil.restorePlayerBar(player);
     }
@@ -113,6 +115,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         UUID uuid = player.getUniqueId();
         if (player.isSneaking() && snowCharge.get(uuid) >= 100) {
             resetIceBridgeBlocks(player); // Clean up blocks that interfere globe
+            leaveIceMode(player);
             spawnGlobe(player);
             snowCharge.put(uuid, 50);
             return;
@@ -133,6 +136,16 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
             cooldowns.put(uuid, System.currentTimeMillis());
         } else {
             player.sendMessage("§cYou don't have enough freeze charges!");
+        }
+    }
+
+    private void leaveIceMode(Player player) {
+        UUID uuid = player.getUniqueId();
+        if (iceMode.containsKey(uuid)) {
+            runningTime.remove(uuid).cancel();
+            iceMode.remove(uuid);
+            if (player.getGameMode().equals(GameMode.SURVIVAL) || player.getGameMode().equals(GameMode.ADVENTURE))
+                player.setAllowFlight(false);
         }
     }
 
@@ -269,6 +282,9 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
             blockStatesToChange.addAll(blockList);
         }
 
+        // Mention player is in ult
+        playerInUlt.put(player.getUniqueId(), true);
+
         // Schedule a repeating task to place blocks at a faster rate.
         new BukkitRunnable() {
             @Override
@@ -323,6 +339,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
             // Play a final sound and particle effect.
             world.playSound(center, Sound.BLOCK_GLASS_BREAK, 1.0f, 1.0f);
             world.spawnParticle(Particle.CLOUD, center, 30, 0, 0, 0, 0.5);
+            playerInUlt.put(player.getUniqueId(), false);
 
         }, durationTicks);
     }
@@ -332,39 +349,35 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     @EventHandler
     public void onSpint(PlayerToggleSprintEvent event) {
         Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
         if (!(CustomArmorSetsCore.getArmorSet(player) instanceof IcemanArmorSet)) return;
         // Now we start
 
-        if (!player.isSprinting() && runningTime.get(player.getUniqueId()) == null) {
+        if (!player.isSprinting() && runningTime.get(uuid) == null) {
             // checks if player started sprinting and no task is running (for safety)
             BukkitTask runnable = new BukkitRunnable() {
-                int seconds;
+                int ticks;
                 @Override
                 public void run() {
-                    seconds++;
-                    if (seconds <= 100) { // give speed under 3 seconds
-                        AttributesUtil.applySpeed(player, 1.15); // slowly increase speed
+                    ticks++;
+                    if (ticks <= 100) { // give speed under 3 seconds
+//                        AttributesUtil.applySpeed(player, 1.15); // slowly increase speed
+                        return;
                     }
-                    else if (iceMode.getOrDefault(player.getUniqueId(), false)) {
-
-
-                    } else {
+                    else if (!iceMode.getOrDefault(uuid, false) && !playerInUlt.get(uuid)) {
                         // Give player ice mode option
                         player.setFreezeTicks(10);
-                        iceMode.put(player.getUniqueId(), false);
+                        iceMode.put(uuid, false);
                         player.setAllowFlight(true);
                     }
 
                 }
             }.runTaskTimer(CustomArmorSets.getInstance(), 0, 1);
             AttributesUtil.removeSpeed(player);
-            runningTime.put(player.getUniqueId(), runnable);
+            runningTime.put(uuid, runnable);
         }
         else {
-            runningTime.remove(player.getUniqueId()).cancel();
-            iceMode.remove(player.getUniqueId());
-            if (player.getGameMode().equals(GameMode.SURVIVAL) || player.getGameMode().equals(GameMode.ADVENTURE))
-                player.setAllowFlight(false);
+            leaveIceMode(player);
         }
     }
 
