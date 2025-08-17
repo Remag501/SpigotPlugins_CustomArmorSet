@@ -37,18 +37,18 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     private static final int COOLDOWN = 5;
     private static final Map<UUID, BukkitTask> runningTime = new ConcurrentHashMap<>();
     private static final Map<UUID, BukkitTask> ultTask = new ConcurrentHashMap<>();
-    private static final Map<UUID, Boolean> iceMode = new HashMap<>();
-    private static final Map<UUID, Long> cooldowns = new HashMap<>();
-    private static final Map<UUID, Integer> freezeCharges = new HashMap<>();
-    private static final Map<UUID, Integer> snowCharge = new HashMap<>();
-    private static final Map<UUID, Map<Block, BlockState>> playerBlocksToReset = new HashMap<>();
+    private static final Map<UUID, Boolean> iceMode = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
+    private static final Map<UUID, Integer> freezeCharges = new ConcurrentHashMap<>();
+    private static final Map<UUID, Integer> snowCharge = new ConcurrentHashMap<>();
+    private static final Map<UUID, Map<Block, BlockState>> playerBlocksToReset = new ConcurrentHashMap<>();
     // Decay task for mobs
-    private static final Map<UUID, BukkitTask> decayTasks = new HashMap<>();
-    private static final Map<UUID, BukkitTask> particleTasks = new HashMap<>();
-    private static final Map<UUID, Long> mobChargeCooldowns = new HashMap<>();
+    private static final Map<UUID, BukkitTask> decayTasks = new ConcurrentHashMap<>();
+    private static final Map<UUID, BukkitTask> particleTasks = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> mobChargeCooldowns = new ConcurrentHashMap<>();
     // Map to store freeze stacks for each mob
-    private static final Map<UUID, Integer> freezeStacks = new HashMap<>();
-    private static final Map<UUID, Boolean> playerIceBeam = new HashMap<>();
+    private static final Map<UUID, Integer> freezeStacks = new ConcurrentHashMap<>();
+    private static final Map<UUID, Boolean> playerIceBeam = new ConcurrentHashMap<>();
 
 
 
@@ -76,6 +76,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     public void removePassive(Player player) {
         AttributesUtil.removeSpeed(player);
         UUID uuid = player.getUniqueId();
+        resetIceBridgeBlocks(player);
         ultTask.remove(uuid).cancel();
         cooldowns.remove(uuid);
         snowCharge.remove(uuid);
@@ -111,6 +112,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     public void triggerAbility(Player player) {
         UUID uuid = player.getUniqueId();
         if (player.isSneaking() && snowCharge.get(uuid) >= 100) {
+            resetIceBridgeBlocks(player); // Clean up blocks that interfere globe
             spawnGlobe(player);
             snowCharge.put(uuid, 50);
             return;
@@ -455,6 +457,18 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         }
     }
 
+    private void resetIceBridgeBlocks(Player player) {
+        UUID uuid = player.getUniqueId();
+        Map<Block, BlockState> blocksToReset = playerBlocksToReset.get(uuid);
+
+        if (blocksToReset != null) {
+            for (BlockState originalState : blocksToReset.values()) {
+                originalState.update(true);
+            }
+            blocksToReset.clear(); // Clear the map after resetting all blocks
+        }
+    }
+
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player)) return;
@@ -583,6 +597,8 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
             mob.setFireTicks(0);
         }
     }
+
+
 
 }
 
