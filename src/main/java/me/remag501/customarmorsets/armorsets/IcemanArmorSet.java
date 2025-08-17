@@ -97,7 +97,8 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
             @Override
             public void run() {
                 ticks++;
-                snowCharge.put(uuid, Math.min(snowCharge.get(uuid) + 1, 100));
+                if (ticks % 40 == 0) // Add charge every two seconds
+                    snowCharge.put(uuid, Math.min(snowCharge.get(uuid) + 1, 100));
                 CooldownBarUtil.setLevel(player, snowCharge.get(uuid));
 //                if (ticks % 5 == 0) {// temp
 //                    freezeCharges.put(uuid, Math.min(5, freezeCharges.get(uuid) + 1));
@@ -117,7 +118,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
             resetIceBridgeBlocks(player); // Clean up blocks that interfere globe
             leaveIceMode(player);
             spawnGlobe(player);
-            snowCharge.put(uuid, 50);
+            snowCharge.put(uuid, 0);
             return;
         } else if (player.isSneaking()) {
             player.sendMessage("Not enough snow charge");
@@ -126,7 +127,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         // First check if player is using ice beam
         if (playerIceBeam.get(uuid)) {
             playerIceBeam.put(uuid, false);
-            player.sendMessage("Paused ts");
+//            player.sendMessage("Paused ts");
             return;
         }
         // Check if player has enough charges
@@ -134,6 +135,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         if (charges > 0) {
             triggerIceBeam(player, charges);
             cooldowns.put(uuid, System.currentTimeMillis());
+            snowCharge.put(uuid, Math.min(snowCharge.get(uuid) + 3 * charges, 100));
         } else {
             player.sendMessage("§cYou don't have enough freeze charges!");
         }
@@ -289,7 +291,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                // Place 10 blocks per tick for a faster effect.
+                // Place 35 blocks per tick for a faster effect.
                 for (int i = 0; i < 35 && !blockStatesToChange.isEmpty(); i++) {
                     BlockState originalState = blockStatesToChange.poll();
                     originalStates.add(originalState);
@@ -305,19 +307,89 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
             }
         }.runTaskTimer(plugin, 0L, 1L); // Runs every tick.
 
-        // --- Step 2: Trap and Debuff Mobs ---
+        // --- Step 2: Trap, Freeze, Damage, and Heal ---
         Set<LivingEntity> trappedMobs = new HashSet<>();
         for (Entity entity : world.getNearbyEntities(center, radius, radius, radius)) {
             // Check if the entity is a LivingEntity and not the player
             if (entity instanceof LivingEntity && !(entity instanceof Player)) {
-                LivingEntity livingEntity = (LivingEntity) entity;
+                LivingEntity mob = (LivingEntity) entity;
+                trappedMobs.add(mob);
 
-                // Apply debuffs to mobs.
-                livingEntity.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) durationTicks, 2));
-                livingEntity.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, (int) durationTicks, 1));
-                trappedMobs.add(livingEntity);
+                // Add 1 freeze stack
+                UUID mobUUID = mob.getUniqueId();
+                int currentStacks = freezeStacks.getOrDefault(mobUUID, 0);
+                freezeStacks.put(mobUUID, Math.min(currentStacks + 1, 5));
+
+                // Restart decay task for this mob
+                if (decayTasks.containsKey(mobUUID)) {
+                    decayTasks.remove(mobUUID).cancel();
+                }
+                BukkitTask decayTask = new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        int stacks = freezeStacks.getOrDefault(mobUUID, 0);
+                        if (stacks <= 3 && !mob.isDead()) {
+                            mob.setAI(true);
+                        }
+                        if (stacks > 0) {
+                            freezeStacks.put(mobUUID, stacks - 1);
+                        }
+                        else {
+                            freezeStacks.remove(mobUUID);
+                            if (particleTasks.containsKey(mobUUID)) {
+                                particleTasks.remove(mobUUID).cancel();
+                            }
+                            decayTasks.remove(mobUUID);
+                            this.cancel();
+                        }
+                    }
+                }.runTaskTimer(CustomArmorSets.getInstance(), 20, 20);
+                decayTasks.put(mobUUID, decayTask);
+
+                // Start or restart a particle task for this mob
+                if (!particleTasks.containsKey(mobUUID)) {
+                    BukkitTask particleTask = new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            int stacks = freezeStacks.getOrDefault(mobUUID, 0);
+                            if (stacks >= 5) {
+                                mob.getWorld().spawnParticle(Particle.BLOCK_CRACK, mob.getLocation().add(0, 1, 0), 200, 0.5, 0.5, 0.5, Material.ICE.createBlockData());
+                            } else if (stacks >= 3) {
+                                mob.getWorld().spawnParticle(Particle.CLOUD, mob.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 0.1);
+                            } else if (stacks >= 1) {
+                                mob.getWorld().spawnParticle(Particle.SNOWFLAKE, mob.getLocation().add(0, 1, 0), 5, 0.5, 0.5, 0.5);
+                            }
+                        }
+                    }.runTaskTimer(CustomArmorSets.getInstance(), 0, 10);
+                    particleTasks.put(mobUUID, particleTask);
+                }
             }
         }
+
+        // Apply DoT and healing in a separate task
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!playerInUlt.get(player.getUniqueId())) {
+                    cancel();
+                    return;
+                }
+                // Damage mobs and heal the player
+                for (LivingEntity mob : trappedMobs) {
+                    if (mob.isDead() || !mob.isValid()) {
+                        continue;
+                    }
+                    // Damage over time
+                    mob.damage(1.0);
+                    // Make sure mob has at least one freeze stack
+                    freezeStacks.compute(mob.getUniqueId(), (k, currentStacks) -> Math.min(currentStacks + 1, 5));
+                    // Add a chilling effect particle
+                    mob.getWorld().spawnParticle(Particle.DRIP_WATER, mob.getLocation().add(0, 1, 0), 5, 0.5, 0.5, 0.5);
+                }
+                // Heal player
+                player.setHealth(Math.min(player.getHealth() + 3.0, player.getMaxHealth()));
+            }
+        }.runTaskTimer(plugin, 0L, 20L); // Runs every second
 
         // Apply a buff to the player.
         player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, (int) durationTicks, 1));
@@ -363,7 +435,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                     if (freezeCharges.get(uuid) <= 0) {
                         leaveIceMode(player);
                     } else if (iceMode.getOrDefault(uuid, false)) {
-                        if (ticks % 60 == 0) // Runs every time: three second (Could enter ice mode moment so drop is random between 0-time)
+                        if (ticks % 100 == 0) // Runs every time: five second (Could enter ice mode moment so drop is random between 0-time)
                             freezeCharges.put(uuid, freezeCharges.get(uuid) - 1);
                     }
                     else if (!playerInUlt.get(uuid) && ticks > 100) {
@@ -420,7 +492,6 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         else
             updateIceBridge(player, false);
     }
-
 
     /**
      * Places the 3x3 ice bridge under the player's feet.
@@ -497,6 +568,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
 
                 // Increment freeze stacks on the target
                 int currentStacks = previousStacks + 1;
+                player.sendMessage("This mobs current stack is "+ currentStacks);
                 freezeStacks.put(mobUUID, Math.min(currentStacks, 5));
 
                 // Add 1 freeze charge to the player (max 5) only if the cooldown has passed
@@ -507,6 +579,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                 }
 
                 freezeCharges.put(playerUUID, Math.min(freezeCharges.getOrDefault(playerUUID, 0) + 1, 5));
+                snowCharge.put(playerUUID, Math.min(snowCharge.get(playerUUID) + 3, 100)); // Add snow dome charge
                 mobChargeCooldowns.put(mobUUID, currentTime);
 
                 // Apply effects based on freeze stacks
@@ -595,6 +668,9 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                 // Spawn a visual melting effect and play a sound
                 mob.getWorld().spawnParticle(Particle.LAVA, mob.getLocation().add(0, 1, 0), 20, 0.5, 0.5, 0.5, 0.1);
                 mob.getWorld().playSound(mob.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
+
+                // Give player dome charge (not implemented as we need to first check if player has done damage)
+//                snowCharge.put(uuid, )
 
                 // Reset freeze stacks, cooldown, and AI to prevent further freezing
                 freezeStacks.remove(mobUUID);
