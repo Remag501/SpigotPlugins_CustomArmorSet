@@ -220,6 +220,45 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
         }
     }
 
+    // Thaw reaction
+    @EventHandler
+    public void onEntityFireDamage(EntityDamageEvent event) {
+        // Ensure the damaged entity is a mob and not a player
+        if (!(event.getEntity() instanceof LivingEntity mob)) return;
+        // Check if the damage cause is related to fire
+        if (event.getCause() == EntityDamageEvent.DamageCause.FIRE || event.getCause() == EntityDamageEvent.DamageCause.FIRE_TICK || event.getCause() == EntityDamageEvent.DamageCause.LAVA) {
+            UUID mobUUID = mob.getUniqueId();
+            int stacks = freezeStacks.getOrDefault(mobUUID, 0);
+
+            if (stacks > 3)
+                mob.setAI(true);
+
+            // If the mob has any freeze stacks, it takes extra damage
+            if (stacks > 0) {
+                // Damage calculation: The original damage + a bonus based on freeze stacks
+                double extraDamage = stacks * 1.5;
+                event.setDamage(event.getDamage() + extraDamage);
+
+                // Spawn a visual melting effect and play a sound
+                mob.getWorld().spawnParticle(Particle.LAVA, mob.getLocation().add(0, 1, 0), 20, 0.5, 0.5, 0.5, 0.1);
+                mob.getWorld().playSound(mob.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0f, 1.0f);
+
+                // Reset freeze stacks, cooldown, and AI to prevent further freezing
+                freezeStacks.remove(mobUUID);
+                mobChargeCooldowns.remove(mobUUID);
+                if (decayTasks.containsKey(mobUUID)) {
+                    decayTasks.remove(mobUUID).cancel();
+                }
+                if (particleTasks.containsKey(mobUUID)) {
+                    particleTasks.remove(mobUUID).cancel();
+                }
+            }
+
+            // Remove fire from mob
+            mob.setFireTicks(0);
+        }
+    }
+
     @EventHandler
     public void onEntityDamage(EntityDamageByEntityEvent event) {
 //        if (!(event.getDamager() instanceof LivingEntity target)) return;
