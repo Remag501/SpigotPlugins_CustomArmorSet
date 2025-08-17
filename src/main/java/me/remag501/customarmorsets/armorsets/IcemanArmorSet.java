@@ -360,17 +360,18 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                 @Override
                 public void run() {
                     ticks++;
-                    if (ticks <= 100) { // give speed under 3 seconds
-//                        AttributesUtil.applySpeed(player, 1.15); // slowly increase speed
-                        return;
+                    if (freezeCharges.get(uuid) <= 0) {
+                        leaveIceMode(player);
+                    } else if (iceMode.getOrDefault(uuid, false)) {
+                        if (ticks % 60 == 0) // Runs every time: three second (Could enter ice mode moment so drop is random between 0-time)
+                            freezeCharges.put(uuid, freezeCharges.get(uuid) - 1);
                     }
-                    else if (!iceMode.getOrDefault(uuid, false) && !playerInUlt.get(uuid)) {
-                        // Give player ice mode option
+                    else if (!playerInUlt.get(uuid) && ticks > 100) {
+                        // Give player option to enter ice mode option
                         player.setFreezeTicks(10);
                         iceMode.put(uuid, false);
                         player.setAllowFlight(true);
                     }
-
                 }
             }.runTaskTimer(CustomArmorSets.getInstance(), 0, 1);
             AttributesUtil.removeSpeed(player);
