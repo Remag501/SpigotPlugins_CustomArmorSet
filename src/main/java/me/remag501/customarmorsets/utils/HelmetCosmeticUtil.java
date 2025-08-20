@@ -15,9 +15,11 @@ import java.util.List;
 import java.util.UUID;
 
 public class HelmetCosmeticUtil {
-    private static final NamespacedKey ORIGINAL_TYPE_KEY = new NamespacedKey(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), "original_type");
 
     public static ItemStack makeCosmeticHelmet(ItemStack original, String texture) {
+
+        if (texture == null)
+            return original;
 
         original.setType(Material.PLAYER_HEAD);
         SkullMeta skullMeta = (SkullMeta) original.getItemMeta();
@@ -38,13 +40,6 @@ public class HelmetCosmeticUtil {
 
     }
 
-    /**
-     * Updates the lore of any armor piece by appending new lines, safely preserving cosmetic helmet textures.
-     * This function assumes that PDC handling and durability logic have already been processed outside.
-     *
-     * @param armorPiece The ItemStack to modify.
-     * @param newLoreLines The new lore lines to append.
-     */
     public static void updateCosmeticHelmetLoreSafely(ItemStack armorPiece, List<String> newLoreLines) {
         if (armorPiece == null || !armorPiece.hasItemMeta()) return;
 
@@ -59,16 +54,6 @@ public class HelmetCosmeticUtil {
         lore.addAll(newLoreLines);
         meta.setLore(lore);
 
-//        // Special handling for textured heads
-//        if (armorPiece.getType() == Material.PLAYER_HEAD && meta instanceof SkullMeta skullMeta) {
-//            PlayerProfile profile = skullMeta.getOwnerProfile();
-//            if (profile != null) {
-//                skullMeta.setOwnerProfile(profile); // Restore profile after mutation
-//            }
-//            armorPiece.setItemMeta(skullMeta);
-//        } else {
-//            armorPiece.setItemMeta(meta);
-//        }
         armorPiece.setItemMeta(meta);
     }
 
