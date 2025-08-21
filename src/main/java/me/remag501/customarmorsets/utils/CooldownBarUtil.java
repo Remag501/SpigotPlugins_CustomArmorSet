@@ -4,26 +4,20 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class CooldownBarUtil {
 
     private static final Map<UUID, Integer> originalLevels = new HashMap<>();
     private static final Map<UUID, Float> originalXp = new HashMap<>();
-    private static final Map<UUID, BossBar> activeBossBars = new HashMap<>();
-    private static boolean inUse = false;
+    private static final Map<UUID, Boolean> inUse = new HashMap<>();
+    private static final Map<UUID, BukkitTask> cooldownTasks = new HashMap<>();
+    private static final Map<UUID, Double> currentCooldownDurations = new HashMap<>();
+    private static final Map<UUID, Double> currentCooldownRemaining = new HashMap<>();
+    private static final Map<UUID, Queue<Double>> cooldownQueues = new HashMap<>();
 
-    /**
-     * Starts a cooldown display using both XP bar and BossBar.
-     *
-     * @param plugin Your plugin instance
-     * @param player The player to show cooldown to
-     * @param seconds Cooldown time in seconds
-//     * @param barColor The BossBar color
-     */
     public static void startCooldownBar(Plugin plugin, Player player, int seconds) {
         if (seconds <= 0) return;
 
@@ -35,15 +29,10 @@ public class CooldownBarUtil {
             originalXp.put(uuid, player.getExp());
         }
 
-        // Create a BossBar for extra visual feedback
-//        BossBar bossBar = Bukkit.createBossBar("Cooldown...", barColor, BarStyle.SEGMENTED_10);
-//        bossBar.addPlayer(player);
-//        activeBossBars.put(uuid, bossBar);
-
         final int totalTicks = seconds * 20;
         final long startTime = System.currentTimeMillis();
 
-        inUse = true;
+        inUse.put(player.getUniqueId(), true);
 
         new BukkitRunnable() {
             int ticksLeft = totalTicks;
@@ -67,12 +56,9 @@ public class CooldownBarUtil {
                 int secondsLeft = (int) Math.ceil((seconds * 1000.0 - elapsedMillis) / 1000.0);
                 player.setLevel(Math.max(secondsLeft, 0));
 
-                // Update BossBar
-//                bossBar.setProgress(progress);
-
                 // When done
                 if (progress <= 0.0) {
-                    inUse = false;
+                    inUse.put(player.getUniqueId(), false);
                     flashXpBar(plugin, player);
                     cleanup(player);
                     cancel();
@@ -81,10 +67,81 @@ public class CooldownBarUtil {
         }.runTaskTimer(plugin, 0L, 2L); // updates every 2 ticks (~0.1s)
     }
 
-    private static void flashXpBar(Plugin plugin, Player player) {
-        if (inUse)
-            return;
+    public static void startMiniCooldownBar(Plugin plugin, Player player, double seconds) {
+        if (seconds <= 0) return;
+
         UUID uuid = player.getUniqueId();
+
+        // Save original XP and level if not already being tracked.
+        if (!originalXp.containsKey(uuid)) {
+            originalXp.put(uuid, player.getExp());
+            originalLevels.put(uuid, player.getLevel());
+        }
+
+        // Get or create the cooldown queue for the player.
+        Queue<Double> queue = cooldownQueues.computeIfAbsent(uuid, k -> new LinkedList<>());
+        queue.add(seconds);
+
+        // If a cooldown task is already running, we're done. The existing task will handle the new queue item.
+        if (cooldownTasks.containsKey(uuid)) {
+            return;
+        }
+
+        // Start a new BukkitRunnable to manage the XP bar display.
+        BukkitTask task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                // Check if the player is still online. If not, clean up and cancel.
+                if (!player.isOnline()) {
+                    cleanup(player);
+                    cooldownTasks.remove(uuid).cancel();
+                    return;
+                }
+
+                // Get the current cooldown from the queue.
+                Double currentCooldown = queue.peek();
+
+                // If the queue is empty, the cooldown is finished.
+                if (currentCooldown == null) {
+                    player.setExp(0);
+                    cleanup(player);
+                    cooldownTasks.remove(uuid).cancel();
+                    return;
+                }
+
+                // If this is the start of a new cooldown, set the duration.
+                if (!currentCooldownDurations.containsKey(uuid)) {
+                    currentCooldownDurations.put(uuid, currentCooldown);
+                    currentCooldownRemaining.put(uuid, currentCooldown);
+                }
+
+                // Decrement the remaining time by 0.1 seconds (2 ticks).
+                double remaining = currentCooldownRemaining.get(uuid) - 0.1;
+                currentCooldownRemaining.put(uuid, remaining);
+
+                // Calculate XP bar progress based on the current cooldown.
+                double duration = currentCooldownDurations.get(uuid);
+                double progress = remaining / duration;
+
+                player.setExp((float) Math.max(0.0, Math.min(1.0, progress)));
+
+                // If the current cooldown is finished, poll the queue to move to the next one.
+                if (remaining <= 0.0) {
+                    queue.poll();
+                    currentCooldownDurations.remove(uuid);
+                    currentCooldownRemaining.remove(uuid);
+                }
+            }
+        }.runTaskTimer(plugin, 0L, 2L); // updates every 2 ticks (~0.1s)
+
+        // Store the task so we can check if it's already running.
+        cooldownTasks.put(uuid, task);
+    }
+
+    private static void flashXpBar(Plugin plugin, Player player) {
+        UUID uuid = player.getUniqueId();
+        if (inUse.get(uuid))
+            return;
 
         new BukkitRunnable() {
             int flashes = 0;
@@ -92,7 +149,7 @@ public class CooldownBarUtil {
 
             @Override
             public void run() {
-                if (!player.isOnline() || inUse) {
+                if (!player.isOnline() || inUse.get(uuid)) {
                     cancel();
                     return;
                 }
@@ -116,12 +173,6 @@ public class CooldownBarUtil {
 
     private static void cleanup(Player player) {
         UUID uuid = player.getUniqueId();
-
-        // Remove BossBar
-//        BossBar bar = activeBossBars.remove(uuid);
-//        if (bar != null) {
-//            bar.removeAll();
-//        }
     }
 
     public static void restorePlayerBar(Player player) {
