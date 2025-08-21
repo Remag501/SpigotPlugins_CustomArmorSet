@@ -240,4 +240,13 @@ public class AttributesUtil {
 
         }
 
+    public static void removeAllArmorAttributes(ItemStack itemStack) {
+        ItemMeta meta = itemStack.getItemMeta();
+        meta.removeAttributeModifier(Attribute.GENERIC_MAX_HEALTH);
+        meta.removeAttributeModifier(Attribute.GENERIC_MOVEMENT_SPEED);
+        meta.removeAttributeModifier(Attribute.GENERIC_ATTACK_SPEED);
+        meta.removeAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE);
+        meta.removeAttributeModifier(Attribute.GENERIC_ARMOR);
+        itemStack.setItemMeta(meta);
     }
+}

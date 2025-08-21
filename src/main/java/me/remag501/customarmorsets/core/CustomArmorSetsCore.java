@@ -1,12 +1,16 @@
 package me.remag501.customarmorsets.core;
 
 import me.remag501.customarmorsets.CustomArmorSets;
+import me.remag501.customarmorsets.utils.AttributesUtil;
 import me.remag501.customarmorsets.utils.HelmetCosmeticUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.HashMap;
 import java.util.List;
@@ -60,6 +64,12 @@ public class CustomArmorSetsCore {
                 player.getInventory().setHelmet(HelmetCosmeticUtil.restoreOriginalHelmet(helmet, Color.fromRGB(type.getLeatherColor())));
             }
             equippedHelmet.remove(player.getUniqueId());
+        }
+
+        // Remove attributes from boots (if still there)
+        ItemStack boots = player.getInventory().getBoots();
+        if (boots != null) {
+            AttributesUtil.removeAllArmorAttributes(boots);
         }
 
     }
