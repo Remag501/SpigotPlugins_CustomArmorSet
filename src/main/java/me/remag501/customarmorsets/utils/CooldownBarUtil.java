@@ -123,7 +123,7 @@ public class CooldownBarUtil {
                 double duration = currentCooldownDurations.get(uuid);
                 double progress = remaining / duration;
 
-                player.setExp((float) Math.max(0.0, Math.min(1.0, progress)));
+                player.setExp((float) Math.min(1.0, 1 - Math.min(1.0, progress)));
 
                 // If the current cooldown is finished, poll the queue to move to the next one.
                 if (remaining <= 0.0) {
