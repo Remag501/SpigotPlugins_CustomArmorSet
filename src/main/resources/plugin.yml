@@ -7,3 +7,6 @@ commands:
   customarmorsets:
     description: Custom armor sets command.
     usage: /<command> give <set>
+
+depend:
+  - Citizens
