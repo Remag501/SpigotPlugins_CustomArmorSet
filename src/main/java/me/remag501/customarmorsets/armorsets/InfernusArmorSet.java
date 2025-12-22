@@ -38,14 +38,14 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
     public void applyPassive(Player player) {
         // Give player permanent fire resistance (infinite duration)
         player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 0, true, false));
-        player.sendMessage("✅ You equipped the Infernus set");
+//        player.sendMessage("✅ You equipped the Infernus set");
     }
 
     @Override
     public void removePassive(Player player) {
         // Remove fire resistance when unequipped
         player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
-        player.sendMessage("❌ You removed the Infernus set");
+//        player.sendMessage("❌ You removed the Infernus set");
     }
 
     @Override
@@ -55,7 +55,7 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
 
         if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
             long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
-            player.sendMessage("§cAbility is on cooldown for " + timeLeft + " more seconds!");
+            player.sendMessage("§c§l(!) §cAbility is on cooldown for " + timeLeft + " more seconds!");
             return;
         }
 

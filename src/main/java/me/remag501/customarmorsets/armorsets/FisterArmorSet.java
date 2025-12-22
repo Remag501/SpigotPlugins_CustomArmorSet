@@ -91,7 +91,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         // Check if player is on cooldown
         if (abilityCooldowns.containsKey(uuid) && now < abilityCooldowns.get(uuid)) {
             long remaining = (abilityCooldowns.get(uuid) - now) / 1000;
-            player.sendMessage(ChatColor.RED + "Your meditate ability is on cooldown for another " + remaining + " seconds.");
+            player.sendMessage("§a§l(!) §aYour meditate ability is on cooldown for another " + remaining + " seconds.");
             return;
         }
 
@@ -216,7 +216,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         if (event.getEntity() instanceof Player damaged && dodging.getOrDefault(damaged.getUniqueId(), null) == event.getDamager()) {
             event.setCancelled(true);
             // Subtitle feedback
-            String message = ChatColor.GRAY + "You dodged the hit!";
+            String message = "§a§l(!) §aYou dodged the hit!";
             damaged.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
             // Sound effect
             damaged.getWorld().playSound(damaged.getLocation(), Sound.ENTITY_IRON_GOLEM_REPAIR, 1f, 1.2f);
@@ -362,7 +362,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         if (dodgeCooldowns.containsKey(uuid) && now < dodgeCooldowns.get(uuid)) {
             // Subtitle feedback
             long remaining = (dodgeCooldowns.get(uuid) - now) / 1000;
-            String message = ChatColor.RED + "You have " + remaining + " seconds before you can block again.";
+            String message = "§c§l(!) §cYou have " + remaining + " §cseconds before you can block again.";
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
             return;
         }
@@ -401,7 +401,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
             loc.getWorld().playSound(loc, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.2f);
 
             loc.getWorld().spawnParticle(Particle.ITEM_CRACK, loc, 10, 0.1, 0.1, 0.1, new ItemStack(Material.ARROW));
-            player.sendMessage("Arrow shattered!");
+            player.sendMessage("§a§l(!) §aArrow shattered!");
         }
     }
 

@@ -43,7 +43,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void applyPassive(Player player) {
-        player.sendMessage("✅ You equipped the Golem Buster set");
+//        player.sendMessage("✅ You equipped the Golem Buster set");
         UUID uuid = player.getUniqueId();
         playerEnergy.put(uuid, 0);
         playerIsGolem.put(uuid, false);
@@ -74,7 +74,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void removePassive(Player player) {
-        player.sendMessage("❌ You removed the Golem Buster set");
+//        player.sendMessage("❌ You removed the Golem Buster set");
         // End the bukkit task
         transformBack(player);
         energyLoop.get(this).cancel();
@@ -100,7 +100,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
                 long lastUsed = stunCooldown.getOrDefault(uuid, 0L);
 
                 if (now - lastUsed < 1000) {
-                    player.sendMessage(ChatColor.RED + "Ability on cooldown!");
+                    player.sendMessage("§c§l(!) §cAbility on cooldown!");
                     return;
                 }
 
@@ -142,7 +142,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
                 }
 
                 // Optional confirmation
-                player.sendMessage(ChatColor.GRAY + "You slam the ground, stunning enemies ahead!");
+                player.sendMessage("§a§l(!) §aYou slam the ground, stunning enemies ahead!");
                 return;
             }
         }
@@ -150,7 +150,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         if (player.isSneaking()) {
 //            battery = consumePlayerEnergy(player, -50);
             if (battery >= 50) {
-                player.sendMessage("Golem Smash");
+                player.sendMessage("§a§l(!) §aGolem Smash");
                 setLevel(player, battery);
                 golemTransform(player);
                 return;
@@ -159,7 +159,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         // Check if player has enough battery
         battery = consumePlayerEnergy(player, -5);
         if (battery < 0) {
-            player.sendMessage("Not enough battery");
+            player.sendMessage("§c§l(!) §cNot enough battery");
             return;
         }
 
@@ -186,7 +186,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         }
 
         world.playSound(player.getLocation(), Sound.ENTITY_SHULKER_SHOOT, 1f, 2f);
-        player.sendMessage("§eBattery gun discharged!");
+        player.sendMessage("§a§l(!) §aBattery gun discharged!");
     }
 
     public void startTargetEffect(LivingEntity target) {
@@ -274,7 +274,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         // Remove disguise
         DisguiseAPI.undisguiseToAll(player);
 
-        player.sendMessage("Golem no longer mad");
+        player.sendMessage("§c§l(!) §cGolem tired.");
     }
 
     private void startParticleTrail(Player player) {
@@ -346,7 +346,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
 
         // Add battery energy
         int energy = (int) calculatedEnergy;
-        player.sendMessage("§6Battery +" + energy + " from kill!");
+        player.sendMessage("§a§l(!) §aBattery +" + energy + " from kill!");
         consumePlayerEnergy(player, energy);
     }
 

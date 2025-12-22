@@ -34,14 +34,14 @@ public class ArcherArmorSet extends ArmorSet implements Listener {
         // Halve max HP (set max health to 10) and give Speed 1.25x
         AttributesUtil.applySpeed(player, 1.5);
         AttributesUtil.applyHealth(player, 0.5);
-        player.sendMessage("✅ You equipped the Archer set");
+//        player.sendMessage("✅ You equipped the Archer set");
     }
 
     @Override
     public void removePassive(Player player) {
         AttributesUtil.removeSpeed(player);
         AttributesUtil.removeHealth(player);
-        player.sendMessage("❌ You removed the Archer set");
+//        player.sendMessage("❌ You removed the Archer set");
     }
 
     @Override
@@ -50,7 +50,7 @@ public class ArcherArmorSet extends ArmorSet implements Listener {
         long now = System.currentTimeMillis();
         if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
             long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
-            player.sendMessage("§cAbility on cooldown for " + timeLeft + " seconds!");
+            player.sendMessage("§c§l(!) §cAbility on cooldown for " + timeLeft + " seconds!");
             return;
         }
 
@@ -116,7 +116,7 @@ public class ArcherArmorSet extends ArmorSet implements Listener {
 
                     if (hitY > targetHeight * 0.75) {
                         event.setDamage(event.getDamage() * 1.5); // Headshot bonus
-                        player.sendMessage("§eHeadshot!");
+                        player.sendMessage("§a§l(!) §aHeadshot!");
                     }
                 }
             }

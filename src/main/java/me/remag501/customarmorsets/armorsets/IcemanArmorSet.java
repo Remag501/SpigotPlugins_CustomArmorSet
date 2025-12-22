@@ -68,7 +68,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     @Override
     public void applyPassive(Player player) {
         AttributesUtil.applySpeed(player, 1.25);
-        player.sendMessage("❄ You equipped the Iceman set");
+//        player.sendMessage("❄ You equipped the Iceman set");
         // Populate maps
         UUID uuid = player.getUniqueId();
         cooldowns.put(uuid, System.currentTimeMillis());
@@ -97,7 +97,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         playerBlocksToReset.remove(uuid);
         playerIceBeam.remove(uuid);
         playerIceBeam.remove(uuid);
-        player.sendMessage("❄ You removed the Iceman set");
+//        player.sendMessage("❄ You removed the Iceman set");
         CooldownBarUtil.restorePlayerBar(player);
     }
 
@@ -111,7 +111,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
             domeCharge.put(uuid, 0);
             return;
         } else if (player.isSneaking()) {
-            player.sendMessage("Not enough snow charge");
+            player.sendMessage("§c§l(!) §cNot enough snow charge");
             return;
         }
         // First check if player is using ice beam
@@ -127,7 +127,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
             cooldowns.put(uuid, System.currentTimeMillis());
             domeCharge.put(uuid, Math.min(domeCharge.get(uuid) + 3 * charges, 100));
         } else {
-            player.sendMessage("§cYou don't have enough freeze charges!");
+            player.sendMessage("§c§l(!) §cYou don't have enough freeze charges!");
         }
     }
 
@@ -303,7 +303,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                 // Set freeze stack to 1
                 freezeStacks.put(mobUUID, 1);
 
-                player.sendMessage("You thawed you're opponent");
+                player.sendMessage("§a§l(!) §aYou thawed you're opponent");
             }
         }
     }

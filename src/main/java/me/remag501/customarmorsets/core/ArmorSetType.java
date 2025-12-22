@@ -14,9 +14,9 @@ public enum ArmorSetType {
             "http://textures.minecraft.net/texture/bf96f13c7fb55b00a172ded93c12419c912188700389ef366d43eb3c107aab71",
             SnowmanArmorSet::new,
             Arrays.asList("", ""),
-            new int[]{1, 1, 1, 1},
-            new int[]{55, 80, 70, 65},
-            new int[]{0, 0, 0, 0}),
+            new int[]{1, 1, 1, 1}, // Armor points
+            new int[]{55, 80, 70, 65}, // Durability
+            new int[]{0, 0, 0, 0}), // Toughness
     INFERNUS("infernus", "Infernus", 7, 1008, null,
             InfernusArmorSet::new,
             Arrays.asList("§6Ability: §ePress F to shoot a fire trail", "§6Passive: §eFire resistance, trail of fire"),
@@ -74,8 +74,8 @@ public enum ArmorSetType {
             new int[]{65, 310, 295, 225},
             new int[]{1, 2, 2, 1}),
 
-    FISTER("fister", "Fister", Color.YELLOW.asRGB(),0,
-            "http://textures.minecraft.net/texture/74c76d07417fb8cd3dcaed4ded98537131658c996ae2e5536bddd9aef752804c",
+    FISTER("fister", "Fister", Color.fromRGB(2,1,7).asRGB(),1010,
+            null,
             FisterArmorSet::new,
             Arrays.asList("§6Ability: §eFist flurry", "§6Passive: §eInvulnerability, Overshield, Regen, No weapons"),
             new int[]{3, 6, 5, 2},
@@ -98,8 +98,8 @@ public enum ArmorSetType {
             new int[]{407, 592, 555, 481},
             new int[]{3, 3, 3, 3}),
 
-    ICEMAN("iceman", "Iceman", Color.AQUA.asRGB(),0,
-            "http://textures.minecraft.net/texture/4d7c1651a7853e9bb96126b57ecae3f926c9ff29c0f9fbb5ff5e9f7740ebc7",
+    ICEMAN("iceman", "Iceman", Color.fromRGB(6,1,4).asRGB(),2030,
+            null,
             IcemanArmorSet::new,
             Arrays.asList(
                     "§6Ability: §ePress F to summon ice ring around you dealing DoT to mobs",

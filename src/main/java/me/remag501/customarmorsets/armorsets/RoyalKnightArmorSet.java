@@ -31,13 +31,13 @@ public class RoyalKnightArmorSet extends ArmorSet implements Listener {
     public void applyPassive(Player player) {
         // 125% max hp
         AttributesUtil.applyHealth(player, 1.25);
-        player.sendMessage("You equipped the Royal Knight set");
+//        player.sendMessage("You equipped the Royal Knight set");
     }
 
     @Override
     public void removePassive(Player player) {
         AttributesUtil.removeHealth(player);
-        player.sendMessage("You removed the Royal Knight set");
+//        player.sendMessage("You removed the Royal Knight set");
     }
 
     @Override
@@ -47,13 +47,13 @@ public class RoyalKnightArmorSet extends ArmorSet implements Listener {
 
         if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
             long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
-            player.sendMessage("§cAbility is on cooldown for " + timeLeft + " more seconds!");
+            player.sendMessage("§c§l(!) §cAbility is on cooldown for " + timeLeft + " more seconds!");
             return;
         }
 
         // Heal 3 hearts (6 health)
         player.setHealth(Math.min(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(), player.getHealth() + 6));
-        player.sendMessage("§aYou used Royal Knight's Healing!");
+        player.sendMessage("§a§l(!) §aYou used Royal Knight's Healing!");
 
         Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
         CooldownBarUtil.startCooldownBar(plugin, player, (int)(COOLDOWN / 1000));

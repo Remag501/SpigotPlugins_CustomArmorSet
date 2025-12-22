@@ -28,7 +28,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
         if (args.length < 1) {
-            sender.sendMessage(ChatColor.RED + "sender.sendMessage(ChatColor.RED + \"Usage: /customarmorsets give <player> <set> OR /customarmorsets give <set> OR /customarmorsets givepiece <type> <player> <set> OR /customarmorsets getrepairkit <player>");
+            sender.sendMessage( "§b§lARMOR §8» §7sender.sendMessage(ChatColor.RED + \"Usage: /customarmorsets give <player> <set> OR /customarmorsets give <set> OR /customarmorsets givepiece <type> <player> <set> OR /customarmorsets getrepairkit <player>");
             return true;
         }
 
@@ -44,20 +44,20 @@ public class CustomArmorSetCommand implements CommandExecutor {
 
                 Player target = Bukkit.getPlayerExact(targetName);
                 if (target == null) {
-                    sender.sendMessage(ChatColor.RED + "Player '" + targetName + "' not found.");
+                    sender.sendMessage("§b§lARMOR §8» §cPlayer '" + targetName + "' not found.");
                     return true;
                 }
 
                 giveArmorSet(target, setId);
-                sender.sendMessage(ChatColor.GREEN + "Gave " + setId + " armor set to " + target.getName() + "!");
+                sender.sendMessage("§b§lARMOR §8» §aGave " + setId + " armor set to " + target.getName() + "!");
             } else {
-                sender.sendMessage(ChatColor.RED + "Usage: /customarmorsets give <player> <set> OR /customarmorsets give <set>");
+                sender.sendMessage("§b§lARMOR §8» §cUsage: /customarmorsets give <player> <set> OR /customarmorsets give <set>");
             }
         }
 
         else if (args[0].equalsIgnoreCase("givepiece")) {
             if (args.length != 4) {
-                sender.sendMessage(ChatColor.RED + "Usage: /customarmorsets givepiece <type> <player> <set>");
+                sender.sendMessage("§b§lARMOR §8» §cUsage: /customarmorsets givepiece <type> <player> <set>");
                 return true;
             }
 
@@ -67,7 +67,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
 
             Player target = Bukkit.getPlayerExact(playerName);
             if (target == null) {
-                sender.sendMessage(ChatColor.RED + "Player '" + playerName + "' not found.");
+                sender.sendMessage("§b§lARMOR §8» §cPlayer '" + playerName + "' not found.");
                 return true;
             }
 
@@ -77,31 +77,31 @@ public class CustomArmorSetCommand implements CommandExecutor {
                 case "LEGGINGS" -> giveArmorPiece(target, setId, EquipmentSlot.LEGS);
                 case "BOOTS" -> giveArmorPiece(target, setId, EquipmentSlot.FEET);
                 default -> {
-                    sender.sendMessage(ChatColor.RED + "Invalid piece type. Use HELMET, CHESTPLATE, LEGGINGS, or BOOTS.");
+                    sender.sendMessage("§b§lARMOR §8» §cInvalid piece type. Use HELMET, CHESTPLATE, LEGGINGS, or BOOTS.");
                     return true;
                 }
             }
 
-            sender.sendMessage(ChatColor.GREEN + "Gave " + pieceType + " of " + setId + " to " + target.getName() + ".");
+            sender.sendMessage("§b§lARMOR §8» §cGave " + pieceType + " of " + setId + " to " + target.getName() + ".");
         }
 
         else if (args.length == 1 && args[0].equalsIgnoreCase("getrepairkit") && sender instanceof Player player) {
             ItemStack repairKit = ItemUtil.createRepairKit(1, 0);
             player.getInventory().addItem(repairKit);
-            player.sendMessage(ChatColor.GREEN + "You received an Armor Repair Kit!");
+            player.sendMessage("§b§lARMOR §8» §aYou received an Armor Repair Kit!");
             return true;
         }
 
         else if (args.length == 2 && args[0].equalsIgnoreCase("getrepairkit")) {
             Player target = Bukkit.getPlayerExact(args[1]);
             if (target == null) {
-                sender.sendMessage(ChatColor.RED + "Player not found.");
+                sender.sendMessage("§b§lARMOR §8» §cPlayer not found.");
                 return true;
             }
 
             target.getInventory().addItem(ItemUtil.createRepairKit(1, 0));
-            sender.sendMessage(ChatColor.GREEN + "Repair kit given to " + target.getName() + "!");
-            target.sendMessage(ChatColor.GREEN + "You received an Armor Repair Kit!");
+            sender.sendMessage("§b§lARMOR §8» §aRepair kit given to " + target.getName() + "!");
+            target.sendMessage("§b§lARMOR §8» §aYou received an Armor Repair Kit!");
             return true;
         }
 
@@ -112,15 +112,15 @@ public class CustomArmorSetCommand implements CommandExecutor {
                 int tier = Integer.parseInt(args[2]);
 
                 if (amount <= 0 || tier < 0) {
-                    sender.sendMessage(ChatColor.RED + "Amount must be positive and tier must be non-negative.");
+                    sender.sendMessage("§b§lARMOR §8» §cAmount must be positive and tier must be non-negative.");
                     return true;
                 }
 
                 ItemStack repairKit = ItemUtil.createRepairKit(amount, tier);
                 player.getInventory().addItem(repairKit);
-                player.sendMessage(ChatColor.GREEN + "You received " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ")!");
+                player.sendMessage("§b§lARMOR §8» §aYou received " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ")!");
             } catch (NumberFormatException e) {
-                sender.sendMessage(ChatColor.RED + "Usage: /customarmorsets getrepairkit <amount> <tier> [player]");
+                sender.sendMessage("§b§lARMOR §8» §cUsage: /customarmorsets getrepairkit <amount> <tier> [player]");
             }
             return true;
         }
@@ -132,28 +132,28 @@ public class CustomArmorSetCommand implements CommandExecutor {
                 int tier = Integer.parseInt(args[2]);
 
                 if (amount <= 0 || tier < 0) {
-                    sender.sendMessage(ChatColor.RED + "Amount must be positive and tier must be non-negative.");
+                    sender.sendMessage("§b§lARMOR §8» §cAmount must be positive and tier must be non-negative.");
                     return true;
                 }
 
                 Player target = Bukkit.getPlayerExact(args[3]);
                 if (target == null) {
-                    sender.sendMessage(ChatColor.RED + "Player not found.");
+                    sender.sendMessage("§b§lARMOR §8» §cPlayer not found.");
                     return true;
                 }
 
                 ItemStack repairKit = ItemUtil.createRepairKit(amount, tier);
                 target.getInventory().addItem(repairKit);
-                sender.sendMessage(ChatColor.GREEN + "Gave " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ") to " + target.getName() + "!");
-                target.sendMessage(ChatColor.GREEN + "You received " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ")!");
+                sender.sendMessage("§b§lARMOR §8» §aGave " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ") to " + target.getName() + "!");
+                target.sendMessage("§b§lARMOR §8» §aYou received " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ")!");
             } catch (NumberFormatException e) {
-                sender.sendMessage(ChatColor.RED + "Usage: /customarmorsets getrepairkit <amount> <tier> [player]");
+                sender.sendMessage("§b§lARMOR §8» §cUsage: /customarmorsets getrepairkit <amount> <tier> [player]");
             }
             return true;
         }
 
         else {
-            sender.sendMessage(ChatColor.RED + "Usage: /customarmorsets give <player> <set> OR /customarmorsets give <set> OR /customarmorsets givepiece <type> <player> <set> OR /customarmorsets getrepairkit <player>");
+            sender.sendMessage("§b§lARMOR §8» §aUsage: /customarmorsets give <player> <set> OR /customarmorsets give <set> OR /customarmorsets givepiece <type> <player> <set> OR /customarmorsets getrepairkit <player>");
         }
 
         return true;
@@ -177,9 +177,9 @@ public class CustomArmorSetCommand implements CommandExecutor {
                 player.getInventory().addItem(item);
             }
 
-            player.sendMessage(ChatColor.GREEN + "You received the " + type.getDisplayName() + ChatColor.GREEN + " Armor Set!");
+            player.sendMessage("§b§lARMOR §8» §aYou received the " + type.getDisplayName() + ChatColor.GREEN + " Armor Set!");
         }, () -> {
-            player.sendMessage(ChatColor.RED + "Unknown armor set. Try: " +
+            player.sendMessage("§b§lARMOR §8» §cUnknown armor set. Try: " +
                     Arrays.stream(ArmorSetType.values())
                             .map(ArmorSetType::getId)
                             .collect(Collectors.joining(", "))
@@ -211,13 +211,13 @@ public class CustomArmorSetCommand implements CommandExecutor {
 
             if (pieceToGive != null) {
                 player.getInventory().addItem(pieceToGive);
-                player.sendMessage(ChatColor.GREEN + "You received the " + slot.name() + " of " + type.getDisplayName() + ChatColor.GREEN + "!");
+                player.sendMessage("§b§lARMOR §8» §aYou received the " + slot.name() + " of " + type.getDisplayName() + ChatColor.GREEN + "!");
             } else {
-                player.sendMessage(ChatColor.RED + "Invalid armor slot.");
+                player.sendMessage("§b§lARMOR §8» §cInvalid armor slot.");
             }
 
         }, () -> {
-            player.sendMessage(ChatColor.RED + "Unknown armor set. Try: " +
+            player.sendMessage("§b§lARMOR §8» §aUnknown armor set. Try: " +
                     Arrays.stream(ArmorSetType.values())
                             .map(ArmorSetType::getId)
                             .collect(Collectors.joining(", "))

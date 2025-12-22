@@ -49,12 +49,12 @@ public class BanditArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void applyPassive(Player player) {
-        player.sendMessage("✅ You equipped the Bandit set!");
+//        player.sendMessage("✅ You equipped the Bandit set!");
     }
 
     @Override
     public void removePassive(Player player) {
-        player.sendMessage("❌ You removed the Bandit set.");
+//        player.sendMessage("❌ You removed the Bandit set.");
         // The speed attribute is handled conditionally in the PlayerMoveEvent handler.
         // It will be removed automatically once the player's hands are no longer empty.
 
@@ -104,8 +104,8 @@ public class BanditArmorSet extends ArmorSet implements Listener {
                 if (item != null && item.getType() != Material.AIR) {
                     target.getWorld().dropItemNaturally(target.getLocation(), item);
                     targetInv.setItem(i, new ItemStack(Material.AIR));
-                    target.sendMessage(ChatColor.RED + "You feel your pockets getting lighter!");
-                    attacker.sendMessage(ChatColor.GREEN + "A piece of loot was dropped!");
+                    target.sendMessage("§c§l(!) §cYou feel your pockets getting lighter!");
+                    attacker.sendMessage("§a§l(!) §aA piece of loot was dropped!");
                     break;
                 }
             }
@@ -128,14 +128,14 @@ public class BanditArmorSet extends ArmorSet implements Listener {
             player.setVelocity(direction);
 
             player.playSound(player.getLocation(), Sound.ENTITY_HORSE_JUMP, 1.0f, 2.0f);
-            player.sendMessage(ChatColor.GOLD + "You dodged! Dodges left: " + currentDodges);
+            player.sendMessage("§a§l(!) §aYou dodged! Dodges left: " + currentDodges);
 
             // Start the regen task if it's not already running.
             if (!regenTasks.containsKey(player.getUniqueId()) || regenTasks.get(player.getUniqueId()).isCancelled()) {
                 startDodgeRegenTask(player);
             }
         } else {
-            player.sendMessage(ChatColor.RED + "You have no dodges left!");
+            player.sendMessage("§c§l(!) §cYou have no dodges left!");
         }
     }
 
@@ -147,7 +147,7 @@ public class BanditArmorSet extends ArmorSet implements Listener {
                 if (currentDodges < MAX_DODGES) {
                     currentDodges++;
                     playerDodges.put(player.getUniqueId(), currentDodges);
-                    player.sendMessage(ChatColor.GREEN + "You regenerated a dodge! Dodges left: " + currentDodges);
+                    player.sendMessage("§a§l(!) §aYou regenerated a dodge! Dodges left: " + currentDodges);
                     CooldownBarUtil.setLevel(player, currentDodges);
                 }
 

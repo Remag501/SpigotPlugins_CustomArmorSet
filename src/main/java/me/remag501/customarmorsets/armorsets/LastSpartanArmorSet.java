@@ -34,13 +34,13 @@ public class LastSpartanArmorSet extends ArmorSet implements Listener {
     @Override
     public void applyPassive(Player player) {
         AttributesUtil.applyHealth(player, 0.7);
-        player.sendMessage("You equipped the Last Spartan set");
+//        player.sendMessage("You equipped the Last Spartan set");
     }
 
     @Override
     public void removePassive(Player player) {
         AttributesUtil.removeHealth(player);
-        player.sendMessage("You removed the Last Spartan set");
+//        player.sendMessage("You removed the Last Spartan set");
     }
 
     @Override
@@ -50,7 +50,7 @@ public class LastSpartanArmorSet extends ArmorSet implements Listener {
 
         if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
             long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
-            player.sendMessage("§cAbility is on cooldown for " + timeLeft + " more seconds!");
+            player.sendMessage("§c§l(!) §cAbility is on cooldown for " + timeLeft + " more seconds!");
             return;
         }
 
@@ -108,7 +108,7 @@ public class LastSpartanArmorSet extends ArmorSet implements Listener {
 
                         cancel();
                     } else if (player.isOnGround() && ticks > 10) { // Enemy got away from spartan jump
-                        player.sendMessage("You missed!");
+                        player.sendMessage("§c§l(!) §cYou missed!");
                         cancel();
                     } else if (ticks >= 100) {
                         // Reduce lag, likely if occurs if player's client is bugged/spoof or player is air
@@ -123,7 +123,7 @@ public class LastSpartanArmorSet extends ArmorSet implements Listener {
             CooldownBarUtil.startCooldownBar(plugin, player, (int) (COOLDOWN / 1000));
 
         } else {
-            player.sendMessage("§cNo enemies nearby to leap toward!");
+            player.sendMessage("§c§l(!) §cNo enemies nearby to leap toward!");
         }
 
     }

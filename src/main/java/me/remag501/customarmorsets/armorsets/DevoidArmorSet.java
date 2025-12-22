@@ -28,12 +28,12 @@ public class DevoidArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void applyPassive(Player player) {
-        player.sendMessage("You equipped the Devoid set");
+//        player.sendMessage("You equipped the Devoid set");
     }
 
     @Override
     public void removePassive(Player player) {
-        player.sendMessage("You removed the Devoid set");
+//        player.sendMessage("You removed the Devoid set");
     }
 
     private static class KineticData {
@@ -55,7 +55,7 @@ public class DevoidArmorSet extends ArmorSet implements Listener {
 
         if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
             long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
-            player.sendMessage("§cAbility is on cooldown for " + timeLeft + " more seconds!");
+            player.sendMessage("§c§l(!) §cAbility is on cooldown for " + timeLeft + " more seconds!");
             return;
         }
 
@@ -148,7 +148,7 @@ public class DevoidArmorSet extends ArmorSet implements Listener {
             }
         }.runTaskTimer(plugin, 0, 1L);
 
-        player.sendMessage(isSneaking ? "§bYou pulled enemies!" : "§bYou pushed enemies!");
+        player.sendMessage(isSneaking ? "§a§l(!) §aYou pulled enemies!" : "§a§l(!) §aYou pushed enemies!");
     }
 
 }
