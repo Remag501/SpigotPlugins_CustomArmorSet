@@ -21,7 +21,7 @@ import java.util.UUID;
 public class RoyalKnightArmorSet extends ArmorSet implements Listener {
 
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
-    private static final long COOLDOWN = 15 * 1000; // 15 seconds cooldown
+    private static final long COOLDOWN = 7 * 1000; // 7 seconds cooldown
 
     public RoyalKnightArmorSet() {
         super(ArmorSetType.ROYAL_KNIGHT);

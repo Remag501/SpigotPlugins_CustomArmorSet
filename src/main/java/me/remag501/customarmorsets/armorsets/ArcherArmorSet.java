@@ -23,7 +23,7 @@ import java.util.UUID;
 public class ArcherArmorSet extends ArmorSet implements Listener {
 
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
-    private static final long COOLDOWN = 6 * 1000; // 6 seconds
+    private static final long COOLDOWN = 5 * 1000; // 5 seconds
 
     public ArcherArmorSet() {
         super(ArmorSetType.ARCHER);
@@ -60,9 +60,9 @@ public class ArcherArmorSet extends ArmorSet implements Listener {
         // Damage and knockback nearby entities
         for (Entity e : player.getNearbyEntities(radius, radius, radius)) {
             if (e instanceof LivingEntity living && !e.equals(player)) {
-                Vector knockback = e.getLocation().toVector().subtract(loc.toVector()).normalize().multiply(1.5).setY(0.5);
+                living.damage(10, player); // Slash damage
+                Vector knockback = e.getLocation().toVector().subtract(loc.toVector()).normalize().add(new Vector(0, 1.25, 0)).multiply(0.75);
                 living.setVelocity(knockback);
-                living.damage(4.0, player); // Slash damage
             }
         }
 

@@ -26,7 +26,7 @@ import java.util.UUID;
 public class VikingCaptainArmorSet extends ArmorSet implements Listener {
 
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
-    private static final long COOLDOWN = 7 * 1000; // 10 seconds cooldown
+    private static final long COOLDOWN = 7 * 1000; // 7 seconds cooldown
 
     public VikingCaptainArmorSet() {
         super(ArmorSetType.VIKING_CAPTAIN);

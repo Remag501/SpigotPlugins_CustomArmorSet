@@ -20,7 +20,7 @@ import static me.remag501.customarmorsets.utils.LookEntitiesUtil.getNearestEntit
 public class DevoidArmorSet extends ArmorSet implements Listener {
 
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
-    private static final long COOLDOWN = 5 * 1000;
+    private static final long COOLDOWN = 10 * 1000;
 
     public DevoidArmorSet() {
         super(ArmorSetType.DEVOID);

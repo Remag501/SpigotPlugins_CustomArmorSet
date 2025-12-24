@@ -25,7 +25,7 @@ import static me.remag501.customarmorsets.utils.LookEntitiesUtil.getNearestEntit
 public class LastSpartanArmorSet extends ArmorSet implements Listener {
 
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
-    private static final long COOLDOWN = 10 * 1000;
+    private static final long COOLDOWN = 3 * 1000;
 
     public LastSpartanArmorSet() {
         super(ArmorSetType.LAST_SPARTAN);

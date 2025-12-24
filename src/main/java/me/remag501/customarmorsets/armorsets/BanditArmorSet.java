@@ -43,6 +43,9 @@ public class BanditArmorSet extends ArmorSet implements Listener {
     // The maximum number of dodges a player can store.
     private final int MAX_DODGES = 3;
 
+    // Regeneration time for doge
+    private final int DODGE_COOLDOWN = 5;
+
     public BanditArmorSet() {
         super(ArmorSetType.BANDIT);
     }
@@ -122,10 +125,22 @@ public class BanditArmorSet extends ArmorSet implements Listener {
 
             // Check if player is out of dodges for ui
             CooldownBarUtil.setLevel(player, currentDodges);
-            CooldownBarUtil.startMiniCooldownBar(CustomArmorSets.getInstance(), player, 3);
+            CooldownBarUtil.startMiniCooldownBar(CustomArmorSets.getInstance(), player, DODGE_COOLDOWN);
 
-            Vector direction = player.getLocation().getDirection().normalize().multiply(1.5);
-            player.setVelocity(direction);
+            // Get the normalized direction
+            Vector direction = player.getLocation().getDirection().normalize();
+
+            // Multiply horizontal components (X and Z) by 1.5 for a strong dash
+            double x = direction.getX() * 1.5;
+            double z = direction.getZ() * 1.5;
+
+            // Multiply the vertical component (Y) by a smaller factor (e.g., 0.5)
+            // to prevent excessive upward flying
+            double y = direction.getY() * 0.75;
+
+            // Reconstruct the vector and apply it
+            Vector velocity = new Vector(x, y, z);
+            player.setVelocity(velocity);
 
             player.playSound(player.getLocation(), Sound.ENTITY_HORSE_JUMP, 1.0f, 2.0f);
             player.sendMessage("§a§l(!) §aYou dodged! Dodges left: " + currentDodges);
@@ -157,7 +172,7 @@ public class BanditArmorSet extends ArmorSet implements Listener {
                     regenTasks.remove(player.getUniqueId());
                 }
             }
-        }.runTaskTimer(CustomArmorSets.getInstance(), 20 * 3, 20 * 3);
+        }.runTaskTimer(CustomArmorSets.getInstance(), 20 * DODGE_COOLDOWN, 20 * DODGE_COOLDOWN);
 
         regenTasks.put(player.getUniqueId(), task);
     }

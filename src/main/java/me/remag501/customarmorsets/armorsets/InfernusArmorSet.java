@@ -59,7 +59,7 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
             return;
         }
 
-        Vector direction = player.getLocation().getDirection().normalize();
+//        Vector direction = player.getLocation().getDirection().normalize();
 
         // Set up the 2 second active ability phase
         int activeDurationSeconds = 2;
@@ -72,7 +72,7 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
 
             @Override
             public void run() {
-                if (ticks >= 20) { // 2 seconds (20 ticks at 0.1s per run)
+                if (ticks >= activeDurationSeconds * 20) { // 2 seconds (20 ticks at 0.1s per run)
                     cancel();
 
                     // After ability ends, start cooldown bar
@@ -85,7 +85,8 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
 
                 // Emit a trail of flame particles
                 for (double i = 0; i <= 5; i += 0.5) {
-                    Vector point = direction.clone().multiply(i);
+//                    Vector point = direction.clone().multiply(i);
+                    Vector point = player.getLocation().getDirection().normalize().multiply(i);
                     player.getWorld().spawnParticle(Particle.FLAME,
                             player.getLocation().add(point),
                             5, 0.2, 0.2, 0.2, 0);
@@ -94,8 +95,8 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
                     for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
                         if (entity instanceof LivingEntity livingEntity && entity != player) {
                             if (entity.getLocation().distance(player.getLocation().add(point)) < 1.5) {
-                                livingEntity.damage(3, player);
-                                livingEntity.setFireTicks(60);
+                                livingEntity.damage(4, player);
+                                livingEntity.setFireTicks(160);
                             }
                         }
                     }
