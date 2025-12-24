@@ -35,7 +35,7 @@ public enum ArmorSetType {
                     "",
                     "§e§lPASSIVE",
                     "§8• §a+50% ❤ §c-15% ❁ DMG"),
-            new int[]{2, 6, 4, 2},
+            new int[]{2, 6, 5, 2},
             new int[]{165, 240, 225, 195},
             new int[]{0, 0, 0, 0}),
 
@@ -48,7 +48,7 @@ public enum ArmorSetType {
                     "§e§lPASSIVE",
                     "§8• §a+25% ⚔ DMG §c-15% ❤"),
             new int[]{2, 6, 2, 1},
-            new int[]{65, 460, 430, 200},
+            new int[]{165, 240, 75, 65},
             new int[]{0, 0, 0, 0}),
 
     VIKING_CAPTAIN("viking_captain", "§aViking Captain", 3, Color.MAROON.asRGB(),0,
@@ -59,8 +59,8 @@ public enum ArmorSetType {
                     "",
                     "§e§lPASSIVE",
                     "§8• §a+20% 🪓 DMG §c-20% ⚔ DMG"),
-            new int[]{2, 6, 2, 1},
-            new int[]{166, 240, 75, 65},
+            new int[]{2, 6, 4, 1},
+            new int[]{165, 240, 225, 65},
             new int[]{0, 0, 0, 0}),
 
     BANDIT("bandit", "§cBandit", 3, 6,1007, null,
@@ -71,7 +71,7 @@ public enum ArmorSetType {
                     "§e§lPASSIVE",
                     "§8• §a+25% ☁"),
             new int[]{2, 6, 2, 1},
-            new int[]{165, 240, 76, 65},
+            new int[]{165, 240, 75, 195},
             new int[]{0, 0, 0, 0}),
 
     DEVOID("devoid", "§dDevoid", 3, 5,1006, null,

@@ -53,13 +53,16 @@ public class SnowmanArmorSet extends ArmorSet implements Listener {
             double baseSpeed = 0.6;
         // How much we reward current speed (1.1 = 10% acceleration)
             double accelerationFactor = 2;
+            // Fast down, slow up
+            double yGravityBonus = lookDir.getY() < 0 ? 1.2 : 0.9;
+
         // A cap to prevent them from hitting "infinite" speed and crashing the server
             double maxSpeed = 100;
 
         // 4. Calculate the new velocity
         // We take the direction they look, and multiply it by a value
         // that is proportional to how fast they are already going.
-            double newSpeed = Math.max(baseSpeed, currentSpeed * accelerationFactor);
+            double newSpeed = Math.max(baseSpeed, currentSpeed * accelerationFactor * yGravityBonus);
             newSpeed = Math.min(newSpeed, maxSpeed); // Apply the speed cap
 
             Vector newVelocity = lookDir.multiply(newSpeed);
