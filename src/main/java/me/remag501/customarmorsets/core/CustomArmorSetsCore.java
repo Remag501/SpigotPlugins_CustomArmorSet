@@ -22,7 +22,9 @@ public class CustomArmorSetsCore {
     public static Map<UUID, ArmorSet> equippedArmor = new HashMap<>();
     public static Map<UUID, ArmorSetType> equippedHelmet = new HashMap<>();
 
-    private static List<String> allowedWorlds = List.of("kuroko", "icecaverns", "sahara", "test");
+//    private static List<String> allowedWorlds = List.of("kuroko", "icycaverns", "sahara", "Calino", "Musicland", "Thundra", "test");
+      private static final List<String> bannedWorlds = List.of("spawn", "dungeonhub", "honeyclicker");
+      private static final String bunkerPrefix = "bunker";
 
     public static boolean equipArmor(Player player, ArmorSetType type) {
         // Equip player head
@@ -36,7 +38,9 @@ public class CustomArmorSetsCore {
 
         // Check if player is pvp world
         World world = player.getWorld();
-        if (!allowedWorlds.contains(world.getName())) {
+        String worldName = world.getName().toLowerCase();
+
+        if (bannedWorlds.contains(worldName) || worldName.startsWith(bunkerPrefix)) {
             return false;
         }
 
