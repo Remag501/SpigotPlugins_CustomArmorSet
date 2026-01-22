@@ -1,9 +1,9 @@
 package me.remag501.customarmorsets;
 
-import me.remag501.customarmorsets.armorsets.*;
-import me.remag501.customarmorsets.commands.CustomArmorSetCommand;
+import me.remag501.customarmorsets.armor.impl.*;
+import me.remag501.customarmorsets.command.CustomArmorSetCommand;
 import me.remag501.customarmorsets.core.CustomArmorSetsCore;
-import me.remag501.customarmorsets.listeners.*;
+import me.remag501.customarmorsets.listener.*;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorListener;
 import me.remag501.customarmorsets.lib.armorequipevent.DispenserArmorListener;
 import org.bukkit.Bukkit;
