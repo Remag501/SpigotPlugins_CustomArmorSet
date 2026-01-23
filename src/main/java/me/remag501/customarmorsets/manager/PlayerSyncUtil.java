@@ -1,5 +1,6 @@
-package me.remag501.customarmorsets.util;
+package me.remag501.customarmorsets.manager;
 
+import me.remag501.customarmorsets.util.AttributesUtil;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
