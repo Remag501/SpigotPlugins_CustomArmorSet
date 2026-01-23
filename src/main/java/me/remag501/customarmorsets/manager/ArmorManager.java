@@ -82,4 +82,7 @@ public class ArmorManager {
         return equippedArmor.get(uuid);
     }
 
+    public Map<UUID, ArmorSet> getEquippedArmor() {
+        return equippedArmor;
+    }
 }
