@@ -1,5 +1,7 @@
 package me.remag501.customarmorsets;
 
+import me.remag501.bgscore.BGSCore;
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.armor.impl.*;
 import me.remag501.customarmorsets.command.CustomArmorSetCommand;
 import me.remag501.customarmorsets.manager.*;
@@ -30,7 +32,10 @@ public final class CustomArmorSets extends JavaPlugin {
         // Plugin startup logic
         getLogger().info("Custom Armor Sets have started up!");
 
-        // 1. Create managers and services
+        // 1. Get the API from the Core ONCE
+        TaskHelper bgsApi = BGSCore.getInstance().getApi();
+
+        // 2. Initialize services and managers
 
         // Setup services
         CosmeticService cosmeticService = new CosmeticService();
@@ -46,10 +51,10 @@ public final class CustomArmorSets extends JavaPlugin {
         PlayerSyncManager playerSyncManager = new PlayerSyncManager(attributesService);
         armorManager = new ArmorManager(this, cosmeticService, attributesService, cooldownBarManager, damageStatsManager, defenseStatsManager, armorService, playerSyncManager);
 
-        // 2. Register command to plugin
+        // 3. Register command to plugin
         getCommand("customarmorsets").setExecutor(new CustomArmorSetCommand(this, itemService));
 
-        // 3. Register all listeners to plugin
+        // 4. Register all listeners to plugin
 
         // Listeners fo equipping and using armor set
         getServer().getPluginManager().registerEvents(new ArmorEquipListener(armorManager, armorService, itemService), this);
