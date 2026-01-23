@@ -17,7 +17,13 @@ public class CooldownBarManager {
     private final Map<UUID, Double> currentCooldownRemaining = new HashMap<>();
     private final Map<UUID, Queue<Double>> cooldownQueues = new HashMap<>();
 
-    public void startCooldownBar(Plugin plugin, Player player, int seconds) {
+    private final Plugin plugin;
+
+    public CooldownBarManager(Plugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public void startCooldownBar(Player player, int seconds) {
         if (seconds <= 0) return;
 
         UUID uuid = player.getUniqueId();
@@ -66,7 +72,7 @@ public class CooldownBarManager {
         }.runTaskTimer(plugin, 0L, 2L); // updates every 2 ticks (~0.1s)
     }
 
-    public void startMiniCooldownBar(Plugin plugin, Player player, double seconds) {
+    public void startMiniCooldownBar(Player player, double seconds) {
         if (seconds <= 0) return;
 
         UUID uuid = player.getUniqueId();
@@ -137,7 +143,7 @@ public class CooldownBarManager {
         cooldownTasks.put(uuid, task);
     }
 
-    private void flashXpBar(Plugin plugin, Player player) {
+    private void flashXpBar(Player player) {
         UUID uuid = player.getUniqueId();
         if (inUse.get(uuid))
             return;

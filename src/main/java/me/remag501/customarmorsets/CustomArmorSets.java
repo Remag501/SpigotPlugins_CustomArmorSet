@@ -40,7 +40,7 @@ public final class CustomArmorSets extends JavaPlugin {
         ItemService itemService = new ItemService(namespaceService, armorService);
 
         // Setup managers
-        CooldownBarManager cooldownBarManager = new CooldownBarManager();
+        CooldownBarManager cooldownBarManager = new CooldownBarManager(this);
         DamageStatsManager damageStatsManager = new DamageStatsManager();
         DefenseStatsManager defenseStatsManager = new DefenseStatsManager();
         armorManager = new ArmorManager(this, cosmeticService, attributesService);
