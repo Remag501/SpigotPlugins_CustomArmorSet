@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class MythicMobsYamlGenerator implements Listener {
+public class MythicMobsListener implements Listener {
 
     private final Plugin plugin;
     private final Yaml yaml;
@@ -50,8 +50,8 @@ public class MythicMobsYamlGenerator implements Listener {
                     "(@EntitiesInRadius\\{[^}]*\\})"
     );
 
-    public MythicMobsYamlGenerator() {
-        this.plugin = CustomArmorSets.getInstance();
+    public MythicMobsListener(Plugin plugin) {
+        this.plugin = plugin;
         DumperOptions options = new DumperOptions();
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK); // Ensure block style for readability
         options.setPrettyFlow(true);

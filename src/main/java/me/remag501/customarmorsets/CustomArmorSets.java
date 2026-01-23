@@ -1,7 +1,5 @@
 package me.remag501.customarmorsets;
 
-import me.remag501.customarmorsets.armor.ArmorSet;
-import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.impl.*;
 import me.remag501.customarmorsets.command.CustomArmorSetCommand;
 import me.remag501.customarmorsets.manager.ArmorManager;
@@ -13,7 +11,6 @@ import me.remag501.customarmorsets.manager.DefenseStatsManager;
 import me.remag501.customarmorsets.manager.PlayerSyncManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.UUID;
@@ -58,7 +55,7 @@ public final class CustomArmorSets extends JavaPlugin {
         // Listener for damage stats
         getServer().getPluginManager().registerEvents(new DamageListener(damageStatsManager, defenseStatsManager), this);
         // Mythic mobs
-        getServer().getPluginManager().registerEvents(new MythicMobsYamlGenerator(), this);
+        getServer().getPluginManager().registerEvents(new MythicMobsListener(this), this);
 
         // Register listeners for armor sets
         getServer().getPluginManager().registerEvents(new SnowmanArmorSet(), this);

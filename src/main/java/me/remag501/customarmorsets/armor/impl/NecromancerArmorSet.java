@@ -16,7 +16,7 @@ import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.TargetCategory;
-import me.remag501.customarmorsets.listener.MythicMobsYamlGenerator;
+import me.remag501.customarmorsets.listener.MythicMobsListener;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.util.AttributesUtil;
@@ -58,7 +58,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, ArmorStand> decoys = new HashMap<>();
     private static final Map<UUID, BukkitRunnable> decoyTasks = new HashMap<>();
 
-    private static final String RESURRECTED_MOB_PREFIX = MythicMobsYamlGenerator.getPrefix();
+    private static final String RESURRECTED_MOB_PREFIX = MythicMobsListener.getPrefix();
 
     public NecromancerArmorSet() {
         super(ArmorSetType.NECROMANCER);
