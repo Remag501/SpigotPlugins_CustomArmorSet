@@ -8,5 +8,7 @@ commands:
     description: Custom armor sets command.
     usage: /<command> give <set>
 
-#depend:
-#  - Citizens
+depend:
+  - BGSCore
+  - MythicMobs
+  - LibsDisguises

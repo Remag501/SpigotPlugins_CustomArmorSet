@@ -64,7 +64,8 @@ public final class CustomArmorSets extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new DisconnectReconnectListener(armorManager, armorService), this);
         getServer().getPluginManager().registerEvents(new WorldChangeListener(armorManager, armorService), this);
         // Listener for broken items
-        getServer().getPluginManager().registerEvents(new BrokenItemListener(itemService), this);
+//        getServer().getPluginManager().registerEvents(new BrokenItemListener(itemService), this);
+        new BrokenItemListener(itemService, bgsApi);
         getServer().getPluginManager().registerEvents(new RepairListener(armorService, cosmeticService, itemService), this);
         // Listener for damage stats
         getServer().getPluginManager().registerEvents(new DamageListener(damageStatsManager, defenseStatsManager), this);
