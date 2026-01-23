@@ -15,6 +15,14 @@ import java.util.UUID;
 
 public class DamageListener implements Listener {
 
+    private final DamageStatsManager damageStatsManager;
+    private final DefenseStatsManager defenseStatsManager;
+
+    public DamageListener(DamageStatsManager damageStatsManager, DefenseStatsManager defenseStatsManager) {
+        this.damageStatsManager = damageStatsManager;
+        this.defenseStatsManager = defenseStatsManager;
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         // Must involve a LivingEntity on at least one side
@@ -37,8 +45,8 @@ public class DamageListener implements Listener {
             TargetCategory targetCategory = getTargetCategory(victim);
 
             // Combine weapon + mob multipliers
-            outgoingMult = DamageStatsManager.getWeaponMultiplier(attackerId, weaponType)
-                    * DamageStatsManager.getMobMultiplier(attackerId, targetCategory);
+            outgoingMult = damageStatsManager.getWeaponMultiplier(attackerId, weaponType)
+                    * damageStatsManager.getMobMultiplier(attackerId, targetCategory);
         }
 
         // -------------------------
@@ -60,8 +68,8 @@ public class DamageListener implements Listener {
             TargetCategory attackerCategory = getTargetCategory(event.getDamager());
 
             // Combine reductions
-            incomingMult = DefenseStatsManager.getSourceReduction(victimId, attackerCategory)
-                    * DefenseStatsManager.getWeaponReduction(victimId, weaponType);
+            incomingMult = defenseStatsManager.getSourceReduction(victimId, attackerCategory)
+                    * defenseStatsManager.getWeaponReduction(victimId, weaponType);
         }
 
         // -------------------------
