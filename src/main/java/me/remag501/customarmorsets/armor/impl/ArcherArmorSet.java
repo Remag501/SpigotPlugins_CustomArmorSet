@@ -2,7 +2,7 @@ package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.util.AttributesUtil;
 import me.remag501.customarmorsets.util.CooldownBarUtil;
 import org.bukkit.*;
@@ -127,7 +127,7 @@ public class ArcherArmorSet extends ArmorSet implements Listener {
         if (player == null) return;
 
         // Check if player is wearing Archer armor
-        if (!(CustomArmorSetsCore.getArmorSet(player) instanceof ArcherArmorSet)) return;
+        if (!(ArmorManager.getArmorSet(player) instanceof ArcherArmorSet)) return;
 
         // Apply Archer bonuses
         if (isProjectile) {

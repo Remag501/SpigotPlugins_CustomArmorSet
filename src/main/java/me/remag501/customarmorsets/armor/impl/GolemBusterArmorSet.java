@@ -7,6 +7,9 @@ import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.core.*;
+import me.remag501.customarmorsets.manager.ArmorManager;
+import me.remag501.customarmorsets.manager.DamageStatsManager;
+import me.remag501.customarmorsets.manager.DefenseStatsManager;
 import me.remag501.customarmorsets.util.AttributesUtil;
 import me.remag501.customarmorsets.util.CooldownBarUtil;
 import org.bukkit.*;
@@ -49,8 +52,8 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         playerEnergy.put(uuid, 0);
         playerIsGolem.put(uuid, false);
         // Apply Damage Stats
-        DamageStats.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.NON_PLAYER);
-        DefenseStats.setSourceReduction(player.getUniqueId(), 0.75f, TargetCategory.NON_PLAYER);
+        DamageStatsManager.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.NON_PLAYER);
+        DefenseStatsManager.setSourceReduction(player.getUniqueId(), 0.75f, TargetCategory.NON_PLAYER);
 //        DefenseStats.setWeaponReduction(player.getUniqueId(), 0.25f, WeaponType.);
         // Apply 1.8 pvp later
         energyLoop.put(this, new BukkitRunnable() {
@@ -81,8 +84,8 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         energyLoop.get(this).cancel();
         CooldownBarUtil.restorePlayerBar(player);
         AttributesUtil.restoreDefaults(player); // Just in case
-        DamageStats.clearAll(player.getUniqueId());
-        DefenseStats.clearAll(player.getUniqueId());
+        DamageStatsManager.clearAll(player.getUniqueId());
+        DefenseStatsManager.clearAll(player.getUniqueId());
     }
 
     @Override
@@ -239,8 +242,8 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         // Give attributes and damage stats
         AttributesUtil.applyHealth(player, 2.0);
         AttributesUtil.applySpeed(player, 0.5);
-        DamageStats.setMobMultiplier(player.getUniqueId(), 2, TargetCategory.NON_PLAYER);
-        DefenseStats.setSourceReduction(player.getUniqueId(), 0.25f, TargetCategory.NON_PLAYER);
+        DamageStatsManager.setMobMultiplier(player.getUniqueId(), 2, TargetCategory.NON_PLAYER);
+        DefenseStatsManager.setSourceReduction(player.getUniqueId(), 0.25f, TargetCategory.NON_PLAYER);
         Bukkit.getScheduler().runTaskLater(CustomArmorSets.getInstance(), () -> {
             player.setHealth(40.0);
         }, 2L);
@@ -250,8 +253,8 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         // Remove attributes and damage stats
         AttributesUtil.removeHealth(player);
         AttributesUtil.removeSpeed(player);
-        DamageStats.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.NON_PLAYER);
-        DefenseStats.setSourceReduction(player.getUniqueId(), 0.75f, TargetCategory.NON_PLAYER);
+        DamageStatsManager.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.NON_PLAYER);
+        DefenseStatsManager.setSourceReduction(player.getUniqueId(), 0.75f, TargetCategory.NON_PLAYER);
 
         // Make player a golem in map
         UUID uuid = player.getUniqueId();
@@ -310,7 +313,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player)) return;
-        if (!(CustomArmorSetsCore.getArmorSet(player) instanceof GolemBusterArmorSet)) return;
+        if (!(ArmorManager.getArmorSet(player) instanceof GolemBusterArmorSet)) return;
 
         if (event.getEntity() instanceof Monster) {
             event.setDamage(event.getDamage() * 0.8); // Reduced damage from mobs
@@ -322,7 +325,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
 //        if (!(event.getEntity().getKiller())) return;
         Player player = event.getEntity().getKiller();
         if (player == null) return;
-        if (!(CustomArmorSetsCore.getArmorSet(player) instanceof GolemBusterArmorSet)) return;
+        if (!(ArmorManager.getArmorSet(player) instanceof GolemBusterArmorSet)) return;
 
         // Get all attributes about entity killed
         double mobMaxHealth = 0;

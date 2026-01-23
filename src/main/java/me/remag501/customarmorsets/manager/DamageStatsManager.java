@@ -1,11 +1,14 @@
-package me.remag501.customarmorsets.core;
+package me.remag501.customarmorsets.manager;
+
+import me.remag501.customarmorsets.core.TargetCategory;
+import me.remag501.customarmorsets.core.WeaponType;
 
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class DamageStats {
+public class DamageStatsManager {
 
     // ----- ENUMS -----
 //    public enum WeaponType {

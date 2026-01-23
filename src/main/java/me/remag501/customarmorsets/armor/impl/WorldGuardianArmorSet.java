@@ -2,7 +2,7 @@ package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.util.AttributesUtil;
 import me.remag501.customarmorsets.util.CooldownBarUtil;
 import org.bukkit.Bukkit;
@@ -75,7 +75,7 @@ public class WorldGuardianArmorSet extends ArmorSet implements Listener {
     public void onEntityDamageEvent(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
 
-        ArmorSet set = CustomArmorSetsCore.getArmorSet(player);
+        ArmorSet set = ArmorManager.getArmorSet(player);
         if (!(set instanceof WorldGuardianArmorSet armorSet)) return;
 
         if (armorSet.isInvulnerable == true) {

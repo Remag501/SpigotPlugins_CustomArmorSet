@@ -1,7 +1,7 @@
 package me.remag501.customarmorsets.listener;
 
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.util.ArmorUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -17,7 +17,7 @@ public class DisconnectReconnectListener implements Listener {
         ArmorSetType set = ArmorUtil.isFullArmorSet(player);
 
         if (set != null) {
-            CustomArmorSetsCore.equipArmor(player, set);
+            ArmorManager.equipArmor(player, set);
         }
     }
 
@@ -27,7 +27,7 @@ public class DisconnectReconnectListener implements Listener {
         ArmorSetType set = ArmorUtil.isFullArmorSet(player);
 
         if (set != null) {
-            CustomArmorSetsCore.unequipArmor(player);
+            ArmorManager.unequipArmor(player);
         }
     }
 }

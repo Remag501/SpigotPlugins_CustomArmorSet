@@ -2,7 +2,7 @@ package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.util.AttributesUtil;
 import me.remag501.customarmorsets.util.CooldownBarUtil;
 import org.bukkit.Bukkit;
@@ -88,7 +88,7 @@ public class RoyalKnightArmorSet extends ArmorSet implements Listener {
 
         if (player == null) return;
 
-        ArmorSet set = CustomArmorSetsCore.getArmorSet(player);
+        ArmorSet set = ArmorManager.getArmorSet(player);
         if (!(set instanceof RoyalKnightArmorSet)) return;
 
         double originalDamage = event.getDamage();

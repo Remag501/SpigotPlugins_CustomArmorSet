@@ -5,7 +5,7 @@ import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.util.AttributesUtil;
 import me.remag501.customarmorsets.util.CooldownBarUtil;
 import org.bukkit.*;
@@ -310,7 +310,7 @@ public class VampireArmorSet extends ArmorSet implements Listener {
         }
 
         // Confirm player is wearing Vampire set
-        if (!(CustomArmorSetsCore.getArmorSet(damager) instanceof VampireArmorSet)) return;
+        if (!(ArmorManager.getArmorSet(damager) instanceof VampireArmorSet)) return;
 
         // Heal the player by a portion of the damage dealt
         double newHealth = Math.min(

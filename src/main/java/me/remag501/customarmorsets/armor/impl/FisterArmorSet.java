@@ -3,7 +3,7 @@ package me.remag501.customarmorsets.armor.impl;
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.util.ArmorUtil;
 import me.remag501.customarmorsets.util.AttributesUtil;
 import me.remag501.customarmorsets.util.CooldownBarUtil;
@@ -229,7 +229,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         Entity damager = event.getDamager();
         if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player p) {
 
-            if (CustomArmorSetsCore.getArmorSet(p) instanceof FisterArmorSet) {
+            if (ArmorManager.getArmorSet(p) instanceof FisterArmorSet) {
                 event.setCancelled(true);
                 return; // Only reduce for arrow/trident, not snowball/egg/etc., actually it reduces for all in this case
             }
@@ -237,7 +237,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
         // Check if player is wearing armor and apply after image passive
         if (!(event.getDamager() instanceof Player player)) return;
-        if (!(CustomArmorSetsCore.getArmorSet(player) instanceof FisterArmorSet)) return;
+        if (!(ArmorManager.getArmorSet(player) instanceof FisterArmorSet)) return;
 
         if (player.getInventory().getItemInMainHand().getType() != Material.AIR) {
             event.setCancelled(true);

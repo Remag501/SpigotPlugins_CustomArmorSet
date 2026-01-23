@@ -3,7 +3,7 @@ package me.remag501.customarmorsets.armor.impl;
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.util.AttributesUtil;
 import me.remag501.customarmorsets.util.CooldownBarUtil;
 import org.bukkit.Material;
@@ -70,7 +70,7 @@ public class BanditArmorSet extends ArmorSet implements Listener {
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        if (!(CustomArmorSetsCore.getArmorSet(player) instanceof BanditArmorSet)) {
+        if (!(ArmorManager.getArmorSet(player) instanceof BanditArmorSet)) {
             return;
         }
 
@@ -88,7 +88,7 @@ public class BanditArmorSet extends ArmorSet implements Listener {
         if (!(event.getDamager() instanceof Player attacker)) {
             return;
         }
-        if (!(CustomArmorSetsCore.getArmorSet(attacker) instanceof BanditArmorSet)) {
+        if (!(ArmorManager.getArmorSet(attacker) instanceof BanditArmorSet)) {
             return;
         }
         if (!(event.getEntity() instanceof Player target)) {

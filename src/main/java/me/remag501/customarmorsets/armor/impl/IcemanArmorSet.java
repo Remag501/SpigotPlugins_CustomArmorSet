@@ -3,7 +3,7 @@ package me.remag501.customarmorsets.armor.impl;
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.util.AttributesUtil;
 import me.remag501.customarmorsets.util.CooldownBarUtil;
 import net.md_5.bungee.api.ChatMessageType;
@@ -136,7 +136,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         // Handle ice bridge passive
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
-        if (!(CustomArmorSetsCore.getArmorSet(player) instanceof IcemanArmorSet)) return;
+        if (!(ArmorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
         // Now we start
 
         if (!player.isSprinting() && runningTime.get(uuid) == null) {
@@ -171,7 +171,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     @EventHandler
     public void onToggleFlight(PlayerToggleFlightEvent event) {
         Player player = event.getPlayer();
-        if (!(CustomArmorSetsCore.getArmorSet(player) instanceof IcemanArmorSet)) return;
+        if (!(ArmorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
         // Now we start
 
         Boolean canEnterIceMode = iceMode.get(player.getUniqueId());
@@ -193,7 +193,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        if (!(CustomArmorSetsCore.getArmorSet(player) instanceof IcemanArmorSet)) return;
+        if (!(ArmorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
         // Now we start
 
         if (!iceMode.getOrDefault(player.getUniqueId(), false)) {
@@ -210,7 +210,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player)) return;
-        if (!(CustomArmorSetsCore.getArmorSet(player) instanceof IcemanArmorSet)) return; // Corrected this line
+        if (!(ArmorManager.getArmorSet(player) instanceof IcemanArmorSet)) return; // Corrected this line
 
         if (event.getEntity() instanceof LivingEntity target) {
             // Check if the player's attack is a fully charged melee hit (cooldown is >= 1.0)
@@ -277,7 +277,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     public void onPlayerFireDamageMob(EntityDamageByEntityEvent event) {
         // Check if the damager is a player
         if (!(event.getDamager() instanceof Player player)) return;
-        if (!(CustomArmorSetsCore.getArmorSet(player) instanceof IcemanArmorSet)) return;
+        if (!(ArmorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
         // Check if the damaged entity is a mob and if the cause is an entity attack
         if (!(event.getEntity() instanceof LivingEntity mob) || event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK) return;
 

@@ -2,7 +2,7 @@ package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.util.CooldownBarUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -111,7 +111,7 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        ArmorSet set = CustomArmorSetsCore.getArmorSet(player);
+        ArmorSet set = ArmorManager.getArmorSet(player);
         if (!(set instanceof InfernusArmorSet)) return;
 
         // Only trigger if the player actually moved a block (not just rotated)

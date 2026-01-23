@@ -2,7 +2,7 @@ package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.util.CooldownBarUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -126,7 +126,7 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player)) return;
 
-        ArmorSet set = CustomArmorSetsCore.getArmorSet(player);
+        ArmorSet set = ArmorManager.getArmorSet(player);
         if (!(set instanceof VikingCaptainArmorSet)) return;
 
         // Check if the player is holding a sword

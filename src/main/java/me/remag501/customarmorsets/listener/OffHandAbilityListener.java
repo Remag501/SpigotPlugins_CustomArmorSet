@@ -2,7 +2,7 @@ package me.remag501.customarmorsets.listener;
 
 
 import me.remag501.customarmorsets.armor.ArmorSet;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.manager.ArmorManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,7 +14,7 @@ public class OffHandAbilityListener implements Listener {
     public void onOffhandUse(PlayerSwapHandItemsEvent event) {
         Player player = event.getPlayer();
         // Check if player has an armor setf
-        ArmorSet set = CustomArmorSetsCore.getArmorSet(player);
+        ArmorSet set = ArmorManager.getArmorSet(player);
         if (set == null) return;
 
         // Cancel the default action

@@ -1,7 +1,7 @@
 package me.remag501.customarmorsets.listener;
 
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.util.ArmorUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -17,8 +17,8 @@ public class WorldChangeListener implements Listener {
         // Then immediately re-equip in the new world
         ArmorSetType currentSet = ArmorUtil.isFullArmorSet(player);
         if (currentSet != null) {
-            if (!CustomArmorSetsCore.equipArmor(player, currentSet)) // Player is in wrong world
-                CustomArmorSetsCore.unequipArmor(player);
+            if (!ArmorManager.equipArmor(player, currentSet)) // Player is in wrong world
+                ArmorManager.unequipArmor(player);
         }
     }
 }

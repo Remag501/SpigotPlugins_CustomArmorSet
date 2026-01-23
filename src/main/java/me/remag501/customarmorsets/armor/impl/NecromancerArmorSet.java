@@ -17,6 +17,8 @@ import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.core.*;
 import me.remag501.customarmorsets.listener.MythicMobsYamlGenerator;
+import me.remag501.customarmorsets.manager.ArmorManager;
+import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.util.AttributesUtil;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -67,7 +69,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     @Override
     public void applyPassive(Player player) {
 //        player.sendMessage("You equipped the Necromancer set");
-        DamageStats.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.UNDEAD);
+        DamageStatsManager.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.UNDEAD);
         UUID uuid = player.getUniqueId();
         summonedMobs.put(uuid, new ArrayList<>());
         summonsTask.put(uuid, new BukkitRunnable() {
@@ -177,7 +179,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     @Override
     public void removePassive(Player player) {
 //        player.sendMessage("You removed the Necromancer set");
-        DamageStats.clearAll(player.getUniqueId());
+        DamageStatsManager.clearAll(player.getUniqueId());
         List<ActiveMob> mobs = summonedMobs.get(player.getUniqueId());
         while (!mobs.isEmpty()) {
             despawnMob(mobs.get(0));
@@ -532,7 +534,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     public void onPlayerKillMob(EntityDeathEvent event) {
         // Basic checks
         Player player = event.getEntity().getKiller();
-        if (player == null || !(CustomArmorSetsCore.getArmorSet(player) instanceof NecromancerArmorSet)) return; // Not killed by a player or player not wearing the set
+        if (player == null || !(ArmorManager.getArmorSet(player) instanceof NecromancerArmorSet)) return; // Not killed by a player or player not wearing the set
         Optional<ActiveMob> optActiveMob = MythicBukkit.inst().getMobManager().getActiveMob(event.getEntity().getUniqueId());
         if (optActiveMob.isEmpty()) return; // Not a mythic mob
         // Logic for mythic mob
@@ -560,7 +562,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             if (controlled != null && event.getFinalDamage() >= player.getHealth()) {
                 event.setCancelled(true);
                 despawnMob(controlled);
-            } else if (CustomArmorSetsCore.getArmorSet(player) instanceof NecromancerArmorSet && event.getFinalDamage() >= player.getHealth()) { // Ressurection Passive: final hit to player
+            } else if (ArmorManager.getArmorSet(player) instanceof NecromancerArmorSet && event.getFinalDamage() >= player.getHealth()) { // Ressurection Passive: final hit to player
                     event.setCancelled(resurrectionPassive(player));
             }
         }

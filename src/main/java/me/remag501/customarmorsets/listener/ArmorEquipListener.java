@@ -1,7 +1,7 @@
 package me.remag501.customarmorsets.listener;
 
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.util.ArmorUtil;
 import me.remag501.customarmorsets.util.ItemUtil;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorEquipEvent;
@@ -34,13 +34,13 @@ public class ArmorEquipListener implements Listener {
         ArmorSetType isWearing = ArmorUtil.hasFullArmorSet(player, event.getNewArmorPiece(), event.getType());
 
         if (wasWearing != null && isWearing == null) {
-            CustomArmorSetsCore.unequipArmor(player);
+            ArmorManager.unequipArmor(player);
         }
 
         ArmorSetType type = (wasWearing != null) ? wasWearing : isWearing;
 
         if (wasWearing == null && isWearing != null) {
-            CustomArmorSetsCore.equipArmor(player, type);
+            ArmorManager.equipArmor(player, type);
         }
     }
 
@@ -52,7 +52,7 @@ public class ArmorEquipListener implements Listener {
         ItemStack heldItem = event.getItem();
         if (heldItem == null)
             return;
-        if (isArmor(heldItem.getType()) && CustomArmorSetsCore.getArmorSet(event.getPlayer()) != null) {
+        if (isArmor(heldItem.getType()) && ArmorManager.getArmorSet(event.getPlayer()) != null) {
 //            event.getPlayer().sendMessage(ChatColor.RED + "You can't hotswap armor!");
             event.setCancelled(true);
         }

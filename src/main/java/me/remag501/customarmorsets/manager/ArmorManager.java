@@ -1,4 +1,4 @@
-package me.remag501.customarmorsets.core;
+package me.remag501.customarmorsets.manager;
 
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class CustomArmorSetsCore {
+public class ArmorManager {
 
     public static Map<UUID, ArmorSet> equippedArmor = new HashMap<>();
     public static Map<UUID, ArmorSetType> equippedHelmet = new HashMap<>();

@@ -2,7 +2,7 @@ package me.remag501.customarmorsets;
 
 import me.remag501.customarmorsets.armor.impl.*;
 import me.remag501.customarmorsets.command.CustomArmorSetCommand;
-import me.remag501.customarmorsets.core.CustomArmorSetsCore;
+import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.listener.*;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorListener;
 import me.remag501.customarmorsets.lib.armorequipevent.DispenserArmorListener;
@@ -67,10 +67,10 @@ public final class CustomArmorSets extends JavaPlugin {
         // Plugin shutdown logic
         isServerShuttingDown = true;
         // Disable any kits that a player has equipped
-        for (UUID uuid: CustomArmorSetsCore.equippedArmor.keySet()) {
+        for (UUID uuid: ArmorManager.equippedArmor.keySet()) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null)
-                CustomArmorSetsCore.unequipArmor(player); // Won't work since events can't get registered
+                ArmorManager.unequipArmor(player); // Won't work since events can't get registered
         }
         getLogger().info("Custom Armor Sets have shut down!");
     }

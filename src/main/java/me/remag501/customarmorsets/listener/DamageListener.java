@@ -1,7 +1,7 @@
 package me.remag501.customarmorsets.listener;
 
-import me.remag501.customarmorsets.core.DamageStats;
-import me.remag501.customarmorsets.core.DefenseStats;
+import me.remag501.customarmorsets.manager.DamageStatsManager;
+import me.remag501.customarmorsets.manager.DefenseStatsManager;
 import me.remag501.customarmorsets.core.TargetCategory;
 import me.remag501.customarmorsets.core.WeaponType;
 import org.bukkit.Material;
@@ -37,8 +37,8 @@ public class DamageListener implements Listener {
             TargetCategory targetCategory = getTargetCategory(victim);
 
             // Combine weapon + mob multipliers
-            outgoingMult = DamageStats.getWeaponMultiplier(attackerId, weaponType)
-                    * DamageStats.getMobMultiplier(attackerId, targetCategory);
+            outgoingMult = DamageStatsManager.getWeaponMultiplier(attackerId, weaponType)
+                    * DamageStatsManager.getMobMultiplier(attackerId, targetCategory);
         }
 
         // -------------------------
@@ -60,8 +60,8 @@ public class DamageListener implements Listener {
             TargetCategory attackerCategory = getTargetCategory(event.getDamager());
 
             // Combine reductions
-            incomingMult = DefenseStats.getSourceReduction(victimId, attackerCategory)
-                    * DefenseStats.getWeaponReduction(victimId, weaponType);
+            incomingMult = DefenseStatsManager.getSourceReduction(victimId, attackerCategory)
+                    * DefenseStatsManager.getWeaponReduction(victimId, weaponType);
         }
 
         // -------------------------
