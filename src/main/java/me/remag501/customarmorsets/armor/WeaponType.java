@@ -1,4 +1,4 @@
-package me.remag501.customarmorsets.core;
+package me.remag501.customarmorsets.armor;
 
 public enum WeaponType {
     ALL,

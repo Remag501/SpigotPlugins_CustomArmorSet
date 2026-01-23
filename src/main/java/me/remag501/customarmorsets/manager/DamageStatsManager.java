@@ -1,7 +1,7 @@
 package me.remag501.customarmorsets.manager;
 
-import me.remag501.customarmorsets.core.TargetCategory;
-import me.remag501.customarmorsets.core.WeaponType;
+import me.remag501.customarmorsets.armor.TargetCategory;
+import me.remag501.customarmorsets.armor.WeaponType;
 
 import java.util.EnumMap;
 import java.util.HashMap;

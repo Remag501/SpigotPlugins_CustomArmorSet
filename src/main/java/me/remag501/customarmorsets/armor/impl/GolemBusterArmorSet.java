@@ -6,7 +6,7 @@ import me.libraryaddict.disguise.disguisetypes.MobDisguise;
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.core.*;
+import me.remag501.customarmorsets.armor.TargetCategory;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.manager.DefenseStatsManager;

@@ -2,8 +2,8 @@ package me.remag501.customarmorsets.listener;
 
 import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.manager.DefenseStatsManager;
-import me.remag501.customarmorsets.core.TargetCategory;
-import me.remag501.customarmorsets.core.WeaponType;
+import me.remag501.customarmorsets.armor.TargetCategory;
+import me.remag501.customarmorsets.armor.WeaponType;
 import org.bukkit.Material;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
