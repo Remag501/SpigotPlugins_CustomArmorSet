@@ -2,6 +2,7 @@ package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
+import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -22,8 +23,13 @@ public class DevoidArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 10 * 1000;
 
-    public DevoidArmorSet() {
+    private final CooldownBarManager cooldownBarManager;
+    private final Plugin plugin;
+
+    public DevoidArmorSet(Plugin plugin, CooldownBarManager cooldownBarManager) {
         super(ArmorSetType.DEVOID);
+        this.plugin = plugin;
+        this.cooldownBarManager = cooldownBarManager;
     }
 
     @Override
@@ -60,9 +66,8 @@ public class DevoidArmorSet extends ArmorSet implements Listener {
         }
 
         boolean isSneaking = player.isSneaking();
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
 
-        CooldownBarManager.startCooldownBar(plugin, player, 1);
+        cooldownBarManager.startCooldownBar(player, 1);
 
         new BukkitRunnable() {
             int ticks = 0;
@@ -78,7 +83,7 @@ public class DevoidArmorSet extends ArmorSet implements Listener {
                         velocityMap.put(target.getUniqueId(), new KineticData(ticks, target.getVelocity()));
                     }
                 } else if (ticks >= 20) {
-                    CooldownBarManager.startCooldownBar(plugin, player, (int) (COOLDOWN / 1000));
+                    cooldownBarManager.startCooldownBar(player, (int) (COOLDOWN / 1000));
                     abilityCooldowns.put(uuid, now);
                     cancel();
                 }

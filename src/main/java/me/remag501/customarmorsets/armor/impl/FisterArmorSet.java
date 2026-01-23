@@ -47,13 +47,24 @@ public class FisterArmorSet extends ArmorSet implements Listener {
     private static final int DODGING_COOLDOWN_TICKS = 2 * 20;
     private static final int ABILITY_COOLDOWN_TICKS = 15 * 20;
 
-    public FisterArmorSet() {
+    private final CooldownBarManager cooldownBarManager;
+    private final ArmorManager armorManager;
+    private final AttributesService attributesService;
+    private final ArmorService armorService;
+    private final Plugin plugin;
+
+    public FisterArmorSet(Plugin plugin, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService, ArmorService armorService) {
         super(ArmorSetType.FISTER);
+        this.plugin = plugin;
+        this.armorManager = armorManager;
+        this.cooldownBarManager = cooldownBarManager;
+        this.attributesService = attributesService;
+        this.armorService = armorService;
     }
 
     public void applyPassive(Player player) {
         // Give player attack speed
-        AttributesService.applyAttackSpeed(player, 3.0);
+        attributesService.applyAttackSpeed(player, 3.0);
 
         // Create npc after images
         NPC afterImageOne = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, player.getName());
@@ -66,7 +77,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
     @Override
     public void removePassive(Player player) {
         // Remove player attack speed
-        AttributesService.removeAttackSpeed(player);
+        attributesService.removeAttackSpeed(player);
 
         NPC afterImageOne = afterImagesOne.remove(player.getUniqueId());
         NPC afterImageTwo = afterImagesTwo.remove(player.getUniqueId());
@@ -77,7 +88,6 @@ public class FisterArmorSet extends ArmorSet implements Listener {
     @Override
     public void triggerAbility(Player player) {
         UUID uuid = player.getUniqueId();
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
         long now = System.currentTimeMillis();
 
         // Cancel meditative state if already active
@@ -102,7 +112,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         player.setFlying(true);
         player.setFlySpeed(0);
         player.setInvulnerable(true);
-        AttributesService.applyHealth(player, 1.5);
+        attributesService.applyHealth(player, 1.5);
 
         // Ring particles + aura
         World world = player.getWorld();
@@ -178,13 +188,13 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                AttributesService.removeHealth(player);
+                attributesService.removeHealth(player);
             }
-        }.runTaskLater(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), 100);
+        }.runTaskLater(plugin, 100);
 
         // Start the cooldown
         abilityCooldowns.put(uuid, System.currentTimeMillis() + ABILITY_COOLDOWN_TICKS * 50);
-        CooldownBarManager.startCooldownBar(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), player, ABILITY_COOLDOWN_TICKS / 20);
+        cooldownBarManager.startCooldownBar(player, ABILITY_COOLDOWN_TICKS / 20);
     }
 
     @EventHandler
@@ -229,7 +239,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         Entity damager = event.getDamager();
         if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player p) {
 
-            if (ArmorManager.getArmorSet(p) instanceof FisterArmorSet) {
+            if (armorManager.getArmorSet(p) instanceof FisterArmorSet) {
                 event.setCancelled(true);
                 return; // Only reduce for arrow/trident, not snowball/egg/etc., actually it reduces for all in this case
             }
@@ -237,7 +247,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
         // Check if player is wearing armor and apply after image passive
         if (!(event.getDamager() instanceof Player player)) return;
-        if (!(ArmorManager.getArmorSet(player) instanceof FisterArmorSet)) return;
+        if (!(armorManager.getArmorSet(player) instanceof FisterArmorSet)) return;
 
         if (player.getInventory().getItemInMainHand().getType() != Material.AIR) {
             event.setCancelled(true);
@@ -253,8 +263,6 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
         NPC afterImageOne = afterImagesOne.get(player.getUniqueId());
         NPC afterImageTwo = afterImagesTwo.get(player.getUniqueId());
-
-        Plugin plugin = CustomArmorSets.getInstance();
 
         new BukkitRunnable() {
             int tick = 0;
@@ -337,7 +345,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         if (event.getHand() != EquipmentSlot.HAND) return;
 
         Player player = event.getPlayer();
-        if (ArmorService.isFullArmorSet(player) != ArmorSetType.FISTER) return;
+        if (armorService.isFullArmorSet(player) != ArmorSetType.FISTER) return;
 
         Entity clicked = event.getRightClicked();
 
@@ -374,7 +382,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
                 dodging.remove(uuid);
                 cancel();
             }
-        }.runTaskLater(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), 10);
+        }.runTaskLater(plugin, 10);
         dodgeCooldowns.put(uuid, now + DODGING_COOLDOWN_TICKS * 50);
 
     }
@@ -390,7 +398,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         if (event.getAnimationType() != PlayerAnimationType.ARM_SWING) return;
 
         Player player = event.getPlayer();
-        if (ArmorService.isFullArmorSet(player) != ArmorSetType.FISTER) return;
+        if (armorService.isFullArmorSet(player) != ArmorSetType.FISTER) return;
 
         Entity target = getTargetedEntity(player, 4);
 

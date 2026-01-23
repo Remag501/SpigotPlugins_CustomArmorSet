@@ -27,19 +27,28 @@ public class LastSpartanArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 3 * 1000;
 
-    public LastSpartanArmorSet() {
+    private final Plugin plugin;
+    private final ArmorManager armorManager;
+    private final CooldownBarManager cooldownBarManager;
+    private final AttributesService attributesService;
+
+    public LastSpartanArmorSet(Plugin plugin ,ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.LAST_SPARTAN);
+        this.plugin = plugin;
+        this.armorManager = armorManager;
+        this.cooldownBarManager = cooldownBarManager;
+        this.attributesService = attributesService;
     }
 
     @Override
     public void applyPassive(Player player) {
-        AttributesService.applyHealth(player, 0.7);
+        attributesService.applyHealth(player, 0.7);
 //        player.sendMessage("You equipped the Last Spartan set");
     }
 
     @Override
     public void removePassive(Player player) {
-        AttributesService.removeHealth(player);
+        attributesService.removeHealth(player);
 //        player.sendMessage("You removed the Last Spartan set");
     }
 
@@ -116,11 +125,10 @@ public class LastSpartanArmorSet extends ArmorSet implements Listener {
                     }
                     ticks++;
                 }
-            }.runTaskTimer(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), 0, 1L);
+            }.runTaskTimer(plugin, 0, 1L);
 
             abilityCooldowns.put(uuid, now);
-            Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
-            CooldownBarManager.startCooldownBar(plugin, player, (int) (COOLDOWN / 1000));
+            cooldownBarManager.startCooldownBar(player, (int) (COOLDOWN / 1000));
 
         } else {
             player.sendMessage("§c§l(!) §cNo enemies nearby to leap toward!");
@@ -132,7 +140,7 @@ public class LastSpartanArmorSet extends ArmorSet implements Listener {
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player)) return;
 
-        ArmorSet set = ArmorManager.getArmorSet(player);
+        ArmorSet set = armorManager.getArmorSet(player);
         if (!(set instanceof LastSpartanArmorSet)) return;
 
         // Check if the player is holding a sword

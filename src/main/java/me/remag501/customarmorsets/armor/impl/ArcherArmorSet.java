@@ -25,22 +25,29 @@ public class ArcherArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 5 * 1000; // 5 seconds
 
-    public ArcherArmorSet() {
+    private final ArmorManager armorManager;
+    private final CooldownBarManager cooldownBarManager;;
+    private final AttributesService attributesService;
+
+    public ArcherArmorSet(ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.ARCHER);
+        this.armorManager = armorManager;
+        this.cooldownBarManager = cooldownBarManager;
+        this.attributesService = attributesService;
     }
 
     @Override
     public void applyPassive(Player player) {
         // Halve max HP (set max health to 10) and give Speed 1.25x
-        AttributesService.applySpeed(player, 1.5);
-        AttributesService.applyHealth(player, 0.5);
+        attributesService.applySpeed(player, 1.5);
+        attributesService.applyHealth(player, 0.5);
 //        player.sendMessage("✅ You equipped the Archer set");
     }
 
     @Override
     public void removePassive(Player player) {
-        AttributesService.removeSpeed(player);
-        AttributesService.removeHealth(player);
+        attributesService.removeSpeed(player);
+        attributesService.removeHealth(player);
 //        player.sendMessage("❌ You removed the Archer set");
     }
 
@@ -88,7 +95,7 @@ public class ArcherArmorSet extends ArmorSet implements Listener {
         }
 
         abilityCooldowns.put(uuid, now);
-        CooldownBarManager.startCooldownBar(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), player, (int) COOLDOWN / 1000);
+        cooldownBarManager.startCooldownBar(player, (int) COOLDOWN / 1000);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -127,7 +134,7 @@ public class ArcherArmorSet extends ArmorSet implements Listener {
         if (player == null) return;
 
         // Check if player is wearing Archer armor
-        if (!(ArmorManager.getArmorSet(player) instanceof ArcherArmorSet)) return;
+        if (!(armorManager.getArmorSet(player) instanceof ArcherArmorSet)) return;
 
         // Apply Archer bonuses
         if (isProjectile) {

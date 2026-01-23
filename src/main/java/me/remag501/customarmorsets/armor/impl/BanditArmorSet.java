@@ -15,6 +15,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
@@ -41,8 +42,17 @@ public class BanditArmorSet extends ArmorSet implements Listener {
     // Regeneration time for doge
     private final int DODGE_COOLDOWN = 5;
 
-    public BanditArmorSet() {
+    private final ArmorManager armorManager;
+    private final CooldownBarManager cooldownBarManager;
+    private final AttributesService attributesService;
+    private final Plugin plugin;
+
+    public BanditArmorSet(Plugin plugin, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.BANDIT);
+        this.plugin = plugin;
+        this.armorManager = armorManager;
+        this.cooldownBarManager = cooldownBarManager;
+        this.attributesService = attributesService;
     }
 
     @Override
@@ -62,7 +72,7 @@ public class BanditArmorSet extends ArmorSet implements Listener {
             task.cancel();
         }
 
-        CooldownBarManager.restorePlayerBar(player);
+        cooldownBarManager.restorePlayerBar(player);
     }
 
     // --- Passive 1: Run Faster With Fists Out ---
@@ -70,15 +80,15 @@ public class BanditArmorSet extends ArmorSet implements Listener {
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        if (!(ArmorManager.getArmorSet(player) instanceof BanditArmorSet)) {
+        if (!(armorManager.getArmorSet(player) instanceof BanditArmorSet)) {
             return;
         }
 
         // This is much cleaner now!
         if (player.getInventory().getItemInMainHand().getType() == Material.AIR) {
-            AttributesService.applySpeed(player, 1.25); // Apply a 25% speed increase
+            attributesService.applySpeed(player, 1.25); // Apply a 25% speed increase
         } else {
-            AttributesService.removeSpeed(player); // Remove the speed increase
+            attributesService.removeSpeed(player); // Remove the speed increase
         }
     }
 
@@ -88,7 +98,7 @@ public class BanditArmorSet extends ArmorSet implements Listener {
         if (!(event.getDamager() instanceof Player attacker)) {
             return;
         }
-        if (!(ArmorManager.getArmorSet(attacker) instanceof BanditArmorSet)) {
+        if (!(armorManager.getArmorSet(attacker) instanceof BanditArmorSet)) {
             return;
         }
         if (!(event.getEntity() instanceof Player target)) {
@@ -119,8 +129,8 @@ public class BanditArmorSet extends ArmorSet implements Listener {
             playerDodges.put(player.getUniqueId(), currentDodges);
 
             // Check if player is out of dodges for ui
-            CooldownBarManager.setLevel(player, currentDodges);
-            CooldownBarManager.startMiniCooldownBar(CustomArmorSets.getInstance(), player, DODGE_COOLDOWN);
+            cooldownBarManager.setLevel(player, currentDodges);
+            cooldownBarManager.startMiniCooldownBar(player, DODGE_COOLDOWN);
 
             // Get the normalized direction
             Vector direction = player.getLocation().getDirection().normalize();
@@ -158,7 +168,7 @@ public class BanditArmorSet extends ArmorSet implements Listener {
                     currentDodges++;
                     playerDodges.put(player.getUniqueId(), currentDodges);
                     player.sendMessage("§a§l(!) §aYou regenerated a dodge! Dodges left: " + currentDodges);
-                    CooldownBarManager.setLevel(player, currentDodges);
+                    cooldownBarManager.setLevel(player, currentDodges);
                 }
 
                 // Cancel the task once the player has max dodges again.
@@ -167,7 +177,7 @@ public class BanditArmorSet extends ArmorSet implements Listener {
                     regenTasks.remove(player.getUniqueId());
                 }
             }
-        }.runTaskTimer(CustomArmorSets.getInstance(), 20 * DODGE_COOLDOWN, 20 * DODGE_COOLDOWN);
+        }.runTaskTimer(plugin, 20 * DODGE_COOLDOWN, 20 * DODGE_COOLDOWN);
 
         regenTasks.put(player.getUniqueId(), task);
     }

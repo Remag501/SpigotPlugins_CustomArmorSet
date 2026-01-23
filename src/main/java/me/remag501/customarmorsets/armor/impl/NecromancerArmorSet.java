@@ -18,7 +18,9 @@ import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.TargetCategory;
 import me.remag501.customarmorsets.listener.MythicMobsListener;
 import me.remag501.customarmorsets.manager.ArmorManager;
+import me.remag501.customarmorsets.manager.CooldownBarManager;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
+import me.remag501.customarmorsets.manager.PlayerSyncManager;
 import me.remag501.customarmorsets.service.AttributesService;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -60,14 +62,25 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
 
     private static final String RESURRECTED_MOB_PREFIX = MythicMobsListener.getPrefix();
 
-    public NecromancerArmorSet() {
+    private final Plugin plugin;
+    private final ArmorManager armorManager;
+    private final DamageStatsManager damageStatsManager;
+    private final AttributesService attributesService;
+    private final PlayerSyncManager playerSyncManager;
+
+    public NecromancerArmorSet(Plugin plugin, ArmorManager armorManager, DamageStatsManager damageStatsManager, AttributesService attributesService, PlayerSyncManager playerSyncManager) {
         super(ArmorSetType.NECROMANCER);
+        this.plugin = plugin;
+        this.armorManager = armorManager;
+        this.damageStatsManager = damageStatsManager;
+        this.attributesService = attributesService;
+        this.playerSyncManager = playerSyncManager;
     }
 
     @Override
     public void applyPassive(Player player) {
 //        player.sendMessage("You equipped the Necromancer set");
-        DamageStatsManager.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.UNDEAD);
+        damageStatsManager.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.UNDEAD);
         UUID uuid = player.getUniqueId();
         summonedMobs.put(uuid, new ArrayList<>());
         summonsTask.put(uuid, new BukkitRunnable() {
@@ -171,13 +184,13 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                     }
                 }
             }
-        }.runTaskTimer(CustomArmorSets.getInstance(), 0, 10));
+        }.runTaskTimer(plugin, 0, 10));
     }
 
     @Override
     public void removePassive(Player player) {
 //        player.sendMessage("You removed the Necromancer set");
-        DamageStatsManager.clearAll(player.getUniqueId());
+        damageStatsManager.clearAll(player.getUniqueId());
         List<ActiveMob> mobs = summonedMobs.get(player.getUniqueId());
         while (!mobs.isEmpty()) {
             despawnMob(mobs.get(0));
@@ -189,7 +202,6 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     @Override
     public void triggerAbility(Player player) {
         // Relevant variables
-        Plugin plugin = CustomArmorSets.getInstance();
         List<ActiveMob> mobs = summonedMobs.get(player.getUniqueId());
 
         if (resurrectionCooldowns.get(player.getUniqueId()) != null && resurrectionCooldowns.get(player.getUniqueId()) == -1) {
@@ -354,17 +366,17 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             player.sendMessage(" " + flySpeed);
         }
         // Apply attributes
-        AttributesService.applyHealthDirect(player, controlledMob.getEntity().getMaxHealth() / 20.0);
-        AttributesService.applySpeedDirect(player, speed); // get speed here
-        AttributesService.applyDamageDirect(player, controlledMob.getType().getDamage(controlledMob) / 1.0);
+        attributesService.applyHealthDirect(player, controlledMob.getEntity().getMaxHealth() / 20.0);
+        attributesService.applySpeedDirect(player, speed); // get speed here
+        attributesService.applyDamageDirect(player, controlledMob.getType().getDamage(controlledMob) / 1.0);
         // Util functions for major syncs
         if (mobEntity instanceof LivingEntity livingEntity) {
-            syncPotionEffects(player, livingEntity);
-            syncInventory(player, livingEntity);
-            syncHealth(player, livingEntity);
+            playerSyncManager.syncPotionEffects(player, livingEntity);
+            playerSyncManager.syncInventory(player, livingEntity);
+            playerSyncManager.syncHealth(player, livingEntity);
         }
 
-        Bukkit.getScheduler().runTaskLater(CustomArmorSets.getInstance(), () -> {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
             player.setHealth(controlledMob.getEntity().getHealth()); // Prevent bugs where health doesn't sync in time
         }, 2L);
 
@@ -388,7 +400,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                 // Optional: Sync mob health back to player (technically won't work due to multiple threads overriding)
 //                 player.setHealth(controlledMob.getEntity().getHealth());
             }
-        }.runTaskTimer(CustomArmorSets.getInstance(), 0L, 2L); // update every 2 ticks
+        }.runTaskTimer(plugin, 0L, 2L); // update every 2 ticks
 
         controlTasks.put(uuid, task);
 
@@ -431,7 +443,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         }
 
         // Reset attributes and remove decoy
-        AttributesService.restoreDefaults(player);
+        attributesService.restoreDefaults(player);
 
         // Remove flight if not in creative or coming back from dead
         if (player.getGameMode() != GameMode.CREATIVE || resurrectionCooldowns.getOrDefault(player.getUniqueId(), 0L) == -1)
@@ -448,9 +460,9 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         mobEntity.setSilent(false);
 
         // Major util syncs
-        restorePotionEffects(player);
-        restoreInventory(player);
-        restoreHealth(player);
+        playerSyncManager.restorePotionEffects(player);
+        playerSyncManager.restoreInventory(player);
+        playerSyncManager.restoreHealth(player);
 
         player.sendMessage("§c§l(!) §cYou are no longer controlling a mob.");
     }
@@ -532,7 +544,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     public void onPlayerKillMob(EntityDeathEvent event) {
         // Basic checks
         Player player = event.getEntity().getKiller();
-        if (player == null || !(ArmorManager.getArmorSet(player) instanceof NecromancerArmorSet)) return; // Not killed by a player or player not wearing the set
+        if (player == null || !(armorManager.getArmorSet(player) instanceof NecromancerArmorSet)) return; // Not killed by a player or player not wearing the set
         Optional<ActiveMob> optActiveMob = MythicBukkit.inst().getMobManager().getActiveMob(event.getEntity().getUniqueId());
         if (optActiveMob.isEmpty()) return; // Not a mythic mob
         // Logic for mythic mob
@@ -560,7 +572,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             if (controlled != null && event.getFinalDamage() >= player.getHealth()) {
                 event.setCancelled(true);
                 despawnMob(controlled);
-            } else if (ArmorManager.getArmorSet(player) instanceof NecromancerArmorSet && event.getFinalDamage() >= player.getHealth()) { // Ressurection Passive: final hit to player
+            } else if (armorManager.getArmorSet(player) instanceof NecromancerArmorSet && event.getFinalDamage() >= player.getHealth()) { // Ressurection Passive: final hit to player
                     event.setCancelled(resurrectionPassive(player));
             }
         }
@@ -650,7 +662,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                 }
 
             }
-        }.runTaskTimer(CustomArmorSets.getInstance(), 0, 20); // Every second
+        }.runTaskTimer(plugin, 0, 20); // Every second
         return true;
     }
 
@@ -799,7 +811,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             }
         };
 
-        task.runTaskTimer(CustomArmorSets.getInstance(), 0L, 20L); // check every second
+        task.runTaskTimer(plugin, 0L, 20L); // check every second
         decoyTasks.put(uuid, task);
     }
 
@@ -836,7 +848,6 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         String textureUrl = "http://textures.minecraft.net/texture/15378267b72a33618c8c9d8ff4be2d452a26509a9964b080b19d7c308ec79605";
         stand.setHelmet(getCustomSkull(textureUrl));
 
-        Plugin plugin = CustomArmorSets.getInstance();
         // Mark with PDC so it can be tracked/removed
         stand.getPersistentDataContainer().set(
                 new NamespacedKey(plugin, "necromancer_" + uuid), // Use your plugin's specific key

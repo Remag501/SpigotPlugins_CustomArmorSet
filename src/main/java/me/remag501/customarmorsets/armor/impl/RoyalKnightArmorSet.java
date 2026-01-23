@@ -23,20 +23,27 @@ public class RoyalKnightArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 7 * 1000; // 7 seconds cooldown
 
-    public RoyalKnightArmorSet() {
+    private final ArmorManager armorManager;
+    private final CooldownBarManager cooldownBarManager;
+    private final AttributesService attributesService;
+
+    public RoyalKnightArmorSet(ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.ROYAL_KNIGHT);
+        this.armorManager = armorManager;
+        this.cooldownBarManager = cooldownBarManager;
+        this.attributesService = attributesService;
     }
 
     @Override
     public void applyPassive(Player player) {
         // 125% max hp
-        AttributesService.applyHealth(player, 1.25);
+        attributesService.applyHealth(player, 1.25);
 //        player.sendMessage("You equipped the Royal Knight set");
     }
 
     @Override
     public void removePassive(Player player) {
-        AttributesService.removeHealth(player);
+        attributesService.removeHealth(player);
 //        player.sendMessage("You removed the Royal Knight set");
     }
 
@@ -55,8 +62,7 @@ public class RoyalKnightArmorSet extends ArmorSet implements Listener {
         player.setHealth(Math.min(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(), player.getHealth() + 6));
         player.sendMessage("§a§l(!) §aYou used Royal Knight's Healing!");
 
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
-        CooldownBarManager.startCooldownBar(plugin, player, (int)(COOLDOWN / 1000));
+        cooldownBarManager.startCooldownBar(player, (int)(COOLDOWN / 1000));
         abilityCooldowns.put(uuid, now);
     }
 
@@ -88,7 +94,7 @@ public class RoyalKnightArmorSet extends ArmorSet implements Listener {
 
         if (player == null) return;
 
-        ArmorSet set = ArmorManager.getArmorSet(player);
+        ArmorSet set = armorManager.getArmorSet(player);
         if (!(set instanceof RoyalKnightArmorSet)) return;
 
         double originalDamage = event.getDamage();

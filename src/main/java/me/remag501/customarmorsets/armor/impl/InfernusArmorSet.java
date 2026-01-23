@@ -30,8 +30,15 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 10 * 1000; // 10 seconds cooldown in milliseconds
 
-    public InfernusArmorSet() {
+    private final Plugin plugin;
+    private final ArmorManager armorManager;
+    private final CooldownBarManager cooldownBarManager;
+
+    public InfernusArmorSet(Plugin plugin, ArmorManager armorManager, CooldownBarManager cooldownBarManager) {
         super(ArmorSetType.INFERNUS);
+        this.plugin = plugin;
+        this.armorManager = armorManager;
+        this.cooldownBarManager = cooldownBarManager;
     }
 
     @Override
@@ -66,7 +73,7 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
         Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
 
         // Show bar during active ability
-        CooldownBarManager.startCooldownBar(plugin, player, activeDurationSeconds);
+        cooldownBarManager.startCooldownBar(player, activeDurationSeconds);
         new BukkitRunnable() {
             int ticks = 0;
 
@@ -79,7 +86,7 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
                     int cooldownSeconds = (int) (COOLDOWN / 1000);
                     long now = System.currentTimeMillis();
                     abilityCooldowns.put(uuid, now);
-                    CooldownBarManager.startCooldownBar(plugin, player, cooldownSeconds);
+                    cooldownBarManager.startCooldownBar(plugin, player, cooldownSeconds);
                     return;
                 }
 
@@ -105,13 +112,13 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
                 ticks++;
             }
 
-        }.runTaskTimer(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), 0L, 2L); // Every 0.1 seconds
+        }.runTaskTimer(plugin, 0L, 2L); // Every 0.1 seconds
     }
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        ArmorSet set = ArmorManager.getArmorSet(player);
+        ArmorSet set = armorManager.getArmorSet(player);
         if (!(set instanceof InfernusArmorSet)) return;
 
         // Only trigger if the player actually moved a block (not just rotated)
@@ -136,7 +143,7 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
                         blockAtFeet.setType(Material.AIR);
                     }
                 }
-            }.runTaskLater(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), 60L);
+            }.runTaskLater(plugin, 60L);
         }
     }
 

@@ -22,25 +22,33 @@ public class WorldGuardianArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 25 * 1000;
 
-    private double prevSpeed;
     private boolean isInvulnerable = false;
 
-    public WorldGuardianArmorSet() {
+    private final Plugin plugin;
+    private final ArmorManager armorManager;
+    private final CooldownBarManager cooldownBarManager;
+    private final AttributesService attributesService;
+
+    public WorldGuardianArmorSet(Plugin plugin, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.WORLD_GUARDIAN);
+        this.plugin = plugin;
+        this.armorManager = armorManager;
+        this.cooldownBarManager = cooldownBarManager;
+        this.attributesService = attributesService;
     }
 
     @Override
     public void applyPassive(Player player) {
-        AttributesService.applyHealth(player, 1.5);
-        AttributesService.applySpeed(player, 0.8);
+        attributesService.applyHealth(player, 1.5);
+        attributesService.applySpeed(player, 0.8);
         player.sendMessage("You equipped the World Guardian set");
 
     }
 
     @Override
     public void removePassive(Player player) {
-        AttributesService.removeHealth(player);
-        AttributesService.removeSpeed(player);
+        attributesService.removeHealth(player);
+        attributesService.removeSpeed(player);
         player.sendMessage("You removed the World Guardian set");
     }
 
@@ -58,12 +66,12 @@ public class WorldGuardianArmorSet extends ArmorSet implements Listener {
         isInvulnerable = true;
 
         Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
-        CooldownBarManager.startCooldownBar(plugin, player, 3);
+        cooldownBarManager.startCooldownBar(player, 3);
         new BukkitRunnable() {
             @Override
             public void run() {
                 isInvulnerable = false;
-                CooldownBarManager.startCooldownBar(plugin, player, (int)(COOLDOWN / 1000));
+                cooldownBarManager.startCooldownBar(player, (int)(COOLDOWN / 1000));
                 abilityCooldowns.put(uuid, now);
             }
         }.runTaskLater(plugin, 60L);
@@ -75,7 +83,7 @@ public class WorldGuardianArmorSet extends ArmorSet implements Listener {
     public void onEntityDamageEvent(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
 
-        ArmorSet set = ArmorManager.getArmorSet(player);
+        ArmorSet set = armorManager.getArmorSet(player);
         if (!(set instanceof WorldGuardianArmorSet armorSet)) return;
 
         if (armorSet.isInvulnerable == true) {

@@ -43,18 +43,27 @@ public class VampireArmorSet extends ArmorSet implements Listener {
     private final Map<UUID, List<Bat>> cosmeticBats = new HashMap<>();
     private final Map<UUID, BukkitRunnable> batTasks = new HashMap<>();
 
-    public VampireArmorSet() {
+    private final Plugin plugin;
+    private final ArmorManager armorManager;
+    private final CooldownBarManager cooldownBarManager;
+    private final AttributesService attributesService;
+
+    public VampireArmorSet(Plugin plugin, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.VAMPIRE);
+        this.plugin = plugin;
+        this.armorManager = armorManager;
+        this.cooldownBarManager = cooldownBarManager;
+        this.attributesService = attributesService;
     }
 
     @Override
     public void applyPassive(Player player) {
-        AttributesService.applyHealth(player, 0.5);
+        attributesService.applyHealth(player, 0.5);
     }
 
     @Override
     public void removePassive(Player player) {
-        AttributesService.removeHealth(player);
+        attributesService.removeHealth(player);
         batForm.remove(player.getUniqueId());
     }
 
@@ -69,7 +78,6 @@ public class VampireArmorSet extends ArmorSet implements Listener {
             return;
         }
 
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
 
         // Check for vampire orb in 5 block radius
         for (Entity entity : player.getNearbyEntities(RADIUS, RADIUS, RADIUS)) {
@@ -109,7 +117,7 @@ public class VampireArmorSet extends ArmorSet implements Listener {
             return;
         }
 
-        CooldownBarManager.startCooldownBar(plugin, player, DURATION_TICKS / 20);
+        cooldownBarManager.startCooldownBar(player, DURATION_TICKS / 20);
 
         // Default: drain enemies and heal
         List<LivingEntity> targets = player.getNearbyEntities(RADIUS, RADIUS, RADIUS).stream()
@@ -141,7 +149,7 @@ public class VampireArmorSet extends ArmorSet implements Listener {
 
         // Store cooldown
         cooldowns.put(uuid, now + COOLDOWN_TICKS * 50);
-        CooldownBarManager.startCooldownBar(plugin, player, COOLDOWN_TICKS / 20);
+        cooldownBarManager.startCooldownBar(player, COOLDOWN_TICKS / 20);
 
     }
 
@@ -180,8 +188,8 @@ public class VampireArmorSet extends ArmorSet implements Listener {
         DisguiseAPI.disguiseToAll(player, disguise);
 
         player.setFlySpeed((float) 0.2);
+        bat.getPersistentDataContainer().set(new NamespacedKey(plugin, "bat_form_owner"), PersistentDataType.STRING, player.getUniqueId().toString());
 
-        bat.getPersistentDataContainer().set(new NamespacedKey(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), "bat_form_owner"), PersistentDataType.STRING, player.getUniqueId().toString());
     }
 
     private void cancelBatForm(Player player) {
@@ -200,7 +208,7 @@ public class VampireArmorSet extends ArmorSet implements Listener {
         // Remove bat
         Bukkit.getWorlds().forEach(world ->
                 world.getEntitiesByClass(Bat.class).forEach(bat -> {
-                    String ownerId = bat.getPersistentDataContainer().get(new NamespacedKey(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), "bat_form_owner"), PersistentDataType.STRING);
+                    String ownerId = bat.getPersistentDataContainer().get(new NamespacedKey(plugin, "bat_form_owner"), PersistentDataType.STRING);
                     if (ownerId != null && ownerId.equals(uuid.toString())) {
                         bat.remove();
                     }
@@ -273,7 +281,7 @@ public class VampireArmorSet extends ArmorSet implements Listener {
             }
         };
 
-        task.runTaskTimer(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), 0L, 2L);
+        task.runTaskTimer(plugin, 0L, 2L);
         batTasks.put(uuid, task);
     }
 
@@ -310,7 +318,7 @@ public class VampireArmorSet extends ArmorSet implements Listener {
         }
 
         // Confirm player is wearing Vampire set
-        if (!(ArmorManager.getArmorSet(damager) instanceof VampireArmorSet)) return;
+        if (!(armorManager.getArmorSet(damager) instanceof VampireArmorSet)) return;
 
         // Heal the player by a portion of the damage dealt
         double newHealth = Math.min(
@@ -323,7 +331,6 @@ public class VampireArmorSet extends ArmorSet implements Listener {
         double finalHealth = victim.getHealth() - event.getFinalDamage();
         if (finalHealth > 0) return;
 
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
         // Delay spawning until after entity death is processed
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             spawnCosmeticHead(victim.getLocation(), damager);
@@ -343,7 +350,6 @@ public class VampireArmorSet extends ArmorSet implements Listener {
         stand.setSilent(true);
         stand.setHelmet(getCustomSkull("http://textures.minecraft.net/texture/cb47759e963f10257ac363e15f5685c54897e300c2b8d05df0bf35e4b4c3ac82")); // Cosmetic skull
 
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
         // Mark with PDC so it can be tracked/removed
         stand.getPersistentDataContainer().set(
                 new NamespacedKey(plugin, "vampire_kill_mark"),

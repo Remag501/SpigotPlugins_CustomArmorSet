@@ -60,14 +60,22 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, Long> mobChargeCooldowns = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> freezeStacks = new ConcurrentHashMap<>();
 
+    private final Plugin plugin;
+    private final ArmorManager armorManager;
+    private final CooldownBarManager cooldownBarManager;
+    private final AttributesService attributesService;
 
-    public IcemanArmorSet() {
+    public IcemanArmorSet(Plugin plugin, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.ICEMAN);
+        this.plugin = plugin;
+        this.armorManager = armorManager;
+        this.cooldownBarManager = cooldownBarManager;
+        this.attributesService = attributesService;
     }
 
     @Override
     public void applyPassive(Player player) {
-        AttributesService.applySpeed(player, 1.25);
+        attributesService.applySpeed(player, 1.25);
 //        player.sendMessage("❄ You equipped the Iceman set");
         // Populate maps
         UUID uuid = player.getUniqueId();
@@ -84,7 +92,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void removePassive(Player player) {
-        AttributesService.removeSpeed(player);
+        attributesService.removeSpeed(player);
         UUID uuid = player.getUniqueId();
         resetIceBridgeBlocks(player);
         ultTask.remove(uuid).cancel();
@@ -98,7 +106,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         playerIceBeam.remove(uuid);
         playerIceBeam.remove(uuid);
 //        player.sendMessage("❄ You removed the Iceman set");
-        CooldownBarManager.restorePlayerBar(player);
+        cooldownBarManager.restorePlayerBar(player);
     }
 
     @Override
@@ -136,7 +144,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         // Handle ice bridge passive
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
-        if (!(ArmorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
+        if (!(armorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
         // Now we start
 
         if (!player.isSprinting() && runningTime.get(uuid) == null) {
@@ -159,8 +167,8 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                         player.setAllowFlight(true);
                     }
                 }
-            }.runTaskTimer(CustomArmorSets.getInstance(), 0, 1);
-            AttributesService.removeSpeed(player);
+            }.runTaskTimer(plugin, 0, 1);
+            attributesService.removeSpeed(player);
             runningTime.put(uuid, runnable);
         }
         else {
@@ -171,7 +179,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     @EventHandler
     public void onToggleFlight(PlayerToggleFlightEvent event) {
         Player player = event.getPlayer();
-        if (!(ArmorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
+        if (!(armorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
         // Now we start
 
         Boolean canEnterIceMode = iceMode.get(player.getUniqueId());
@@ -193,7 +201,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        if (!(ArmorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
+        if (!(armorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
         // Now we start
 
         if (!iceMode.getOrDefault(player.getUniqueId(), false)) {
@@ -210,7 +218,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player)) return;
-        if (!(ArmorManager.getArmorSet(player) instanceof IcemanArmorSet)) return; // Corrected this line
+        if (!(armorManager.getArmorSet(player) instanceof IcemanArmorSet)) return; // Corrected this line
 
         if (event.getEntity() instanceof LivingEntity target) {
             // Check if the player's attack is a fully charged melee hit (cooldown is >= 1.0)
@@ -277,7 +285,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     public void onPlayerFireDamageMob(EntityDamageByEntityEvent event) {
         // Check if the damager is a player
         if (!(event.getDamager() instanceof Player player)) return;
-        if (!(ArmorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
+        if (!(armorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
         // Check if the damaged entity is a mob and if the cause is an entity attack
         if (!(event.getEntity() instanceof LivingEntity mob) || event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK) return;
 
@@ -349,7 +357,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                     this.cancel();
                 }
             }
-        }.runTaskTimer(CustomArmorSets.getInstance(), 20, 20);
+        }.runTaskTimer(plugin, 20, 20);
         decayTasks.put(mobUUID, decayTask);
 
         // Schedule particle task
@@ -365,7 +373,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                     mob.getWorld().spawnParticle(Particle.SNOWFLAKE, mob.getLocation().add(0, 1, 0), 5, 0.5, 0.5, 0.5);
                 }
             }
-        }.runTaskTimer(CustomArmorSets.getInstance(), 0, 10);
+        }.runTaskTimer(plugin, 0, 10);
         particleTasks.put(mobUUID, particleTask);
     }
 
@@ -379,7 +387,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                 ticks++;
                 if (ticks % 40 == 0) // Add charge every two seconds
                     domeCharge.put(uuid, Math.min(domeCharge.get(uuid) + 50, 100));
-                CooldownBarManager.setLevel(player, domeCharge.get(uuid));
+                cooldownBarManager.setLevel(player, domeCharge.get(uuid));
 //                if (ticks % 5 == 0) {// temp
 //                    freezeCharges.put(uuid, Math.min(5, freezeCharges.get(uuid) + 1));
 ////                    player.sendTitle("Freeze Charge ❄ " + freezeCharges.get(uuid) + "/ 5", "subtitle");
@@ -387,7 +395,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                 int charges = freezeCharges.getOrDefault(uuid, 0);
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§bFreeze Charge ❄ " + charges + " / 5"));
             }
-        }.runTaskTimer(CustomArmorSets.getInstance(), 0, 1);
+        }.runTaskTimer(plugin, 0, 1);
         ultTask.put(uuid, task);
     }
 
@@ -477,7 +485,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                 }
                 ticksLived++;
             }
-        }.runTaskTimer(CustomArmorSets.getInstance(), 0L, 1L);
+        }.runTaskTimer(plugin, 0L, 1L);
     }
 
     private void spawnGlobe(Player player) {
@@ -486,7 +494,6 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         final int radius = 10; // A good size for a dome.
         final long durationTicks = 20L * ULT_DURATION_SECONDS; // 10 seconds.
         final Random random = new Random();
-        final Plugin plugin = CustomArmorSets.getInstance();
 
         // A set to store the original state of blocks that make up the dome so we can remove them later.
         Set<BlockState> originalStates = new HashSet<>();
@@ -594,7 +601,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                             this.cancel();
                         }
                     }
-                }.runTaskTimer(CustomArmorSets.getInstance(), 20, 20);
+                }.runTaskTimer(plugin, 20, 20);
                 decayTasks.put(mobUUID, decayTask);
 
                 // Start or restart a particle task for this mob
@@ -611,7 +618,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                                 mob.getWorld().spawnParticle(Particle.SNOWFLAKE, mob.getLocation().add(0, 1, 0), 5, 0.5, 0.5, 0.5);
                             }
                         }
-                    }.runTaskTimer(CustomArmorSets.getInstance(), 0, 10);
+                    }.runTaskTimer(plugin, 0, 10);
                     particleTasks.put(mobUUID, particleTask);
                 }
             }
@@ -714,7 +721,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                         blocksToReset.put(blockToPlaceIceOn, originalState);
                         blockToPlaceIceOn.setType(Material.ICE);
 
-                        Bukkit.getScheduler().runTaskLater(CustomArmorSets.getInstance(), () -> {
+                        Bukkit.getScheduler().runTaskLater(plugin, () -> {
                             BlockState oldState = blocksToReset.get(blockToPlaceIceOn);
                             if (oldState != null) {
                                 oldState.update(true);

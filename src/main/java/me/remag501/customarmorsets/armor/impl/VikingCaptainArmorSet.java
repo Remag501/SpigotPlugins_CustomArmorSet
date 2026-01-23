@@ -28,8 +28,14 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 7 * 1000; // 7 seconds cooldown
 
-    public VikingCaptainArmorSet() {
+    private final ArmorManager armorManager;
+    private final CooldownBarManager cooldownBarManager;
+
+
+    public VikingCaptainArmorSet(ArmorManager armorManager, CooldownBarManager cooldownBarManager) {
         super(ArmorSetType.VIKING_CAPTAIN);
+        this.armorManager = armorManager;
+        this.cooldownBarManager = cooldownBarManager;
     }
 
     @Override
@@ -108,7 +114,7 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
         }.runTaskTimer(plugin, 0L, 1L);
 
         // Start cooldown and cooldown bar
-        CooldownBarManager.startCooldownBar(plugin, player, (int) (COOLDOWN / 1000));
+        cooldownBarManager.startCooldownBar(player, (int) (COOLDOWN / 1000));
         abilityCooldowns.put(uuid, now);
     }
 
@@ -126,7 +132,7 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player)) return;
 
-        ArmorSet set = ArmorManager.getArmorSet(player);
+        ArmorSet set = armorManager.getArmorSet(player);
         if (!(set instanceof VikingCaptainArmorSet)) return;
 
         // Check if the player is holding a sword

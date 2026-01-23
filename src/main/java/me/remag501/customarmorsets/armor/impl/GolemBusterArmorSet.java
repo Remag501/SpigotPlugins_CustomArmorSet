@@ -23,15 +23,17 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
+import java.awt.geom.AffineTransform;
 import java.util.*;
 
-import static me.remag501.customarmorsets.manager.CooldownBarManager.setLevel;
+//import static me.remag501.customarmorsets.manager.CooldownBarManager.setLevel;
 
 public class GolemBusterArmorSet extends ArmorSet implements Listener {
 
@@ -41,8 +43,21 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
     private static final Map<GolemBusterArmorSet, BukkitTask> energyLoop = new HashMap<>();
     private static final Map<UUID, Long> stunCooldown = new HashMap<>();
 
-    public GolemBusterArmorSet() {
+    private final Plugin plugin;
+    private final ArmorManager armorManager;
+    private final CooldownBarManager cooldownBarManager;
+    private final AttributesService attributesService;
+    private final DamageStatsManager damageStatsManager;
+    private final DefenseStatsManager defenseStatsManager;
+
+    public GolemBusterArmorSet(Plugin plugin, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService, DamageStatsManager damageStatsManager, DefenseStatsManager defenseStatsManager) {
         super(ArmorSetType.GOLEM_BUSTER);
+        this.plugin = plugin;
+        this.armorManager = armorManager;
+        this.cooldownBarManager = cooldownBarManager;
+        this.attributesService = attributesService;
+        this.damageStatsManager = damageStatsManager;
+        this.defenseStatsManager = defenseStatsManager;
     }
 
     @Override
@@ -52,8 +67,8 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         playerEnergy.put(uuid, 0);
         playerIsGolem.put(uuid, false);
         // Apply Damage Stats
-        DamageStatsManager.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.NON_PLAYER);
-        DefenseStatsManager.setSourceReduction(player.getUniqueId(), 0.75f, TargetCategory.NON_PLAYER);
+        damageStatsManager.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.NON_PLAYER);
+        defenseStatsManager.setSourceReduction(player.getUniqueId(), 0.75f, TargetCategory.NON_PLAYER);
 //        DefenseStats.setWeaponReduction(player.getUniqueId(), 0.25f, WeaponType.);
         // Apply 1.8 pvp later
         energyLoop.put(this, new BukkitRunnable() {
@@ -71,9 +86,9 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
                 else
                     energy = consumePlayerEnergy(player, 1);
 
-                setLevel(player, energy);
+                cooldownBarManager.setLevel(player, energy);
             }
-        }.runTaskTimer(CustomArmorSets.getInstance(), 0, 20));
+        }.runTaskTimer(plugin, 0, 20));
     }
 
     @Override
@@ -82,10 +97,10 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         // End the bukkit task
         transformBack(player);
         energyLoop.get(this).cancel();
-        CooldownBarManager.restorePlayerBar(player);
-        AttributesService.restoreDefaults(player); // Just in case
-        DamageStatsManager.clearAll(player.getUniqueId());
-        DefenseStatsManager.clearAll(player.getUniqueId());
+        cooldownBarManager.restorePlayerBar(player);
+        attributesService.restoreDefaults(player); // Just in case
+        damageStatsManager.clearAll(player.getUniqueId());
+        defenseStatsManager.clearAll(player.getUniqueId());
     }
 
     @Override
@@ -155,7 +170,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
 //            battery = consumePlayerEnergy(player, -50);
             if (battery >= 50) {
                 player.sendMessage("§a§l(!) §aGolem Smash");
-                setLevel(player, battery);
+                cooldownBarManager.setLevel(player, battery);
                 golemTransform(player);
                 return;
             }
@@ -167,7 +182,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
             return;
         }
 
-        setLevel(player, battery);
+        cooldownBarManager.setLevel(player, battery);
 
         World world = player.getWorld();
         Location start = player.getEyeLocation();
@@ -213,7 +228,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
 
                 ticks++;
             }
-        }.runTaskTimer(CustomArmorSets.getInstance(), 0L, 1L); // Run every tick (1L) for 60 ticks = 3 seconds
+        }.runTaskTimer(plugin, 0L, 1L); // Run every tick (1L) for 60 ticks = 3 seconds
     }
 
     private void golemTransform(Player player) {
@@ -240,21 +255,21 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         startParticleTrail(player);
 
         // Give attributes and damage stats
-        AttributesService.applyHealth(player, 2.0);
-        AttributesService.applySpeed(player, 0.5);
-        DamageStatsManager.setMobMultiplier(player.getUniqueId(), 2, TargetCategory.NON_PLAYER);
-        DefenseStatsManager.setSourceReduction(player.getUniqueId(), 0.25f, TargetCategory.NON_PLAYER);
-        Bukkit.getScheduler().runTaskLater(CustomArmorSets.getInstance(), () -> {
+        attributesService.applyHealth(player, 2.0);
+        attributesService.applySpeed(player, 0.5);
+        damageStatsManager.setMobMultiplier(player.getUniqueId(), 2, TargetCategory.NON_PLAYER);
+        defenseStatsManager.setSourceReduction(player.getUniqueId(), 0.25f, TargetCategory.NON_PLAYER);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
             player.setHealth(40.0);
         }, 2L);
     }
 
     private void transformBack(Player player)  {
         // Remove attributes and damage stats
-        AttributesService.removeHealth(player);
-        AttributesService.removeSpeed(player);
-        DamageStatsManager.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.NON_PLAYER);
-        DefenseStatsManager.setSourceReduction(player.getUniqueId(), 0.75f, TargetCategory.NON_PLAYER);
+        attributesService.removeHealth(player);
+        attributesService.removeSpeed(player);
+        damageStatsManager.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.NON_PLAYER);
+        defenseStatsManager.setSourceReduction(player.getUniqueId(), 0.75f, TargetCategory.NON_PLAYER);
 
         // Make player a golem in map
         UUID uuid = player.getUniqueId();
@@ -306,14 +321,14 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
             }
         };
 
-        task.runTaskTimer(CustomArmorSets.getInstance(), 0L, 10L); // Every 10 ticks (0.5s)
+        task.runTaskTimer(plugin, 0L, 10L); // Every 10 ticks (0.5s)
         particleTasks.put(uuid, task);
     }
 
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player)) return;
-        if (!(ArmorManager.getArmorSet(player) instanceof GolemBusterArmorSet)) return;
+        if (!(armorManager.getArmorSet(player) instanceof GolemBusterArmorSet)) return;
 
         if (event.getEntity() instanceof Monster) {
             event.setDamage(event.getDamage() * 0.8); // Reduced damage from mobs
@@ -325,7 +340,7 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
 //        if (!(event.getEntity().getKiller())) return;
         Player player = event.getEntity().getKiller();
         if (player == null) return;
-        if (!(ArmorManager.getArmorSet(player) instanceof GolemBusterArmorSet)) return;
+        if (!(armorManager.getArmorSet(player) instanceof GolemBusterArmorSet)) return;
 
         // Get all attributes about entity killed
         double mobMaxHealth = 0;
