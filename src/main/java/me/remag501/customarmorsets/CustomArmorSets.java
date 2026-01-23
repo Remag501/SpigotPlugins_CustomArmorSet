@@ -68,18 +68,18 @@ public final class CustomArmorSets extends JavaPlugin {
 
         // Register listeners for armor sets
         getServer().getPluginManager().registerEvents(new SnowmanArmorSet(), this);
-        getServer().getPluginManager().registerEvents(new InfernusArmorSet(), this);
-        getServer().getPluginManager().registerEvents(new LastSpartanArmorSet(), this);
-        getServer().getPluginManager().registerEvents(new VikingCaptainArmorSet(), this);
-        getServer().getPluginManager().registerEvents(new RoyalKnightArmorSet(), this);
-        getServer().getPluginManager().registerEvents(new WorldGuardianArmorSet(), this);
-        getServer().getPluginManager().registerEvents(new VampireArmorSet(), this);
-        getServer().getPluginManager().registerEvents(new FisterArmorSet(), this);
-        getServer().getPluginManager().registerEvents(new ArcherArmorSet(), this);
-        getServer().getPluginManager().registerEvents(new NecromancerArmorSet(), this);
-        getServer().getPluginManager().registerEvents(new IcemanArmorSet(), this);
-        getServer().getPluginManager().registerEvents(new GolemBusterArmorSet(), this);
-        getServer().getPluginManager().registerEvents(new BanditArmorSet(), this);
+        getServer().getPluginManager().registerEvents(new InfernusArmorSet(this, armorManager, cooldownBarManager), this);
+        getServer().getPluginManager().registerEvents(new LastSpartanArmorSet(this, armorManager, cooldownBarManager, attributesService), this);
+        getServer().getPluginManager().registerEvents(new VikingCaptainArmorSet(damageStatsManager, cooldownBarManager), this);
+        getServer().getPluginManager().registerEvents(new RoyalKnightArmorSet(armorManager, cooldownBarManager, attributesService), this);
+        getServer().getPluginManager().registerEvents(new WorldGuardianArmorSet(this, armorManager, cooldownBarManager, attributesService), this);
+        getServer().getPluginManager().registerEvents(new VampireArmorSet(this, armorManager, cooldownBarManager, attributesService), this);
+        getServer().getPluginManager().registerEvents(new FisterArmorSet(this, armorManager, cooldownBarManager, attributesService, armorService), this);
+        getServer().getPluginManager().registerEvents(new ArcherArmorSet(armorManager, cooldownBarManager, attributesService), this);
+        getServer().getPluginManager().registerEvents(new NecromancerArmorSet(this, armorManager, damageStatsManager, attributesService, playerSyncManager), this);
+        getServer().getPluginManager().registerEvents(new IcemanArmorSet(this, armorManager, cooldownBarManager, attributesService), this);
+        getServer().getPluginManager().registerEvents(new GolemBusterArmorSet(this, armorManager, cooldownBarManager, attributesService, damageStatsManager, defenseStatsManager), this);
+        getServer().getPluginManager().registerEvents(new BanditArmorSet(this, armorManager, cooldownBarManager, attributesService), this);
 
         // Libraries
         getServer().getPluginManager().registerEvents(new ArmorListener(getConfig().getStringList("blocked")), this);

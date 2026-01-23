@@ -70,7 +70,6 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
 
         // Set up the 2 second active ability phase
         int activeDurationSeconds = 2;
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
 
         // Show bar during active ability
         cooldownBarManager.startCooldownBar(player, activeDurationSeconds);
@@ -86,7 +85,7 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
                     int cooldownSeconds = (int) (COOLDOWN / 1000);
                     long now = System.currentTimeMillis();
                     abilityCooldowns.put(uuid, now);
-                    cooldownBarManager.startCooldownBar(plugin, player, cooldownSeconds);
+                    cooldownBarManager.startCooldownBar(player, cooldownSeconds);
                     return;
                 }
 

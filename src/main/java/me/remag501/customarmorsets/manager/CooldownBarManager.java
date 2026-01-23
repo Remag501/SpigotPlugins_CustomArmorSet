@@ -64,7 +64,7 @@ public class CooldownBarManager {
                 // When done
                 if (progress <= 0.0) {
                     inUse.put(player.getUniqueId(), false);
-                    flashXpBar(plugin, player);
+                    flashXpBar(player);
                     cleanup(player);
                     cancel();
                 }
