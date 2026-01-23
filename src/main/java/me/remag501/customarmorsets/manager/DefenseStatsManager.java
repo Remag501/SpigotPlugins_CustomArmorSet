@@ -11,11 +11,11 @@ import java.util.UUID;
 public class DefenseStatsManager {
 
     // Reductions: UUID -> Category -> Multiplier (0.0 - 1.0)
-    private static final Map<UUID, Map<WeaponType, Float>> weaponReductions = new HashMap<>();
-    private static final Map<UUID, Map<TargetCategory, Float>> sourceReductions = new HashMap<>();
+    private final Map<UUID, Map<WeaponType, Float>> weaponReductions = new HashMap<>();
+    private final Map<UUID, Map<TargetCategory, Float>> sourceReductions = new HashMap<>();
 
     // ---------- Weapon-based Reduction ----------
-    public static void setWeaponReduction(UUID player, float multiplier, WeaponType... types) {
+    public void setWeaponReduction(UUID player, float multiplier, WeaponType... types) {
         weaponReductions
                 .computeIfAbsent(player, k -> new EnumMap<>(WeaponType.class));
         for (WeaponType type : types) {
@@ -23,13 +23,13 @@ public class DefenseStatsManager {
         }
     }
 
-    public static float getWeaponReduction(UUID player, WeaponType type) {
+    public float getWeaponReduction(UUID player, WeaponType type) {
         Map<WeaponType, Float> map = weaponReductions.get(player);
         if (map == null) return 1.0f;
         return map.getOrDefault(type, map.getOrDefault(WeaponType.ALL, 1.0f));
     }
 
-    public static void clearWeaponReduction(UUID player, WeaponType... types) {
+    public void clearWeaponReduction(UUID player, WeaponType... types) {
         Map<WeaponType, Float> map = weaponReductions.get(player);
         if (map != null) {
             if (types.length == 0) map.clear();
@@ -37,13 +37,13 @@ public class DefenseStatsManager {
         }
     }
 
-    public static boolean hasWeaponReduction(UUID player, WeaponType type) {
+    public boolean hasWeaponReduction(UUID player, WeaponType type) {
         Map<WeaponType, Float> map = weaponReductions.get(player);
         return map != null && (map.containsKey(type) || map.containsKey(WeaponType.ALL));
     }
 
     // ---------- Source-based Reduction ----------
-    public static void setSourceReduction(UUID player, float multiplier, TargetCategory... categories) {
+    public void setSourceReduction(UUID player, float multiplier, TargetCategory... categories) {
         sourceReductions
                 .computeIfAbsent(player, k -> new EnumMap<>(TargetCategory.class));
         for (TargetCategory category : categories) {
@@ -51,7 +51,7 @@ public class DefenseStatsManager {
         }
     }
 
-    public static float getSourceReduction(UUID player, TargetCategory category) {
+    public float getSourceReduction(UUID player, TargetCategory category) {
         Map<TargetCategory, Float> map = sourceReductions.get(player);
         if (map == null) return 1.0f;
 
@@ -62,7 +62,7 @@ public class DefenseStatsManager {
         return mult != null ? mult : map.getOrDefault(TargetCategory.ALL, 1.0f);
     }
 
-    public static void clearSourceReduction(UUID player, TargetCategory... categories) {
+    public void clearSourceReduction(UUID player, TargetCategory... categories) {
         Map<TargetCategory, Float> map = sourceReductions.get(player);
         if (map != null) {
             if (categories.length == 0) map.clear();
@@ -70,13 +70,13 @@ public class DefenseStatsManager {
         }
     }
 
-    public static boolean hasSourceReduction(UUID player, TargetCategory category) {
+    public boolean hasSourceReduction(UUID player, TargetCategory category) {
         Map<TargetCategory, Float> map = sourceReductions.get(player);
         return map != null && (map.containsKey(category) || map.containsKey(TargetCategory.ALL));
     }
 
     // ---------- Clear All ----------
-    public static void clearAll(UUID player) {
+    public void clearAll(UUID player) {
         weaponReductions.remove(player);
         sourceReductions.remove(player);
     }

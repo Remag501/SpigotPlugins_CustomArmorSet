@@ -45,8 +45,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
-import static me.remag501.customarmorsets.manager.PlayerSyncUtil.*;
-
 public class NecromancerArmorSet extends ArmorSet implements Listener {
 
     private static final Long RESURRECTION_COOLDOWN = 120 * 1000L;

@@ -10,37 +10,15 @@ import java.util.UUID;
 
 public class DamageStatsManager {
 
-    // ----- ENUMS -----
-//    public enum WeaponType {
-//        ALL,
-//        SWORD,
-//        AXE,
-//        BOW,
-//        CROSSBOW,
-//        TRIDENT,
-//        OTHER
-//    }
-
-//    public enum TargetCategory {
-//        ALL,          // Applies to everything
-//        PLAYERS,      // PvP
-//        NON_PLAYER,   // Any non-player entity
-//        UNDEAD,
-//        ARTHROPOD,
-//        ILLAGER,
-//        BOSS,
-//        GENERIC
-//    }
-
     // ----- STORAGE -----
-    private static final Map<UUID, Map<WeaponType, Float>> weaponMultipliers = new HashMap<>();
-    private static final Map<UUID, Map<TargetCategory, Float>> mobMultipliers = new HashMap<>();
+    private final Map<UUID, Map<WeaponType, Float>> weaponMultipliers = new HashMap<>();
+    private final Map<UUID, Map<TargetCategory, Float>> mobMultipliers = new HashMap<>();
 
     // -----------------------
     // WEAPON MULTIPLIER LOGIC
     // -----------------------
 
-    public static void setWeaponMultiplier(UUID player, float multiplier, WeaponType... types) {
+    public void setWeaponMultiplier(UUID player, float multiplier, WeaponType... types) {
         weaponMultipliers.putIfAbsent(player, new EnumMap<>(WeaponType.class));
         Map<WeaponType, Float> map = weaponMultipliers.get(player);
         for (WeaponType type : types) {
@@ -48,7 +26,7 @@ public class DamageStatsManager {
         }
     }
 
-    public static float getWeaponMultiplier(UUID player, WeaponType type) {
+    public float getWeaponMultiplier(UUID player, WeaponType type) {
         Map<WeaponType, Float> map = weaponMultipliers.get(player);
         if (map == null) return 1.0f;
 
@@ -56,12 +34,12 @@ public class DamageStatsManager {
         return map.getOrDefault(type, map.getOrDefault(WeaponType.ALL, 1.0f));
     }
 
-    public static boolean hasWeaponMultiplier(UUID player, WeaponType type) {
+    public boolean hasWeaponMultiplier(UUID player, WeaponType type) {
         Map<WeaponType, Float> map = weaponMultipliers.get(player);
         return map != null && (map.containsKey(type) || map.containsKey(WeaponType.ALL));
     }
 
-    public static void clearWeaponMultiplier(UUID player, WeaponType... types) {
+    public void clearWeaponMultiplier(UUID player, WeaponType... types) {
         Map<WeaponType, Float> map = weaponMultipliers.get(player);
         if (map == null) return;
         for (WeaponType type : types) {
@@ -76,7 +54,7 @@ public class DamageStatsManager {
     // MOB (TARGET) MULTIPLIER LOGIC
     // -----------------------
 
-    public static void setMobMultiplier(UUID player, float multiplier, TargetCategory... categories) {
+    public void setMobMultiplier(UUID player, float multiplier, TargetCategory... categories) {
         mobMultipliers.putIfAbsent(player, new EnumMap<>(TargetCategory.class));
         Map<TargetCategory, Float> map = mobMultipliers.get(player);
         for (TargetCategory category : categories) {
@@ -84,7 +62,7 @@ public class DamageStatsManager {
         }
     }
 
-    public static float getMobMultiplier(UUID player, TargetCategory category) {
+    public float getMobMultiplier(UUID player, TargetCategory category) {
         Map<TargetCategory, Float> map = mobMultipliers.get(player);
         if (map == null) return 1.0f;
 
@@ -104,12 +82,12 @@ public class DamageStatsManager {
         return multiplier;
     }
 
-    public static boolean hasMobMultiplier(UUID player, TargetCategory category) {
+    public boolean hasMobMultiplier(UUID player, TargetCategory category) {
         Map<TargetCategory, Float> map = mobMultipliers.get(player);
         return map != null && (map.containsKey(category) || map.containsKey(TargetCategory.ALL));
     }
 
-    public static void clearMobMultiplier(UUID player, TargetCategory... categories) {
+    public void clearMobMultiplier(UUID player, TargetCategory... categories) {
         Map<TargetCategory, Float> map = mobMultipliers.get(player);
         if (map == null) return;
         for (TargetCategory category : categories) {
@@ -124,16 +102,16 @@ public class DamageStatsManager {
     // UTILITY
     // -----------------------
 
-    public static void clearAll(UUID player) {
+    public void clearAll(UUID player) {
         weaponMultipliers.remove(player);
         mobMultipliers.remove(player);
     }
 
-    public static Map<WeaponType, Float> getWeaponMultipliers(UUID player) {
+    public Map<WeaponType, Float> getWeaponMultipliers(UUID player) {
         return weaponMultipliers.getOrDefault(player, new EnumMap<>(WeaponType.class));
     }
 
-    public static Map<TargetCategory, Float> getMobMultipliers(UUID player) {
+    public Map<TargetCategory, Float> getMobMultipliers(UUID player) {
         return mobMultipliers.getOrDefault(player, new EnumMap<>(TargetCategory.class));
     }
 }

@@ -10,19 +10,19 @@ import org.bukkit.potion.PotionEffect;
 
 import java.util.*;
 
-public class PlayerSyncUtil {
+public class PlayerSyncManager {
     // Stores original potion effects
-    private static final Map<UUID, Collection<PotionEffect>> originalEffects = new HashMap<>();
-    private static final Map<UUID, Integer> playerOnFire = new HashMap<>();
+    private final Map<UUID, Collection<PotionEffect>> originalEffects = new HashMap<>();
+    private final Map<UUID, Integer> playerOnFire = new HashMap<>();
 
     // Stores original inventory (ItemStack[])
-    private static final Map<UUID, ItemStack[]> originalInventory = new HashMap<>();
+    private final Map<UUID, ItemStack[]> originalInventory = new HashMap<>();
 
     // Stores original health (double)
-    private static final Map<UUID, Double> originalHealth = new HashMap<>();
+    private final Map<UUID, Double> originalHealth = new HashMap<>();
 
 
-    public static void syncPotionEffects(Player player, LivingEntity mob) {
+    public void syncPotionEffects(Player player, LivingEntity mob) {
         // Save player's current effects
         originalEffects.put(player.getUniqueId(), new ArrayList<>(player.getActivePotionEffects()));
         playerOnFire.put(player.getUniqueId(), player.getFireTicks());
@@ -47,7 +47,7 @@ public class PlayerSyncUtil {
     }
 
 
-    public static void syncInventory(Player player, LivingEntity mob) {
+    public void syncInventory(Player player, LivingEntity mob) {
         // Save player's current inventory
         originalInventory.put(player.getUniqueId(), player.getInventory().getContents().clone());
 
@@ -70,7 +70,7 @@ public class PlayerSyncUtil {
     }
 
 
-    public static void syncHealth(Player player, LivingEntity mob) {
+    public void syncHealth(Player player, LivingEntity mob) {
         // Save current player health
         originalHealth.put(player.getUniqueId(), player.getHealth());
 
@@ -85,7 +85,7 @@ public class PlayerSyncUtil {
     }
 
 
-    public static void restorePotionEffects(Player player) {
+    public void restorePotionEffects(Player player) {
         Collection<PotionEffect> effects = originalEffects.remove(player.getUniqueId());
         if (effects != null) {
             // Clear mob effects first
@@ -102,7 +102,7 @@ public class PlayerSyncUtil {
         }
     }
 
-    public static void restoreInventory(Player player) {
+    public void restoreInventory(Player player) {
         ItemStack[] inventory = originalInventory.remove(player.getUniqueId());
         if (inventory != null) {
             player.getInventory().setContents(inventory);
@@ -110,7 +110,7 @@ public class PlayerSyncUtil {
         }
     }
 
-    public static void restoreHealth(Player player) {
+    public void restoreHealth(Player player) {
         Double health = originalHealth.remove(player.getUniqueId());
         if (health != null) {
             AttributesUtil.removeHealth(player);

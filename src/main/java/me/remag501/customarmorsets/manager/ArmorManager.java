@@ -18,14 +18,14 @@ import java.util.UUID;
 
 public class ArmorManager {
 
-    public static Map<UUID, ArmorSet> equippedArmor = new HashMap<>();
-    public static Map<UUID, ArmorSetType> equippedHelmet = new HashMap<>();
+    private Map<UUID, ArmorSet> equippedArmor = new HashMap<>();
+    private Map<UUID, ArmorSetType> equippedHelmet = new HashMap<>();
 
 //    private static List<String> allowedWorlds = List.of("kuroko", "icycaverns", "sahara", "Calino", "Musicland", "Thundra", "test");
       private static final List<String> bannedWorlds = List.of("spawn", "dungeonhub", "honeyclicker");
       private static final String bunkerPrefix = "bunker";
 
-    public static boolean equipArmor(Player player, ArmorSetType type) {
+    public boolean equipArmor(Player player, ArmorSetType type) {
         // Equip player head
         Bukkit.getScheduler().runTask(CustomArmorSets.getInstance(), () -> {
             ItemStack helmet = player.getInventory().getHelmet();
@@ -50,7 +50,7 @@ public class ArmorManager {
         return true;
     }
 
-    public static void unequipArmor(Player player) {
+    public void unequipArmor(Player player) {
         // Get set and helmet instances
         ArmorSet set = equippedArmor.remove(player.getUniqueId());
         ArmorSetType type = equippedHelmet.get(player.getUniqueId());
@@ -77,7 +77,7 @@ public class ArmorManager {
 
     }
 
-    public static ArmorSet getArmorSet(Player player) {
+    public ArmorSet getArmorSet(Player player) {
         UUID uuid = player.getUniqueId();
         return equippedArmor.get(uuid);
     }
