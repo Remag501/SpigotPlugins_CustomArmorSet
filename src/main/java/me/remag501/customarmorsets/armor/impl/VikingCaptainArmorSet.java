@@ -2,8 +2,10 @@ package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
+import me.remag501.customarmorsets.armor.WeaponType;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
+import me.remag501.customarmorsets.manager.DamageStatsManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -28,25 +30,27 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 7 * 1000; // 7 seconds cooldown
 
-    private final ArmorManager armorManager;
+    private final DamageStatsManager damageStatsManager;
     private final CooldownBarManager cooldownBarManager;
 
-
-    public VikingCaptainArmorSet(ArmorManager armorManager, CooldownBarManager cooldownBarManager) {
+    public VikingCaptainArmorSet(DamageStatsManager damageStatsManager, CooldownBarManager cooldownBarManager) {
         super(ArmorSetType.VIKING_CAPTAIN);
-        this.armorManager = armorManager;
+        this.damageStatsManager = damageStatsManager;
         this.cooldownBarManager = cooldownBarManager;
+
     }
 
     @Override
     public void applyPassive(Player player) {
-        player.sendMessage("✅ You equipped the Viking Captain set");
-        // Passive: 20% axe damage buff, -20% sword damage (needs manual handling in combat events)
+//        player.sendMessage("You equipped the Viking Captain set");
+        damageStatsManager.setWeaponMultiplier(player.getUniqueId(), (float) 0.75, WeaponType.SWORD);
+        damageStatsManager.setWeaponMultiplier(player.getUniqueId(), (float) 1.25, WeaponType.AXE);
     }
 
     @Override
     public void removePassive(Player player) {
-        player.sendMessage("❌ You removed the Viking Captain set");
+//        player.sendMessage("You removed the Viking Captain set");
+        damageStatsManager.clearAll(player.getUniqueId());
     }
 
     @Override
@@ -126,24 +130,6 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
             player.getInventory().addItem(axe);
         }
         player.sendMessage("§aYour axe has returned.");
-    }
-
-    @EventHandler
-    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player player)) return;
-
-        ArmorSet set = armorManager.getArmorSet(player);
-        if (!(set instanceof VikingCaptainArmorSet)) return;
-
-        // Check if the player is holding a sword
-        Material itemInHand = player.getInventory().getItemInMainHand().getType();
-        if (itemInHand.name().endsWith("_SWORD")) {
-            double originalDamage = event.getDamage();
-            event.setDamage(originalDamage * 0.75); // Decrease sword damage
-        } else if (itemInHand.name().endsWith("_AXE")) {
-            double originalDamage = event.getDamage();
-            event.setDamage(originalDamage * 1.25); // Increase axe damage
-        }
     }
 
     /**
