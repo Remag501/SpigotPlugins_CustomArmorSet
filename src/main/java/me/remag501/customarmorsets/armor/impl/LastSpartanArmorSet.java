@@ -2,7 +2,9 @@ package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
+import me.remag501.customarmorsets.armor.WeaponType;
 import me.remag501.customarmorsets.manager.ArmorManager;
+import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Bukkit;
@@ -31,25 +33,27 @@ public class LastSpartanArmorSet extends ArmorSet implements Listener {
     private final ArmorManager armorManager;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
+    private final DamageStatsManager damageStatsManager;
 
-    public LastSpartanArmorSet(Plugin plugin ,ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public LastSpartanArmorSet(Plugin plugin, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService, DamageStatsManager damageStatsManager) {
         super(ArmorSetType.LAST_SPARTAN);
         this.plugin = plugin;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
+        this.damageStatsManager = damageStatsManager;
     }
 
     @Override
     public void applyPassive(Player player) {
         attributesService.applyHealth(player, 0.7);
-//        player.sendMessage("You equipped the Last Spartan set");
+        damageStatsManager.setWeaponMultiplier(player.getUniqueId(), 1.25F, WeaponType.SWORD);
     }
 
     @Override
     public void removePassive(Player player) {
         attributesService.removeHealth(player);
-//        player.sendMessage("You removed the Last Spartan set");
+        damageStatsManager.clearAll(player.getUniqueId());
     }
 
     @Override
@@ -134,21 +138,6 @@ public class LastSpartanArmorSet extends ArmorSet implements Listener {
             player.sendMessage("§c§l(!) §cNo enemies nearby to leap toward!");
         }
 
-    }
-
-    @EventHandler
-    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player player)) return;
-
-        ArmorSet set = armorManager.getArmorSet(player);
-        if (!(set instanceof LastSpartanArmorSet)) return;
-
-        // Check if the player is holding a sword
-        Material itemInHand = player.getInventory().getItemInMainHand().getType();
-        if (itemInHand.name().endsWith("_SWORD")) {
-            double originalDamage = event.getDamage();
-            event.setDamage(originalDamage * 1.25); // Increase damage by 25%
-        }
     }
 
 }
