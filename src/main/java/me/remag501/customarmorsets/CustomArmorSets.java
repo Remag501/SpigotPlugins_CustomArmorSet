@@ -58,17 +58,16 @@ public final class CustomArmorSets extends JavaPlugin {
 
         // Listeners fo equipping and using armor set
         getServer().getPluginManager().registerEvents(new ArmorEquipListener(armorManager, armorService, itemService), this);
-        getServer().getPluginManager().registerEvents(new OffHandAbilityListener(armorManager), this);
-        getServer().getPluginManager().registerEvents(new DurabilityListener(armorService, cosmeticService), this);
+        new OffHandAbilityListener(armorManager, bgsApi);
+        new DurabilityListener(armorService, cosmeticService, namespaceService, bgsApi);
         // Listeners for world change and connection
-        getServer().getPluginManager().registerEvents(new DisconnectReconnectListener(armorManager, armorService), this);
-        getServer().getPluginManager().registerEvents(new WorldChangeListener(armorManager, armorService), this);
+        new DisconnectReconnectListener(armorManager, armorService, bgsApi);
+        new WorldChangeListener(armorManager, armorService, bgsApi);
         // Listener for broken items
-//        getServer().getPluginManager().registerEvents(new BrokenItemListener(itemService), this);
         new BrokenItemListener(itemService, bgsApi);
-        getServer().getPluginManager().registerEvents(new RepairListener(armorService, cosmeticService, itemService), this);
+        new RepairListener(armorService, cosmeticService, itemService, namespaceService, bgsApi);
         // Listener for damage stats
-        getServer().getPluginManager().registerEvents(new DamageListener(damageStatsManager, defenseStatsManager), this);
+        new DamageListener(damageStatsManager, defenseStatsManager, bgsApi);
         // Mythic mobs
         getServer().getPluginManager().registerEvents(new MythicMobsListener(this), this);
 

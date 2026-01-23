@@ -55,27 +55,6 @@ public class ArmorEquipListener implements Listener {
         }
     }
 
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        if (!event.hasItem()) {
-            return;
-        }
-        ItemStack heldItem = event.getItem();
-        if (heldItem == null)
-            return;
-        if (isArmor(heldItem.getType()) && armorManager.getArmorSet(event.getPlayer()) != null) {
-//            event.getPlayer().sendMessage(ChatColor.RED + "You can't hotswap armor!");
-            event.setCancelled(true);
-        }
-    }
-
-    private boolean isArmor(Material material) {
-        String name = material.name();
-        return name.endsWith("_HELMET") ||
-                name.endsWith("_CHESTPLATE") ||
-                name.endsWith("_LEGGINGS") ||
-                name.endsWith("_BOOTS");
-    }
 }
 
 

@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.listener;
 
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.manager.DefenseStatsManager;
 import me.remag501.customarmorsets.armor.TargetCategory;
@@ -13,20 +14,24 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.UUID;
 
-public class DamageListener implements Listener {
+public class DamageListener {
 
     private final DamageStatsManager damageStatsManager;
     private final DefenseStatsManager defenseStatsManager;
 
-    public DamageListener(DamageStatsManager damageStatsManager, DefenseStatsManager defenseStatsManager) {
+    public DamageListener(DamageStatsManager damageStatsManager, DefenseStatsManager defenseStatsManager, TaskHelper bgsApi) {
         this.damageStatsManager = damageStatsManager;
         this.defenseStatsManager = defenseStatsManager;
+
+        // Subscribe to the Damage Event via Core
+        bgsApi.subscribe(EntityDamageByEntityEvent.class)
+                .filter(e -> e.getEntity() instanceof LivingEntity) // Must involve a LivingEntity victim
+                .handler(this::onEntityDamageByEntity);
     }
 
-    @EventHandler(ignoreCancelled = true)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         // Must involve a LivingEntity on at least one side
-        if (!(event.getEntity() instanceof LivingEntity victim)) return;
+        LivingEntity victim = (LivingEntity) event.getEntity();
 
         UUID attackerId = null;
         UUID victimId = null;

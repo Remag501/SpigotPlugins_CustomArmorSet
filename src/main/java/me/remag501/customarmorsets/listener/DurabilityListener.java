@@ -1,10 +1,12 @@
 package me.remag501.customarmorsets.listener;
 
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.CosmeticService;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorEquipEvent;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorType;
+import me.remag501.customarmorsets.service.NamespaceService;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -22,23 +24,27 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class DurabilityListener implements Listener {
+public class DurabilityListener {
 
     private final ArmorService armorService;
     private final CosmeticService cosmeticService;
+    private final NamespaceService namespaceService;
 
-
-    public DurabilityListener(ArmorService armorService, CosmeticService cosmeticService) {
+    public DurabilityListener(ArmorService armorService, CosmeticService cosmeticService, NamespaceService namespaceService, TaskHelper bgsApi) {
         this.armorService = armorService;
         this.cosmeticService = cosmeticService;
+        this.namespaceService = namespaceService;
+
+        bgsApi.subscribe(PlayerItemDamageEvent.class)
+                .filter(e -> e.getItem().hasItemMeta())
+                .handler(this::onPlayerDamage);
     }
 
-    @EventHandler
     public void onPlayerDamage(PlayerItemDamageEvent event) {
         Player player = event.getPlayer();
         ItemStack damagedItem = event.getItem();
 
-        if (!damagedItem.hasItemMeta()) return;
+//        if (!damagedItem.hasItemMeta()) return;
         if (!armorService.isCustomArmorPiece(damagedItem)) {
             // Check if regular piece has a durability of 0 and unequip it
             Damageable meta = (Damageable) event.getItem().getItemMeta();
@@ -58,8 +64,8 @@ public class DurabilityListener implements Listener {
         ItemMeta meta = damagedItem.getItemMeta();
         PersistentDataContainer container = meta.getPersistentDataContainer();
 
-        NamespacedKey durabilityKey = new NamespacedKey("customarmorsets", "internal_durability");
-        NamespacedKey maxDurabilityKey = new NamespacedKey("customarmorsets", "internal_max_durability");
+        NamespacedKey durabilityKey = namespaceService.internalDurability;
+        NamespacedKey maxDurabilityKey = namespaceService.maxDurability;
 
         int currentDurability = container.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 100);
         int maxDurability = container.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 100);

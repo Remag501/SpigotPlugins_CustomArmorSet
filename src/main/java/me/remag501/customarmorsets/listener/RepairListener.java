@@ -1,9 +1,11 @@
 package me.remag501.customarmorsets.listener;
 
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.CosmeticService;
 import me.remag501.customarmorsets.service.ItemService;
+import me.remag501.customarmorsets.service.NamespaceService;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;
@@ -21,37 +23,47 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class RepairListener implements Listener {
+public class RepairListener {
 
-    private ArmorService armorService;
-    private CosmeticService cosmeticService;
-    private ItemService itemService;
+    private final ArmorService armorService;
+    private final CosmeticService cosmeticService;
+    private final NamespaceService namespaceService;
 
-    public RepairListener(ArmorService armorService, CosmeticService cosmeticService, ItemService itemService) {
+    public RepairListener(ArmorService armorService, CosmeticService cosmeticService, ItemService itemService, NamespaceService namespaceService, TaskHelper bgsApi) {
         this.armorService = armorService;
         this.cosmeticService = cosmeticService;
-        this.itemService = itemService;
+        this.namespaceService = namespaceService;
+
+//        bgsApi.subscribe(InventoryClickEvent.class)
+//                .filter(e -> !(e.getWhoClicked() instanceof Player))
+//                .filter(e -> !(itemService.isRepairKit(e.getCursor())))
+//                .filter(e -> e.getCurrentItem() == null || e.getCurrentItem().getType() == Material.AIR)
+//                .filter(e -> e.getCurrentItem().getType().getMaxDurability() <= 0 || e.getCurrentItem().getItemMeta() instanceof Damageable)
+//                .handler(this::onInventoryClick);
+        bgsApi.subscribe(InventoryClickEvent.class)
+                .filter(e -> e.getWhoClicked() instanceof Player) // Must be a player
+                .filter(e -> itemService.isRepairKit(e.getCursor())) // Must be a kit
+                .filter(e -> e.getCurrentItem() != null && e.getCurrentItem().getType() != Material.AIR) // Must click something
+                .handler(this::onInventoryClick);
     }
 
-    // Clicking in inventory while holding stick
-    @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) return;
-
+//        if (!(event.getWhoClicked() instanceof Player player)) return;
+//
         ItemStack cursor = event.getCursor();
-        if (!itemService.isRepairKit(cursor)) return;
+//        if (!itemService.isRepairKit(cursor)) return;
 
         ItemStack clickedItem = event.getCurrentItem();
-        if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
+//        if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
-        Material type = clickedItem.getType();
-        if (type.getMaxDurability() <= 0 || !(clickedItem.getItemMeta() instanceof Damageable))
-            return;
+//        Material type = clickedItem.getType();
+//        if (type.getMaxDurability() <= 0 || !(clickedItem.getItemMeta() instanceof Damageable))
+//            return;
 
         // Get tier and corresponding repair amount
         ItemMeta meta = cursor.getItemMeta();
         PersistentDataContainer container = meta.getPersistentDataContainer();
-        int tier = container.getOrDefault(new NamespacedKey("customarmorsets", "repair_kit_tier"), PersistentDataType.INTEGER, 0);
+        int tier = container.getOrDefault(namespaceService.repairKitTier, PersistentDataType.INTEGER, 0);
 
         int repairAmount = switch (tier) {
             case 0 -> 10; // Weak
@@ -59,6 +71,8 @@ public class RepairListener implements Listener {
             case 2 -> 100; // Strong
             default -> 0;
         };
+
+        Player player = (Player) event.getWhoClicked();
 
         if (tryRepair(player, clickedItem, repairAmount)) {
             event.setCancelled(true);
@@ -99,8 +113,8 @@ public class RepairListener implements Listener {
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer container = meta.getPersistentDataContainer();
 
-        NamespacedKey durabilityKey = new NamespacedKey("customarmorsets", "internal_durability");
-        NamespacedKey maxDurabilityKey = new NamespacedKey("customarmorsets", "internal_max_durability");
+        NamespacedKey durabilityKey = namespaceService.internalDurability;
+        NamespacedKey maxDurabilityKey = namespaceService.maxDurability;
 
         int currentDurability = container.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 100);
         int maxDurability = container.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 100);

@@ -1,32 +1,35 @@
 package me.remag501.customarmorsets.listener;
 
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.service.ArmorService;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 
-public class WorldChangeListener implements Listener {
+public class WorldChangeListener {
 
-    private final ArmorManager armorManager;
-    private final ArmorService armorService;
+    public WorldChangeListener(ArmorManager armorManager, ArmorService armorService, TaskHelper bgsApi) {
 
-    public WorldChangeListener(ArmorManager armorManager, ArmorService armorService) {
-        this.armorManager = armorManager;
-        this.armorService = armorService;
-    }
+        bgsApi.subscribe(PlayerChangedWorldEvent.class)
+                .handler(e -> {
+                    Player player = e.getPlayer();
 
-    @EventHandler
-    public void onWorldChange(PlayerChangedWorldEvent event) {
-        Player player = event.getPlayer();
+                    // Check if they are wearing a set in the new world
+                    ArmorSetType currentSet = armorService.isFullArmorSet(player);
 
-        // Then immediately re-equip in the new world
-        ArmorSetType currentSet = armorService.isFullArmorSet(player);
-        if (currentSet != null) {
-            if (!armorManager.equipArmor(player, currentSet)) // Player is in wrong world
-                armorManager.unequipArmor(player);
-        }
+                    if (currentSet != null) {
+                        // The equipArmor method likely returns false if the world is blacklisted
+                        boolean success = armorManager.equipArmor(player, currentSet);
+
+                        if (!success) {
+                            // If they can't wear it here, ensure all passives/tasks are purged
+                            armorManager.unequipArmor(player);
+                        }
+                    } else {
+                        // If they aren't wearing a full set anymore after the change, clean up
+                        armorManager.unequipArmor(player);
+                    }
+                });
     }
 }
