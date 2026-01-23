@@ -15,9 +15,14 @@ import org.bukkit.inventory.ItemStack;
 public class ArmorEquipListener implements Listener {
 
     private final ArmorManager armorManager;
+    private final ArmorService armorService;
+    private final ItemService itemService;
 
-    public ArmorEquipListener(ArmorManager armorManager) {
+
+    public ArmorEquipListener(ArmorManager armorManager, ArmorService armorService, ItemService itemService) {
         this.armorManager = armorManager;
+        this.armorService = armorService;
+        this.itemService = itemService;
     }
 
     @EventHandler
@@ -27,7 +32,7 @@ public class ArmorEquipListener implements Listener {
 
         // Handle logic for broken armor
         ItemStack newArmor = event.getNewArmorPiece();
-        if (ItemService.isBroken(newArmor)) {
+        if (itemService.isBroken(newArmor)) {
             event.setCancelled(true);
             event.getPlayer().sendMessage(ChatColor.RED + "This armor is broken and can't be equipped!");
             return;
@@ -36,8 +41,8 @@ public class ArmorEquipListener implements Listener {
         // Other stuff
         Player player = event.getPlayer();
 
-        ArmorSetType wasWearing = ArmorService.hasFullArmorSet(player, event.getOldArmorPiece(), event.getType());
-        ArmorSetType isWearing = ArmorService.hasFullArmorSet(player, event.getNewArmorPiece(), event.getType());
+        ArmorSetType wasWearing = armorService.hasFullArmorSet(player, event.getOldArmorPiece(), event.getType());
+        ArmorSetType isWearing = armorService.hasFullArmorSet(player, event.getNewArmorPiece(), event.getType());
 
         if (wasWearing != null && isWearing == null) {
             armorManager.unequipArmor(player);

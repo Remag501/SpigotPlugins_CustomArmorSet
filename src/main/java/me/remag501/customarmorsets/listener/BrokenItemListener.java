@@ -2,6 +2,7 @@ package me.remag501.customarmorsets.listener;
 
 import me.remag501.customarmorsets.service.ItemService;
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -11,6 +12,12 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 
 public class BrokenItemListener implements Listener {
+
+    private final ItemService itemService;
+
+    public BrokenItemListener(ItemService itemService) {
+        this.itemService = itemService;
+    }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
@@ -24,7 +31,7 @@ public class BrokenItemListener implements Listener {
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player)) return;
 
-        if (ItemService.isBroken(player.getInventory().getItemInMainHand())) {
+        if (itemService.isBroken(player.getInventory().getItemInMainHand())) {
             event.setCancelled(true);
             player.sendMessage(ChatColor.RED + "This weapon is broken and can't be used!");
         }
@@ -32,7 +39,7 @@ public class BrokenItemListener implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        if (ItemService.isBroken(event.getItem())) {
+        if (itemService.isBroken(event.getItem())) {
             event.setCancelled(true);
             event.getPlayer().sendMessage(ChatColor.RED + "This item is broken and can't be used!");
         }

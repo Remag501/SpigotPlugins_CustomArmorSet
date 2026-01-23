@@ -12,7 +12,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class ArmorService {
 
-    private JavaPlugin plugin;
+    private final NamespaceService namespaceService;
+
+    public ArmorService(NamespaceService namespaceService) {
+        this.namespaceService = namespaceService;
+    }
 
     public ArmorSetType hasFullArmorSet(Player player, ItemStack armorPiece, ArmorType armorType) {
         // Get the ID from the armor piece in question (e.g., chestplate)
@@ -66,7 +70,7 @@ public class ArmorService {
         if (item == null || item.getType() == Material.AIR) return null;
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return null;
-        NamespacedKey key = new NamespacedKey(plugin, "armor_set");
+        NamespacedKey key = namespaceService.armorSet;
         PersistentDataContainer container = meta.getPersistentDataContainer();
         return container.has(key, PersistentDataType.STRING) ? container.get(key, PersistentDataType.STRING) : null;
     }
@@ -77,7 +81,7 @@ public class ArmorService {
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer container = meta.getPersistentDataContainer();
 
-        NamespacedKey armorSetKey = new NamespacedKey(plugin, "armor_set");
+        NamespacedKey armorSetKey = namespaceService.armorSet;
 
         return container.has(armorSetKey, PersistentDataType.STRING);
     }

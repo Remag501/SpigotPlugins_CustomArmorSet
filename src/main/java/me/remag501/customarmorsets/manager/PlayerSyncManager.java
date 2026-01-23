@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
+import org.w3c.dom.Attr;
 
 import java.util.*;
 
@@ -20,6 +21,12 @@ public class PlayerSyncManager {
 
     // Stores original health (double)
     private final Map<UUID, Double> originalHealth = new HashMap<>();
+
+    private final AttributesService attributesService;
+
+    public PlayerSyncManager(AttributesService attributesService) {
+        this.attributesService = attributesService;
+    }
 
 
     public void syncPotionEffects(Player player, LivingEntity mob) {
@@ -75,7 +82,7 @@ public class PlayerSyncManager {
         originalHealth.put(player.getUniqueId(), player.getHealth());
 
         // Scale max health first
-        AttributesService.applyHealth(player, mob.getMaxHealth() / 20.0);
+        attributesService.applyHealth(player, mob.getMaxHealth() / 20.0);
 
         // Set current health proportionally
         double scaledHealth = (mob.getHealth() / mob.getMaxHealth()) *
@@ -113,7 +120,7 @@ public class PlayerSyncManager {
     public void restoreHealth(Player player) {
         Double health = originalHealth.remove(player.getUniqueId());
         if (health != null) {
-            AttributesService.removeHealth(player);
+            attributesService.removeHealth(player);
             player.setHealth(Math.min(health, player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()));
         }
     }

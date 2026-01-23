@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.listener;
 
+import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.CosmeticService;
 import me.remag501.customarmorsets.service.ItemService;
@@ -22,13 +23,23 @@ import java.util.List;
 
 public class RepairListener implements Listener {
 
+    private ArmorService armorService;
+    private CosmeticService cosmeticService;
+    private ItemService itemService;
+
+    public RepairListener(ArmorService armorService, CosmeticService cosmeticService, ItemService itemService) {
+        this.armorService = armorService;
+        this.cosmeticService = cosmeticService;
+        this.itemService = itemService;
+    }
+
     // Clicking in inventory while holding stick
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
         ItemStack cursor = event.getCursor();
-        if (!ItemService.isRepairKit(cursor)) return;
+        if (!itemService.isRepairKit(cursor)) return;
 
         ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
@@ -56,7 +67,7 @@ public class RepairListener implements Listener {
 
     private boolean tryRepair(Player player, ItemStack item, int repairAmount) {
         if (item == null || item.getType() == Material.AIR) return false;
-        if (ArmorService.isCustomArmorPiece(item)) {
+        if (armorService.isCustomArmorPiece(item)) {
             return customRepair(player, item, repairAmount);
         }
 
@@ -80,7 +91,7 @@ public class RepairListener implements Listener {
     }
 
     private boolean customRepair(Player player, ItemStack item, int repairAmount) {
-        if (!ArmorService.isCustomArmorPiece(item)) {
+        if (!armorService.isCustomArmorPiece(item)) {
             player.sendMessage(ChatColor.RED + "This is not a custom armor piece.");
             return false;
         }
@@ -106,7 +117,7 @@ public class RepairListener implements Listener {
         String durabilityLine = ChatColor.GRAY + "Durability: " + ChatColor.WHITE + newDurability + " / " + maxDurability;
 
         if (item.getType() == Material.PLAYER_HEAD) {
-            CosmeticService.updateCosmeticHelmetLoreSafely(item, Collections.singletonList(durabilityLine));
+            cosmeticService.updateCosmeticHelmetLoreSafely(item, Collections.singletonList(durabilityLine));
         } else {
             List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
             lore.removeIf(line -> ChatColor.stripColor(line).contains("Durability"));

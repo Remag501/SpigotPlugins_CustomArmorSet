@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.manager;
 
+import io.lumine.mythic.bukkit.utils.lib.jooq.impl.QOM;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.service.AttributesService;
@@ -24,10 +25,15 @@ public class ArmorManager {
 
     private Map<UUID, ArmorSet> equippedArmor = new HashMap<>();
     private Map<UUID, ArmorSetType> equippedHelmet = new HashMap<>();
-    private Plugin plugin;
 
-    public ArmorManager(Plugin plugin) {
+    private final Plugin plugin;
+    private final CosmeticService cosmeticService;
+    private final AttributesService attributesService;
+
+    public ArmorManager(Plugin plugin, CosmeticService cosmeticService, AttributesService attributesService) {
         this.plugin = plugin;
+        this.cosmeticService = cosmeticService;
+        this.attributesService = attributesService;
     }
 
 
@@ -36,7 +42,7 @@ public class ArmorManager {
         Bukkit.getScheduler().runTask(plugin, () -> {
             ItemStack helmet = player.getInventory().getHelmet();
             if (helmet != null) {
-                player.getInventory().setHelmet(CosmeticService.makeCosmeticHelmet(helmet, type.getHeadUrl()));
+                player.getInventory().setHelmet(cosmeticService.makeCosmeticHelmet(helmet, type.getHeadUrl()));
             }
         });
         equippedHelmet.put(player.getUniqueId(), type);
@@ -70,7 +76,7 @@ public class ArmorManager {
         if (type != null) {
             ItemStack helmet = player.getInventory().getHelmet();
             if (helmet != null) {
-                player.getInventory().setHelmet(CosmeticService.restoreOriginalHelmet(helmet, Color.fromRGB(type.getLeatherColor())));
+                player.getInventory().setHelmet(cosmeticService.restoreOriginalHelmet(helmet, Color.fromRGB(type.getLeatherColor())));
             }
             equippedHelmet.remove(player.getUniqueId());
         }
@@ -78,7 +84,7 @@ public class ArmorManager {
         // Remove attributes from boots (if still there)
         ItemStack boots = player.getInventory().getBoots();
         if (boots != null) {
-            AttributesService.removeAllArmorAttributes(boots);
+            attributesService.removeAllArmorAttributes(boots);
         }
 
     }

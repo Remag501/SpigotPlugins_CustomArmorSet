@@ -11,9 +11,11 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 public class WorldChangeListener implements Listener {
 
     private final ArmorManager armorManager;
+    private final ArmorService armorService;
 
-    public WorldChangeListener(ArmorManager armorManager) {
+    public WorldChangeListener(ArmorManager armorManager, ArmorService armorService) {
         this.armorManager = armorManager;
+        this.armorService = armorService;
     }
 
     @EventHandler
@@ -21,7 +23,7 @@ public class WorldChangeListener implements Listener {
         Player player = event.getPlayer();
 
         // Then immediately re-equip in the new world
-        ArmorSetType currentSet = ArmorService.isFullArmorSet(player);
+        ArmorSetType currentSet = armorService.isFullArmorSet(player);
         if (currentSet != null) {
             if (!armorManager.equipArmor(player, currentSet)) // Player is in wrong world
                 armorManager.unequipArmor(player);

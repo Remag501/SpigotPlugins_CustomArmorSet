@@ -14,14 +14,11 @@ import java.util.Arrays;
 
 public class ItemService {
 
-    private final NamespacedKey REPAIR_KIT_KEY;
+    private final NamespaceService namespaceService;
     private final ArmorService armorService;
 
-//    private final Plugin plugin;
-
-    public ItemService(Plugin plugin, ArmorService armorService) {
-//        REPAIR_KIT_KEY = new NamespacedKey("customarmorsets", "is_repair_kit");
-        REPAIR_KIT_KEY = new NamespacedKey(plugin, "is_repair_kit");
+    public ItemService(NamespaceService namespaceService, ArmorService armorService) {
+        this.namespaceService = namespaceService;
         this.armorService = armorService;
     }
 
@@ -45,8 +42,8 @@ public class ItemService {
        ));
 
        PersistentDataContainer container = meta.getPersistentDataContainer();
-       container.set(REPAIR_KIT_KEY, PersistentDataType.BYTE, (byte) 1); // identifies as repair kit
-       container.set(new NamespacedKey("customarmorsets", "repair_kit_tier"), PersistentDataType.INTEGER, tier); // stores tier
+       container.set(namespaceService.repairKit, PersistentDataType.BYTE, (byte) 1); // identifies as repair kit
+       container.set(namespaceService.repairKitTier, PersistentDataType.INTEGER, tier); // stores tier
 
        kit.setItemMeta(meta);
        return kit;
@@ -56,7 +53,7 @@ public class ItemService {
         if (item == null || !item.hasItemMeta()) return false;
 
         PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer();
-        return container.has(REPAIR_KIT_KEY, PersistentDataType.BYTE);
+        return container.has(namespaceService.repairKit, PersistentDataType.BYTE);
     }
 
     public boolean isBroken(ItemStack item) {
@@ -67,7 +64,7 @@ public class ItemService {
         // Custom durability system
         if (armorService.isCustomArmorPiece(item)) {
             PersistentDataContainer container = meta.getPersistentDataContainer();
-            NamespacedKey durabilityKey = new NamespacedKey("customarmorsets", "internal_durability");
+            NamespacedKey durabilityKey = namespaceService.internalDurability;
 
             int currentDurability = container.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 100);
             return currentDurability <= 0;
