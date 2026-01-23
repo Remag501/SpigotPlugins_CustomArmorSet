@@ -11,13 +11,13 @@ import java.util.function.Supplier;
 public enum ArmorSetType {
     SNOWMAN("snowman", "Snow Man", Color.WHITE.asRGB(), 3, 0,
             "http://textures.minecraft.net/texture/bf96f13c7fb55b00a172ded93c12419c912188700389ef366d43eb3c107aab71",
-            SnowmanArmorSet::new,
+//            SnowmanArmorSet::new,
             Arrays.asList("", ""),
             new int[]{1, 1, 1, 1}, // Armor points
             new int[]{55, 80, 70, 65}, // Durability
             new int[]{0, 0, 0, 0}), // Toughness
     INFERNUS("infernus", "§6Infernus", 4, 7, 1008, null,
-            InfernusArmorSet::new,
+//            InfernusArmorSet::new,
             Arrays.asList("§2Flamethrower §a§lPRESS F",
                     "§8• §7Shoot a rapid burst of flames.",
                     "",
@@ -28,7 +28,7 @@ public enum ArmorSetType {
             new int[]{0, 2, 0, 2}),
     ROYAL_KNIGHT("royal_knight", "§bRoyal Knight", 3, Color.GRAY.asRGB(), 0,
             "http://textures.minecraft.net/texture/e2941b8b71abe79ce12775aee601fec9126dee730e2a57257a784231de6da848",
-            RoyalKnightArmorSet::new,
+//            RoyalKnightArmorSet::new,
             Arrays.asList("§2Royal Regen §a§lPRESS F",
                     "§8• §7Channel the healing powers of the Royal Knight.",
                     "",
@@ -40,7 +40,7 @@ public enum ArmorSetType {
 
     LAST_SPARTAN("last_spartan", "§cLast Spartan", 3, Color.RED.asRGB(),0,
             "http://textures.minecraft.net/texture/f517fbca9751798d6200d1a71b7af0aab0e96eb5f41ba97294198688f5a7127b",
-            LastSpartanArmorSet::new,
+//            LastSpartanArmorSet::new,
             Arrays.asList("§2Spartan Kick §a§lPRESS F",
                     "§8• §7Leap forward and kick with the strength of Sparta.",
                     "",
@@ -52,7 +52,7 @@ public enum ArmorSetType {
 
     VIKING_CAPTAIN("viking_captain", "§aViking Captain", 3, Color.MAROON.asRGB(),0,
             "http://textures.minecraft.net/texture/9772642ffccfc9e11b350c874f2c84678fc08044b51e7a8e3a0919f8f788ed9a",
-            VikingCaptainArmorSet::new,
+//            VikingCaptainArmorSet::new,
             Arrays.asList("§2Axe Throw §a§lPRESS F",
                     "§8• §7Throw your axe with pure might.",
                     "",
@@ -63,7 +63,7 @@ public enum ArmorSetType {
             new int[]{0, 0, 0, 0}),
 
     BANDIT("bandit", "§cBandit", 3, 6,1007, null,
-            BanditArmorSet::new,
+//            BanditArmorSet::new,
             Arrays.asList("§2Quick Escape §a§lPRESS F",
                     "§8• §7Swiftly dash away from enemies.",
                     "",
@@ -74,7 +74,7 @@ public enum ArmorSetType {
             new int[]{0, 0, 0, 0}),
 
     DEVOID("devoid", "§dDevoid", 3, 5,1006, null,
-            DevoidArmorSet::new,
+//            DevoidArmorSet::new,
             Arrays.asList("§2Void Tether §a§lSHIFT F",
                     "§8• §7Pull in enemies with the power of the unknown.",
                     "",
@@ -85,7 +85,7 @@ public enum ArmorSetType {
             new int[]{0, 2, 0, 0}),
 
     WORLD_GUARDIAN("world_guardian", "§bWorld Guardian", 4, 4,1005, null,
-            WorldGuardianArmorSet::new,
+//            WorldGuardianArmorSet::new,
             Arrays.asList("§2Guardian's Protection §a§lPRESS F",
                     "§8• §7Absorb protection from the guardian and become invulnerable.",
                     "",
@@ -96,7 +96,7 @@ public enum ArmorSetType {
             new int[]{2, 2, 2, 2}),
 
     VAMPIRE("vampire", "§4Vampire", 5, Color.fromRGB(3,1,7).asRGB(),2017, null,
-            VampireArmorSet::new,
+//            VampireArmorSet::new,
             Arrays.asList("§2Blood Drain §a§lPRESS F",
                     "§8• §7Drain HP or gain regen/overshield on kill.",
                     "",
@@ -113,7 +113,7 @@ public enum ArmorSetType {
             new int[]{2, 3, 2, 2}),
 
     FISTER("fister", "§eFister", 5, Color.fromRGB(2,1,7).asRGB(),1010, null,
-            FisterArmorSet::new,
+//            FisterArmorSet::new,
             Arrays.asList("§2Pull Out Game §a§lPRESS F",
                     "§8• §7Meditate and ditch quickly.",
                     "",
@@ -133,7 +133,7 @@ public enum ArmorSetType {
             new int[]{1, 1, 1, 1}),
 
     ARCHER("archer", "§aArcher", 5, Color.fromRGB(4, 2, 7).asRGB(),2013, null,
-            ArcherArmorSet::new,
+//            ArcherArmorSet::new,
             Arrays.asList("§2Bowstep §a§lPRESS F",
                     "§8• §7Arrow slash & knockback, gain jump boost for a few seconds.",
                     "",
@@ -144,7 +144,7 @@ public enum ArmorSetType {
             new int[]{1, 2, 2, 1}),
 
     NECROMANCER("necromancer", "§5Necromancer", 5, Color.fromRGB(2,0,7).asRGB(),1009, null,
-    NecromancerArmorSet::new,
+//    NecromancerArmorSet::new,
             Arrays.asList("§2Reanimation §a§lPRESS F",
                     "§8• §7Bring back mobs you've killed to your side.",
                     "",
@@ -162,7 +162,7 @@ public enum ArmorSetType {
 
 
     ICEMAN("iceman", "§bIceman", 5, Color.fromRGB(6,1,4).asRGB(),2030, null,
-    IcemanArmorSet::new,
+//    IcemanArmorSet::new,
             Arrays.asList("§2Frostbite §a§lPRESS F",
                     "§8• §7Consume freeze charge to shoot an ice cloud freezing opponents.",
                     "",
@@ -185,7 +185,7 @@ public enum ArmorSetType {
             new int[]{2, 3, 2, 1}),
 
     GOLEM_BUSTER("golem_buster", "§fGolem Buster", 5, Color.fromRGB(4,1,7).asRGB(),2012, null,
-    GolemBusterArmorSet::new,
+//    GolemBusterArmorSet::new,
             Arrays.asList("§2Battery Gun §a§lPRESS F",
                     "§8• §7Shoot a strong electric pulse that damages enemies or stuns as a golem.",
                     "",
@@ -204,22 +204,21 @@ public enum ArmorSetType {
     private final int leatherColor;
     private final int customModelData;
     private final String headUrl;
-    private final Supplier<ArmorSet> constructor;// now no plugin
+//    private final Supplier<ArmorSet> constructor;// now no plugin
     private final List<String> lore;
     private final int[] armorPoints;
     private final int[] durability;
     private final int[] armorToughness;
 
     ArmorSetType(String id, String displayName, int rarity, int leatherColor, int customModelData, String headUrl,
-                 Supplier<ArmorSet> constructor, List<String> lore, int[] armorPoints,
-                 int[] durability, int[] armorToughness) {
+                 List<String> lore, int[] armorPoints, int[] durability, int[] armorToughness) {
         this.id = id;
         this.displayName = displayName;
         this.rarity = rarity;
         this.leatherColor = leatherColor;
         this.customModelData = customModelData;
         this.headUrl = headUrl;
-        this.constructor = constructor;
+//        this.constructor = constructor;
         this.lore = lore; // or pass this in as usual
         this.armorPoints = armorPoints;
         this.durability = durability;
@@ -251,7 +250,7 @@ public enum ArmorSetType {
         return armorToughness;
     }
 
-    public ArmorSet create() { return constructor.get(); }
+//    public ArmorSet create() { return constructor.get(); }
 
     public static Optional<ArmorSetType> fromId(String id) {
         return Arrays.stream(values()).filter(s -> s.id.equalsIgnoreCase(id)).findFirst();
