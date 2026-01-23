@@ -1,4 +1,4 @@
-package me.remag501.customarmorsets.util;
+package me.remag501.customarmorsets.service;
 
 import me.remag501.customarmorsets.CustomArmorSets;
 import org.bukkit.Material;

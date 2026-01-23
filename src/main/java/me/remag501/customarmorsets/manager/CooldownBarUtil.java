@@ -1,4 +1,4 @@
-package me.remag501.customarmorsets.util;
+package me.remag501.customarmorsets.manager;
 
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;

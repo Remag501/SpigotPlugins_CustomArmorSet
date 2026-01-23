@@ -19,7 +19,7 @@ import me.remag501.customarmorsets.armor.TargetCategory;
 import me.remag501.customarmorsets.listener.MythicMobsListener;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
-import me.remag501.customarmorsets.util.AttributesUtil;
+import me.remag501.customarmorsets.service.AttributesUtil;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;

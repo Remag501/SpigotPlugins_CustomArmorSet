@@ -1,8 +1,8 @@
 package me.remag501.customarmorsets.command;
 
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.util.ArmorUtil;
-import me.remag501.customarmorsets.util.ItemUtil;
+import me.remag501.customarmorsets.service.ArmorUtil;
+import me.remag501.customarmorsets.service.ItemUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;

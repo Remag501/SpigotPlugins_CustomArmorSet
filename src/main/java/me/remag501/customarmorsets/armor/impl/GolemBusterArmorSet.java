@@ -10,8 +10,8 @@ import me.remag501.customarmorsets.armor.TargetCategory;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.manager.DefenseStatsManager;
-import me.remag501.customarmorsets.util.AttributesUtil;
-import me.remag501.customarmorsets.util.CooldownBarUtil;
+import me.remag501.customarmorsets.service.AttributesUtil;
+import me.remag501.customarmorsets.manager.CooldownBarUtil;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -31,7 +31,7 @@ import org.bukkit.util.Vector;
 
 import java.util.*;
 
-import static me.remag501.customarmorsets.util.CooldownBarUtil.setLevel;
+import static me.remag501.customarmorsets.manager.CooldownBarUtil.setLevel;
 
 public class GolemBusterArmorSet extends ArmorSet implements Listener {
 

@@ -1,4 +1,4 @@
-package me.remag501.customarmorsets.util;
+package me.remag501.customarmorsets.service;
 
 import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;

@@ -1,8 +1,8 @@
 package me.remag501.customarmorsets.listener;
 
-import me.remag501.customarmorsets.util.ArmorUtil;
-import me.remag501.customarmorsets.util.HelmetCosmeticUtil;
-import me.remag501.customarmorsets.util.ItemUtil;
+import me.remag501.customarmorsets.service.ArmorUtil;
+import me.remag501.customarmorsets.service.HelmetCosmeticUtil;
+import me.remag501.customarmorsets.service.ItemUtil;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;

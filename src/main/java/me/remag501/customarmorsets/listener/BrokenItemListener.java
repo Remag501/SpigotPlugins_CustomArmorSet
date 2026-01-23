@@ -1,6 +1,6 @@
 package me.remag501.customarmorsets.listener;
 
-import me.remag501.customarmorsets.util.ItemUtil;
+import me.remag501.customarmorsets.service.ItemUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

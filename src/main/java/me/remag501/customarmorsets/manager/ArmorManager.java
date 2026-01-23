@@ -1,10 +1,9 @@
 package me.remag501.customarmorsets.manager;
 
-import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.util.AttributesUtil;
-import me.remag501.customarmorsets.util.HelmetCosmeticUtil;
+import me.remag501.customarmorsets.service.AttributesUtil;
+import me.remag501.customarmorsets.service.HelmetCosmeticUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.World;
