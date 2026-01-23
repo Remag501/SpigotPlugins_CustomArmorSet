@@ -10,11 +10,17 @@ import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 
 public class OffHandAbilityListener implements Listener {
 
+    private ArmorManager armorManager;
+
+    public OffHandAbilityListener(ArmorManager armorManager) {
+        this.armorManager = armorManager;
+    }
+
     @EventHandler
     public void onOffhandUse(PlayerSwapHandItemsEvent event) {
         Player player = event.getPlayer();
         // Check if player has an armor setf
-        ArmorSet set = ArmorManager.getArmorSet(player);
+        ArmorSet set = armorManager.getArmorSet(player);
         if (set == null) return;
 
         // Cancel the default action

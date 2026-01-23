@@ -47,7 +47,7 @@ public final class CustomArmorSets extends JavaPlugin {
 
         // Listeners fo equipping and using armor set
         getServer().getPluginManager().registerEvents(new ArmorEquipListener(armorManager), this);
-        getServer().getPluginManager().registerEvents(new OffHandAbilityListener(), this);
+        getServer().getPluginManager().registerEvents(new OffHandAbilityListener(armorManager), this);
         getServer().getPluginManager().registerEvents(new DurabilityListener(), this);
         // Listeners for world change and connection
         getServer().getPluginManager().registerEvents(new DisconnectReconnectListener(armorManager), this);
