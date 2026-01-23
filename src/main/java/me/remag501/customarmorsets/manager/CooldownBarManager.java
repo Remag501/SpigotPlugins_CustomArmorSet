@@ -7,17 +7,17 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 
-public class CooldownBarUtil {
+public class CooldownBarManager {
 
-    private static final Map<UUID, Integer> originalLevels = new HashMap<>();
-    private static final Map<UUID, Float> originalXp = new HashMap<>();
-    private static final Map<UUID, Boolean> inUse = new HashMap<>();
-    private static final Map<UUID, BukkitTask> cooldownTasks = new HashMap<>();
-    private static final Map<UUID, Double> currentCooldownDurations = new HashMap<>();
-    private static final Map<UUID, Double> currentCooldownRemaining = new HashMap<>();
-    private static final Map<UUID, Queue<Double>> cooldownQueues = new HashMap<>();
+    private final Map<UUID, Integer> originalLevels = new HashMap<>();
+    private final Map<UUID, Float> originalXp = new HashMap<>();
+    private final Map<UUID, Boolean> inUse = new HashMap<>();
+    private final Map<UUID, BukkitTask> cooldownTasks = new HashMap<>();
+    private final Map<UUID, Double> currentCooldownDurations = new HashMap<>();
+    private final Map<UUID, Double> currentCooldownRemaining = new HashMap<>();
+    private final Map<UUID, Queue<Double>> cooldownQueues = new HashMap<>();
 
-    public static void startCooldownBar(Plugin plugin, Player player, int seconds) {
+    public void startCooldownBar(Plugin plugin, Player player, int seconds) {
         if (seconds <= 0) return;
 
         UUID uuid = player.getUniqueId();
@@ -66,7 +66,7 @@ public class CooldownBarUtil {
         }.runTaskTimer(plugin, 0L, 2L); // updates every 2 ticks (~0.1s)
     }
 
-    public static void startMiniCooldownBar(Plugin plugin, Player player, double seconds) {
+    public void startMiniCooldownBar(Plugin plugin, Player player, double seconds) {
         if (seconds <= 0) return;
 
         UUID uuid = player.getUniqueId();
@@ -137,7 +137,7 @@ public class CooldownBarUtil {
         cooldownTasks.put(uuid, task);
     }
 
-    private static void flashXpBar(Plugin plugin, Player player) {
+    private void flashXpBar(Plugin plugin, Player player) {
         UUID uuid = player.getUniqueId();
         if (inUse.get(uuid))
             return;
@@ -170,11 +170,11 @@ public class CooldownBarUtil {
         }.runTaskTimer(plugin, 0L, 5L); // Flash every 5 ticks (~0.25s)
     }
 
-    private static void cleanup(Player player) {
+    private void cleanup(Player player) {
         UUID uuid = player.getUniqueId();
     }
 
-    public static void restorePlayerBar(Player player) {
+    public void restorePlayerBar(Player player) {
         UUID uuid = player.getUniqueId();
 
         if (originalLevels.containsKey(uuid)) {
@@ -190,7 +190,7 @@ public class CooldownBarUtil {
         }
     }
 
-    public static void setLevel(Player player, int level) {
+    public void setLevel(Player player, int level) {
         UUID uuid = player.getUniqueId();
         if (!originalXp.containsKey(uuid)) {
             originalXp.put(uuid, player.getExp());

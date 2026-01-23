@@ -19,7 +19,7 @@ import me.remag501.customarmorsets.armor.TargetCategory;
 import me.remag501.customarmorsets.listener.MythicMobsListener;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
-import me.remag501.customarmorsets.service.AttributesUtil;
+import me.remag501.customarmorsets.service.AttributesService;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -354,9 +354,9 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             player.sendMessage(" " + flySpeed);
         }
         // Apply attributes
-        AttributesUtil.applyHealthDirect(player, controlledMob.getEntity().getMaxHealth() / 20.0);
-        AttributesUtil.applySpeedDirect(player, speed); // get speed here
-        AttributesUtil.applyDamageDirect(player, controlledMob.getType().getDamage(controlledMob) / 1.0);
+        AttributesService.applyHealthDirect(player, controlledMob.getEntity().getMaxHealth() / 20.0);
+        AttributesService.applySpeedDirect(player, speed); // get speed here
+        AttributesService.applyDamageDirect(player, controlledMob.getType().getDamage(controlledMob) / 1.0);
         // Util functions for major syncs
         if (mobEntity instanceof LivingEntity livingEntity) {
             syncPotionEffects(player, livingEntity);
@@ -431,7 +431,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         }
 
         // Reset attributes and remove decoy
-        AttributesUtil.restoreDefaults(player);
+        AttributesService.restoreDefaults(player);
 
         // Remove flight if not in creative or coming back from dead
         if (player.getGameMode() != GameMode.CREATIVE || resurrectionCooldowns.getOrDefault(player.getUniqueId(), 0L) == -1)

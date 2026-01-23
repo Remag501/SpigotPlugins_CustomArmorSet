@@ -2,8 +2,8 @@ package me.remag501.customarmorsets.listener;
 
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.service.ArmorUtil;
-import me.remag501.customarmorsets.service.ItemUtil;
+import me.remag501.customarmorsets.service.ArmorService;
+import me.remag501.customarmorsets.service.ItemService;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorEquipEvent;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -27,7 +27,7 @@ public class ArmorEquipListener implements Listener {
 
         // Handle logic for broken armor
         ItemStack newArmor = event.getNewArmorPiece();
-        if (ItemUtil.isBroken(newArmor)) {
+        if (ItemService.isBroken(newArmor)) {
             event.setCancelled(true);
             event.getPlayer().sendMessage(ChatColor.RED + "This armor is broken and can't be equipped!");
             return;
@@ -36,8 +36,8 @@ public class ArmorEquipListener implements Listener {
         // Other stuff
         Player player = event.getPlayer();
 
-        ArmorSetType wasWearing = ArmorUtil.hasFullArmorSet(player, event.getOldArmorPiece(), event.getType());
-        ArmorSetType isWearing = ArmorUtil.hasFullArmorSet(player, event.getNewArmorPiece(), event.getType());
+        ArmorSetType wasWearing = ArmorService.hasFullArmorSet(player, event.getOldArmorPiece(), event.getType());
+        ArmorSetType isWearing = ArmorService.hasFullArmorSet(player, event.getNewArmorPiece(), event.getType());
 
         if (wasWearing != null && isWearing == null) {
             armorManager.unequipArmor(player);

@@ -3,8 +3,8 @@ package me.remag501.customarmorsets.armor.impl;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.service.AttributesUtil;
-import me.remag501.customarmorsets.manager.CooldownBarUtil;
+import me.remag501.customarmorsets.service.AttributesService;
+import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -32,15 +32,15 @@ public class ArcherArmorSet extends ArmorSet implements Listener {
     @Override
     public void applyPassive(Player player) {
         // Halve max HP (set max health to 10) and give Speed 1.25x
-        AttributesUtil.applySpeed(player, 1.5);
-        AttributesUtil.applyHealth(player, 0.5);
+        AttributesService.applySpeed(player, 1.5);
+        AttributesService.applyHealth(player, 0.5);
 //        player.sendMessage("✅ You equipped the Archer set");
     }
 
     @Override
     public void removePassive(Player player) {
-        AttributesUtil.removeSpeed(player);
-        AttributesUtil.removeHealth(player);
+        AttributesService.removeSpeed(player);
+        AttributesService.removeHealth(player);
 //        player.sendMessage("❌ You removed the Archer set");
     }
 
@@ -88,7 +88,7 @@ public class ArcherArmorSet extends ArmorSet implements Listener {
         }
 
         abilityCooldowns.put(uuid, now);
-        CooldownBarUtil.startCooldownBar(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), player, (int) COOLDOWN / 1000);
+        CooldownBarManager.startCooldownBar(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), player, (int) COOLDOWN / 1000);
     }
 
     @EventHandler(ignoreCancelled = true)

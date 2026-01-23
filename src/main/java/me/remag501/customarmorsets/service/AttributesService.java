@@ -9,14 +9,21 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Consumer;
 
 import java.util.UUID;
 
-public class AttributesUtil {
+public class AttributesService {
 
-    public static void getBootsOnDelay(Player player, Consumer<ItemStack> callback) {
+    private final Plugin plugin;
+
+    public AttributesService(Plugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public void getBootsOnDelay(Player player, Consumer<ItemStack> callback) {
         boolean shouldBeSynchronous = CustomArmorSets.isServerShuttingDown();
         if (shouldBeSynchronous) {
             ItemStack boots = player.getInventory().getBoots();
@@ -33,12 +40,12 @@ public class AttributesUtil {
                         cancel();
                     }
                 }
-            }.runTaskTimer(CustomArmorSets.getInstance(), 1L, 1L);
+            }.runTaskTimer(plugin, 1L, 1L);
         }
     }
 
 
-    public static void applyHealth(Player player, double mult) {
+    public void applyHealth(Player player, double mult) {
         getBootsOnDelay(player, boots -> {
             if (boots == null || !boots.hasItemMeta()) return;
 
@@ -65,7 +72,7 @@ public class AttributesUtil {
 
     }
 
-    public static void removeHealth(Player player) {
+    public void removeHealth(Player player) {
         getBootsOnDelay(player, boots -> {
             if (boots == null || !boots.hasItemMeta()) return;
 
@@ -78,7 +85,7 @@ public class AttributesUtil {
         });
     }
 
-    public static void applyDamage(Player player, double mult) {
+    public void applyDamage(Player player, double mult) {
         getBootsOnDelay(player, boots -> {
             if (boots == null || !boots.hasItemMeta()) return;
 
@@ -104,7 +111,7 @@ public class AttributesUtil {
         });
     }
 
-    public static void removeDamage(Player player) {
+    public void removeDamage(Player player) {
         getBootsOnDelay(player, boots -> {
             if (boots == null || !boots.hasItemMeta()) return;
 
@@ -117,7 +124,7 @@ public class AttributesUtil {
         });
     }
 
-    public static void applySpeed(Player player, double mult) {
+    public void applySpeed(Player player, double mult) {
         getBootsOnDelay(player, boots -> {
             if (boots == null || !boots.hasItemMeta()) return;
 
@@ -143,7 +150,7 @@ public class AttributesUtil {
         });
     }
 
-    public static void removeSpeed(Player player) {
+    public void removeSpeed(Player player) {
         getBootsOnDelay(player, boots -> {
             if (boots == null || !boots.hasItemMeta()) return;
 
@@ -155,7 +162,7 @@ public class AttributesUtil {
         });
     }
 
-    public static void applyAttackSpeed(Player player, double mult) {
+    public void applyAttackSpeed(Player player, double mult) {
         getBootsOnDelay(player, boots -> {
             if (boots == null || !boots.hasItemMeta()) return;
 
@@ -181,7 +188,7 @@ public class AttributesUtil {
         });
     }
 
-    public static void removeAttackSpeed(Player player) {
+    public void removeAttackSpeed(Player player) {
         getBootsOnDelay(player, boots -> {
             if (boots == null || !boots.hasItemMeta()) return;
 
@@ -194,7 +201,7 @@ public class AttributesUtil {
         });
     }
 
-    public static void applyHealthDirect(Player player, double multiplier) {
+    public void applyHealthDirect(Player player, double multiplier) {
         AttributeInstance attr = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
         if (attr == null) return;
 
@@ -210,7 +217,7 @@ public class AttributesUtil {
         }
     }
 
-    public static void applySpeedDirect(Player player, double multiplier) {
+    public void applySpeedDirect(Player player, double multiplier) {
         AttributeInstance attr = player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
         if (attr == null) return;
 
@@ -218,7 +225,7 @@ public class AttributesUtil {
         attr.setBaseValue(base * multiplier);
     }
 
-    public static void applyDamageDirect(Player player, double multiplier) {
+    public void applyDamageDirect(Player player, double multiplier) {
         AttributeInstance attr = player.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
         if (attr == null) return;
 
@@ -226,7 +233,7 @@ public class AttributesUtil {
         attr.setBaseValue(base * multiplier);
     }
 
-    public static void restoreDefaults(Player player) {
+    public void restoreDefaults(Player player) {
         // Reset to vanilla values
         AttributeInstance healthAttr = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
         if (healthAttr != null) healthAttr.setBaseValue(20.0);
@@ -239,7 +246,7 @@ public class AttributesUtil {
 
         }
 
-    public static void removeAllArmorAttributes(ItemStack itemStack) {
+    public void removeAllArmorAttributes(ItemStack itemStack) {
         ItemMeta meta = itemStack.getItemMeta();
         meta.removeAttributeModifier(Attribute.GENERIC_MAX_HEALTH);
         meta.removeAttributeModifier(Attribute.GENERIC_MOVEMENT_SPEED);
@@ -248,4 +255,5 @@ public class AttributesUtil {
 //        meta.removeAttributeModifier(Attribute.GENERIC_ARMOR);
         itemStack.setItemMeta(meta);
     }
+
 }

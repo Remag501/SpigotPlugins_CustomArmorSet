@@ -4,9 +4,9 @@ import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.service.ArmorUtil;
-import me.remag501.customarmorsets.service.AttributesUtil;
-import me.remag501.customarmorsets.manager.CooldownBarUtil;
+import me.remag501.customarmorsets.service.ArmorService;
+import me.remag501.customarmorsets.service.AttributesService;
+import me.remag501.customarmorsets.manager.CooldownBarManager;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.md_5.bungee.api.ChatMessageType;
@@ -53,7 +53,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
     public void applyPassive(Player player) {
         // Give player attack speed
-        AttributesUtil.applyAttackSpeed(player, 3.0);
+        AttributesService.applyAttackSpeed(player, 3.0);
 
         // Create npc after images
         NPC afterImageOne = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, player.getName());
@@ -66,7 +66,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
     @Override
     public void removePassive(Player player) {
         // Remove player attack speed
-        AttributesUtil.removeAttackSpeed(player);
+        AttributesService.removeAttackSpeed(player);
 
         NPC afterImageOne = afterImagesOne.remove(player.getUniqueId());
         NPC afterImageTwo = afterImagesTwo.remove(player.getUniqueId());
@@ -102,7 +102,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         player.setFlying(true);
         player.setFlySpeed(0);
         player.setInvulnerable(true);
-        AttributesUtil.applyHealth(player, 1.5);
+        AttributesService.applyHealth(player, 1.5);
 
         // Ring particles + aura
         World world = player.getWorld();
@@ -178,13 +178,13 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                AttributesUtil.removeHealth(player);
+                AttributesService.removeHealth(player);
             }
         }.runTaskLater(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), 100);
 
         // Start the cooldown
         abilityCooldowns.put(uuid, System.currentTimeMillis() + ABILITY_COOLDOWN_TICKS * 50);
-        CooldownBarUtil.startCooldownBar(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), player, ABILITY_COOLDOWN_TICKS / 20);
+        CooldownBarManager.startCooldownBar(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), player, ABILITY_COOLDOWN_TICKS / 20);
     }
 
     @EventHandler
@@ -337,7 +337,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         if (event.getHand() != EquipmentSlot.HAND) return;
 
         Player player = event.getPlayer();
-        if (ArmorUtil.isFullArmorSet(player) != ArmorSetType.FISTER) return;
+        if (ArmorService.isFullArmorSet(player) != ArmorSetType.FISTER) return;
 
         Entity clicked = event.getRightClicked();
 
@@ -390,7 +390,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         if (event.getAnimationType() != PlayerAnimationType.ARM_SWING) return;
 
         Player player = event.getPlayer();
-        if (ArmorUtil.isFullArmorSet(player) != ArmorSetType.FISTER) return;
+        if (ArmorService.isFullArmorSet(player) != ArmorSetType.FISTER) return;
 
         Entity target = getTargetedEntity(player, 4);
 

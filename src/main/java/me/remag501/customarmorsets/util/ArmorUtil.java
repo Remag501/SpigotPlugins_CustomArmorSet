@@ -1,12 +1,11 @@
-package me.remag501.customarmorsets.service;
+package me.remag501.customarmorsets.util;
 
-import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.CustomArmorSets;
-import me.remag501.customarmorsets.lib.armorequipevent.ArmorType;
-import org.bukkit.*;
+import org.bukkit.ChatColor;
+import org.bukkit.Color;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -130,72 +129,5 @@ public class ArmorUtil {
         };
     }
 
-    public static ArmorSetType hasFullArmorSet(Player player, ItemStack armorPiece, ArmorType armorType) {
-        // Get the ID from the armor piece in question (e.g., chestplate)
-        String setId = getArmorSetId(armorPiece);
-        if (setId == null) return null;
-
-        // Simulate current armor content
-        ItemStack[] armor = player.getInventory().getArmorContents().clone();
-
-        // Replace the slot with the passed `armorPiece` (simulate this equip)
-        switch (armorType) {
-            case HELMET -> armor[3] = armorPiece;
-            case CHESTPLATE -> armor[2] = armorPiece;
-            case LEGGINGS -> armor[1] = armorPiece;
-            case BOOTS -> armor[0] = armorPiece;
-        }
-
-        // Check if all armor pieces exist and have matching set ID
-        for (ItemStack piece : armor) {
-            String otherId = getArmorSetId(piece);
-            if (otherId == null || !otherId.equalsIgnoreCase(setId)) {
-                return null;
-            }
-        }
-
-        // Return matching ArmorSetType
-        return ArmorSetType.fromId(setId).orElse(null);
-    }
-
-    public static ArmorSetType isFullArmorSet(Player player) {
-        ItemStack[] armor = player.getInventory().getArmorContents();
-
-        if (armor.length != 4) return null;
-
-        // First, get the id from the first armor piece (helmet)
-        String id = ArmorUtil.getArmorSetId(armor[3]);
-        if (id == null) return null;
-
-        // Now check if ALL armor pieces match the same id
-        for (ItemStack piece : armor) {
-            if (!id.equals(ArmorUtil.getArmorSetId(piece))) {
-                return null;
-            }
-        }
-
-        // Now lookup the ArmorSetType from the id
-        return ArmorSetType.fromId(id).orElse(null);
-    }
-
-    private static String getArmorSetId(ItemStack item) {
-        if (item == null || item.getType() == Material.AIR) return null;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return null;
-        NamespacedKey key = new NamespacedKey(CustomArmorSets.getInstance(), "armor_set");
-        PersistentDataContainer container = meta.getPersistentDataContainer();
-        return container.has(key, PersistentDataType.STRING) ? container.get(key, PersistentDataType.STRING) : null;
-    }
-
-    public static boolean isCustomArmorPiece(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-
-        ItemMeta meta = item.getItemMeta();
-        PersistentDataContainer container = meta.getPersistentDataContainer();
-
-        NamespacedKey armorSetKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("CustomArmorSets"), "armor_set");
-
-        return container.has(armorSetKey, PersistentDataType.STRING);
-    }
 
 }

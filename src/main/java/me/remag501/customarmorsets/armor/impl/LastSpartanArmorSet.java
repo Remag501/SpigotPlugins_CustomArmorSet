@@ -3,8 +3,8 @@ package me.remag501.customarmorsets.armor.impl;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.service.AttributesUtil;
-import me.remag501.customarmorsets.manager.CooldownBarUtil;
+import me.remag501.customarmorsets.service.AttributesService;
+import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -33,13 +33,13 @@ public class LastSpartanArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void applyPassive(Player player) {
-        AttributesUtil.applyHealth(player, 0.7);
+        AttributesService.applyHealth(player, 0.7);
 //        player.sendMessage("You equipped the Last Spartan set");
     }
 
     @Override
     public void removePassive(Player player) {
-        AttributesUtil.removeHealth(player);
+        AttributesService.removeHealth(player);
 //        player.sendMessage("You removed the Last Spartan set");
     }
 
@@ -120,7 +120,7 @@ public class LastSpartanArmorSet extends ArmorSet implements Listener {
 
             abilityCooldowns.put(uuid, now);
             Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
-            CooldownBarUtil.startCooldownBar(plugin, player, (int) (COOLDOWN / 1000));
+            CooldownBarManager.startCooldownBar(plugin, player, (int) (COOLDOWN / 1000));
 
         } else {
             player.sendMessage("§c§l(!) §cNo enemies nearby to leap toward!");

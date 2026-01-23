@@ -14,9 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class HelmetCosmeticUtil {
+public class CosmeticService {
 
-    public static ItemStack makeCosmeticHelmet(ItemStack original, String texture) {
+    public ItemStack makeCosmeticHelmet(ItemStack original, String texture) {
 
         if (texture == null)
             return original;
@@ -40,7 +40,7 @@ public class HelmetCosmeticUtil {
 
     }
 
-    public static void updateCosmeticHelmetLoreSafely(ItemStack armorPiece, List<String> newLoreLines) {
+    public void updateCosmeticHelmetLoreSafely(ItemStack armorPiece, List<String> newLoreLines) {
         if (armorPiece == null || !armorPiece.hasItemMeta()) return;
 
         ItemMeta meta = armorPiece.getItemMeta();
@@ -57,7 +57,7 @@ public class HelmetCosmeticUtil {
         armorPiece.setItemMeta(meta);
     }
 
-    public static ItemStack restoreOriginalHelmet(ItemStack cosmetic, Color color) {
+    public ItemStack restoreOriginalHelmet(ItemStack cosmetic, Color color) {
 
         cosmetic.setType(Material.LEATHER_HELMET);
         LeatherArmorMeta meta = (LeatherArmorMeta) cosmetic.getItemMeta();

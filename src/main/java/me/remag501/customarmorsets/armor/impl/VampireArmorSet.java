@@ -6,8 +6,8 @@ import me.libraryaddict.disguise.disguisetypes.MobDisguise;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.service.AttributesUtil;
-import me.remag501.customarmorsets.manager.CooldownBarUtil;
+import me.remag501.customarmorsets.service.AttributesService;
+import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
@@ -49,12 +49,12 @@ public class VampireArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void applyPassive(Player player) {
-        AttributesUtil.applyHealth(player, 0.5);
+        AttributesService.applyHealth(player, 0.5);
     }
 
     @Override
     public void removePassive(Player player) {
-        AttributesUtil.removeHealth(player);
+        AttributesService.removeHealth(player);
         batForm.remove(player.getUniqueId());
     }
 
@@ -109,7 +109,7 @@ public class VampireArmorSet extends ArmorSet implements Listener {
             return;
         }
 
-        CooldownBarUtil.startCooldownBar(plugin, player, DURATION_TICKS / 20);
+        CooldownBarManager.startCooldownBar(plugin, player, DURATION_TICKS / 20);
 
         // Default: drain enemies and heal
         List<LivingEntity> targets = player.getNearbyEntities(RADIUS, RADIUS, RADIUS).stream()
@@ -141,7 +141,7 @@ public class VampireArmorSet extends ArmorSet implements Listener {
 
         // Store cooldown
         cooldowns.put(uuid, now + COOLDOWN_TICKS * 50);
-        CooldownBarUtil.startCooldownBar(plugin, player, COOLDOWN_TICKS / 20);
+        CooldownBarManager.startCooldownBar(plugin, player, COOLDOWN_TICKS / 20);
 
     }
 

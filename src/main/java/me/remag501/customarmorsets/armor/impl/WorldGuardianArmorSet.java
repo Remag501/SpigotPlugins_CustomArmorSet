@@ -3,8 +3,8 @@ package me.remag501.customarmorsets.armor.impl;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.service.AttributesUtil;
-import me.remag501.customarmorsets.manager.CooldownBarUtil;
+import me.remag501.customarmorsets.service.AttributesService;
+import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -31,16 +31,16 @@ public class WorldGuardianArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void applyPassive(Player player) {
-        AttributesUtil.applyHealth(player, 1.5);
-        AttributesUtil.applySpeed(player, 0.8);
+        AttributesService.applyHealth(player, 1.5);
+        AttributesService.applySpeed(player, 0.8);
         player.sendMessage("You equipped the World Guardian set");
 
     }
 
     @Override
     public void removePassive(Player player) {
-        AttributesUtil.removeHealth(player);
-        AttributesUtil.removeSpeed(player);
+        AttributesService.removeHealth(player);
+        AttributesService.removeSpeed(player);
         player.sendMessage("You removed the World Guardian set");
     }
 
@@ -58,12 +58,12 @@ public class WorldGuardianArmorSet extends ArmorSet implements Listener {
         isInvulnerable = true;
 
         Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
-        CooldownBarUtil.startCooldownBar(plugin, player, 3);
+        CooldownBarManager.startCooldownBar(plugin, player, 3);
         new BukkitRunnable() {
             @Override
             public void run() {
                 isInvulnerable = false;
-                CooldownBarUtil.startCooldownBar(plugin, player, (int)(COOLDOWN / 1000));
+                CooldownBarManager.startCooldownBar(plugin, player, (int)(COOLDOWN / 1000));
                 abilityCooldowns.put(uuid, now);
             }
         }.runTaskLater(plugin, 60L);

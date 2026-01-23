@@ -3,8 +3,8 @@ package me.remag501.customarmorsets.armor.impl;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.service.AttributesUtil;
-import me.remag501.customarmorsets.manager.CooldownBarUtil;
+import me.remag501.customarmorsets.service.AttributesService;
+import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -30,13 +30,13 @@ public class RoyalKnightArmorSet extends ArmorSet implements Listener {
     @Override
     public void applyPassive(Player player) {
         // 125% max hp
-        AttributesUtil.applyHealth(player, 1.25);
+        AttributesService.applyHealth(player, 1.25);
 //        player.sendMessage("You equipped the Royal Knight set");
     }
 
     @Override
     public void removePassive(Player player) {
-        AttributesUtil.removeHealth(player);
+        AttributesService.removeHealth(player);
 //        player.sendMessage("You removed the Royal Knight set");
     }
 
@@ -56,7 +56,7 @@ public class RoyalKnightArmorSet extends ArmorSet implements Listener {
         player.sendMessage("§a§l(!) §aYou used Royal Knight's Healing!");
 
         Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
-        CooldownBarUtil.startCooldownBar(plugin, player, (int)(COOLDOWN / 1000));
+        CooldownBarManager.startCooldownBar(plugin, player, (int)(COOLDOWN / 1000));
         abilityCooldowns.put(uuid, now);
     }
 

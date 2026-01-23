@@ -1,6 +1,6 @@
 package me.remag501.customarmorsets.manager;
 
-import me.remag501.customarmorsets.service.AttributesUtil;
+import me.remag501.customarmorsets.service.AttributesService;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -75,7 +75,7 @@ public class PlayerSyncManager {
         originalHealth.put(player.getUniqueId(), player.getHealth());
 
         // Scale max health first
-        AttributesUtil.applyHealth(player, mob.getMaxHealth() / 20.0);
+        AttributesService.applyHealth(player, mob.getMaxHealth() / 20.0);
 
         // Set current health proportionally
         double scaledHealth = (mob.getHealth() / mob.getMaxHealth()) *
@@ -113,7 +113,7 @@ public class PlayerSyncManager {
     public void restoreHealth(Player player) {
         Double health = originalHealth.remove(player.getUniqueId());
         if (health != null) {
-            AttributesUtil.removeHealth(player);
+            AttributesService.removeHealth(player);
             player.setHealth(Math.min(health, player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()));
         }
     }

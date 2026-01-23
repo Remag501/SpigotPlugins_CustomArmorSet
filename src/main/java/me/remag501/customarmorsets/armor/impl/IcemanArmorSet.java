@@ -4,8 +4,8 @@ import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.service.AttributesUtil;
-import me.remag501.customarmorsets.manager.CooldownBarUtil;
+import me.remag501.customarmorsets.service.AttributesService;
+import me.remag501.customarmorsets.manager.CooldownBarManager;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -67,7 +67,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void applyPassive(Player player) {
-        AttributesUtil.applySpeed(player, 1.25);
+        AttributesService.applySpeed(player, 1.25);
 //        player.sendMessage("❄ You equipped the Iceman set");
         // Populate maps
         UUID uuid = player.getUniqueId();
@@ -84,7 +84,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void removePassive(Player player) {
-        AttributesUtil.removeSpeed(player);
+        AttributesService.removeSpeed(player);
         UUID uuid = player.getUniqueId();
         resetIceBridgeBlocks(player);
         ultTask.remove(uuid).cancel();
@@ -98,7 +98,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         playerIceBeam.remove(uuid);
         playerIceBeam.remove(uuid);
 //        player.sendMessage("❄ You removed the Iceman set");
-        CooldownBarUtil.restorePlayerBar(player);
+        CooldownBarManager.restorePlayerBar(player);
     }
 
     @Override
@@ -160,7 +160,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                     }
                 }
             }.runTaskTimer(CustomArmorSets.getInstance(), 0, 1);
-            AttributesUtil.removeSpeed(player);
+            AttributesService.removeSpeed(player);
             runningTime.put(uuid, runnable);
         }
         else {
@@ -379,7 +379,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
                 ticks++;
                 if (ticks % 40 == 0) // Add charge every two seconds
                     domeCharge.put(uuid, Math.min(domeCharge.get(uuid) + 50, 100));
-                CooldownBarUtil.setLevel(player, domeCharge.get(uuid));
+                CooldownBarManager.setLevel(player, domeCharge.get(uuid));
 //                if (ticks % 5 == 0) {// temp
 //                    freezeCharges.put(uuid, Math.min(5, freezeCharges.get(uuid) + 1));
 ////                    player.sendTitle("Freeze Charge ❄ " + freezeCharges.get(uuid) + "/ 5", "subtitle");

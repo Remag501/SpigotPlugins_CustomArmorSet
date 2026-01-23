@@ -10,8 +10,8 @@ import me.remag501.customarmorsets.armor.TargetCategory;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.manager.DefenseStatsManager;
-import me.remag501.customarmorsets.service.AttributesUtil;
-import me.remag501.customarmorsets.manager.CooldownBarUtil;
+import me.remag501.customarmorsets.service.AttributesService;
+import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -31,7 +31,7 @@ import org.bukkit.util.Vector;
 
 import java.util.*;
 
-import static me.remag501.customarmorsets.manager.CooldownBarUtil.setLevel;
+import static me.remag501.customarmorsets.manager.CooldownBarManager.setLevel;
 
 public class GolemBusterArmorSet extends ArmorSet implements Listener {
 
@@ -82,8 +82,8 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         // End the bukkit task
         transformBack(player);
         energyLoop.get(this).cancel();
-        CooldownBarUtil.restorePlayerBar(player);
-        AttributesUtil.restoreDefaults(player); // Just in case
+        CooldownBarManager.restorePlayerBar(player);
+        AttributesService.restoreDefaults(player); // Just in case
         DamageStatsManager.clearAll(player.getUniqueId());
         DefenseStatsManager.clearAll(player.getUniqueId());
     }
@@ -240,8 +240,8 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         startParticleTrail(player);
 
         // Give attributes and damage stats
-        AttributesUtil.applyHealth(player, 2.0);
-        AttributesUtil.applySpeed(player, 0.5);
+        AttributesService.applyHealth(player, 2.0);
+        AttributesService.applySpeed(player, 0.5);
         DamageStatsManager.setMobMultiplier(player.getUniqueId(), 2, TargetCategory.NON_PLAYER);
         DefenseStatsManager.setSourceReduction(player.getUniqueId(), 0.25f, TargetCategory.NON_PLAYER);
         Bukkit.getScheduler().runTaskLater(CustomArmorSets.getInstance(), () -> {
@@ -251,8 +251,8 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
 
     private void transformBack(Player player)  {
         // Remove attributes and damage stats
-        AttributesUtil.removeHealth(player);
-        AttributesUtil.removeSpeed(player);
+        AttributesService.removeHealth(player);
+        AttributesService.removeSpeed(player);
         DamageStatsManager.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.NON_PLAYER);
         DefenseStatsManager.setSourceReduction(player.getUniqueId(), 0.75f, TargetCategory.NON_PLAYER);
 

@@ -1,8 +1,8 @@
 package me.remag501.customarmorsets.listener;
 
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.service.ArmorUtil;
-import me.remag501.customarmorsets.service.HelmetCosmeticUtil;
+import me.remag501.customarmorsets.service.ArmorService;
+import me.remag501.customarmorsets.service.CosmeticService;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorEquipEvent;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorType;
 import org.bukkit.*;
@@ -29,7 +29,7 @@ public class DurabilityListener implements Listener {
         ItemStack damagedItem = event.getItem();
 
         if (!damagedItem.hasItemMeta()) return;
-        if (!ArmorUtil.isCustomArmorPiece(damagedItem)) {
+        if (!ArmorService.isCustomArmorPiece(damagedItem)) {
             // Check if regular piece has a durability of 0 and unequip it
             Damageable meta = (Damageable) event.getItem().getItemMeta();
             int maxDurability = event.getItem().getType().getMaxDurability();
@@ -75,7 +75,7 @@ public class DurabilityListener implements Listener {
         damagedItem.setItemMeta(meta); // Save internal durability
 
         if (damagedItem.getType() == Material.PLAYER_HEAD) {
-            HelmetCosmeticUtil.updateCosmeticHelmetLoreSafely(damagedItem, appendedLore);
+            CosmeticService.updateCosmeticHelmetLoreSafely(damagedItem, appendedLore);
         } else {
             List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
             lore.removeIf(line -> ChatColor.stripColor(line).contains("Durability"));
@@ -89,7 +89,7 @@ public class DurabilityListener implements Listener {
             unequipAndBreakArmorPiece(player, damagedItem);
 
         // Mirror head durability update manually only when leggings are damaged
-        if (damagedItem.getType().name().endsWith("_LEGGINGS") && ArmorUtil.isFullArmorSet(player) != null) {
+        if (damagedItem.getType().name().endsWith("_LEGGINGS") && ArmorService.isFullArmorSet(player) != null) {
             ItemStack helmet = player.getInventory().getHelmet();
 
             if (helmet != null && helmet.getType() == Material.PLAYER_HEAD && helmet.hasItemMeta()) {
@@ -108,7 +108,7 @@ public class DurabilityListener implements Listener {
 
                 String headDurabilityLine = ChatColor.GRAY + "Durability: " + ChatColor.WHITE + newHeadDurability + " / " + headMaxDurability;
                 helmet.setItemMeta(headMeta); // Save updated container first
-                HelmetCosmeticUtil.updateCosmeticHelmetLoreSafely(helmet, Collections.singletonList(headDurabilityLine));
+                CosmeticService.updateCosmeticHelmetLoreSafely(helmet, Collections.singletonList(headDurabilityLine));
 
                 // Break head if needed
                 if (newHeadDurability == 0)
@@ -135,9 +135,9 @@ public class DurabilityListener implements Listener {
         if (type.name().endsWith("_HELMET") || type == Material.PLAYER_HEAD) {
             storage = inventory.getHelmet();
             // Handle cosmetic case
-            ArmorSetType armorSetType = ArmorUtil.isFullArmorSet(player);
+            ArmorSetType armorSetType = ArmorService.isFullArmorSet(player);
             if (armorSetType != null) // Revert cosmetic
-                HelmetCosmeticUtil.restoreOriginalHelmet(storage, Color.fromRGB(armorSetType.getLeatherColor()));
+                CosmeticService.restoreOriginalHelmet(storage, Color.fromRGB(armorSetType.getLeatherColor()));
             // Handle normally
             inventory.setHelmet(null);
             armorType = ArmorType.HELMET;

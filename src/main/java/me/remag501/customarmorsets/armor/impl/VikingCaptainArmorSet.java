@@ -3,7 +3,7 @@ package me.remag501.customarmorsets.armor.impl;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.manager.CooldownBarUtil;
+import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -108,7 +108,7 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
         }.runTaskTimer(plugin, 0L, 1L);
 
         // Start cooldown and cooldown bar
-        CooldownBarUtil.startCooldownBar(plugin, player, (int) (COOLDOWN / 1000));
+        CooldownBarManager.startCooldownBar(plugin, player, (int) (COOLDOWN / 1000));
         abilityCooldowns.put(uuid, now);
     }
 

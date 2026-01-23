@@ -3,7 +3,7 @@ package me.remag501.customarmorsets.armor.impl;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.manager.CooldownBarUtil;
+import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -66,7 +66,7 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
         Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
 
         // Show bar during active ability
-        CooldownBarUtil.startCooldownBar(plugin, player, activeDurationSeconds);
+        CooldownBarManager.startCooldownBar(plugin, player, activeDurationSeconds);
         new BukkitRunnable() {
             int ticks = 0;
 
@@ -79,7 +79,7 @@ public class InfernusArmorSet extends ArmorSet implements Listener {
                     int cooldownSeconds = (int) (COOLDOWN / 1000);
                     long now = System.currentTimeMillis();
                     abilityCooldowns.put(uuid, now);
-                    CooldownBarUtil.startCooldownBar(plugin, player, cooldownSeconds);
+                    CooldownBarManager.startCooldownBar(plugin, player, cooldownSeconds);
                     return;
                 }
 

@@ -2,8 +2,8 @@ package me.remag501.customarmorsets.manager;
 
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.service.AttributesUtil;
-import me.remag501.customarmorsets.service.HelmetCosmeticUtil;
+import me.remag501.customarmorsets.service.AttributesService;
+import me.remag501.customarmorsets.service.CosmeticService;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.World;
@@ -36,7 +36,7 @@ public class ArmorManager {
         Bukkit.getScheduler().runTask(plugin, () -> {
             ItemStack helmet = player.getInventory().getHelmet();
             if (helmet != null) {
-                player.getInventory().setHelmet(HelmetCosmeticUtil.makeCosmeticHelmet(helmet, type.getHeadUrl()));
+                player.getInventory().setHelmet(CosmeticService.makeCosmeticHelmet(helmet, type.getHeadUrl()));
             }
         });
         equippedHelmet.put(player.getUniqueId(), type);
@@ -70,7 +70,7 @@ public class ArmorManager {
         if (type != null) {
             ItemStack helmet = player.getInventory().getHelmet();
             if (helmet != null) {
-                player.getInventory().setHelmet(HelmetCosmeticUtil.restoreOriginalHelmet(helmet, Color.fromRGB(type.getLeatherColor())));
+                player.getInventory().setHelmet(CosmeticService.restoreOriginalHelmet(helmet, Color.fromRGB(type.getLeatherColor())));
             }
             equippedHelmet.remove(player.getUniqueId());
         }
@@ -78,7 +78,7 @@ public class ArmorManager {
         // Remove attributes from boots (if still there)
         ItemStack boots = player.getInventory().getBoots();
         if (boots != null) {
-            AttributesUtil.removeAllArmorAttributes(boots);
+            AttributesService.removeAllArmorAttributes(boots);
         }
 
     }

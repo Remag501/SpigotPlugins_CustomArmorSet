@@ -4,8 +4,8 @@ import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.service.AttributesUtil;
-import me.remag501.customarmorsets.manager.CooldownBarUtil;
+import me.remag501.customarmorsets.service.AttributesService;
+import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -62,7 +62,7 @@ public class BanditArmorSet extends ArmorSet implements Listener {
             task.cancel();
         }
 
-        CooldownBarUtil.restorePlayerBar(player);
+        CooldownBarManager.restorePlayerBar(player);
     }
 
     // --- Passive 1: Run Faster With Fists Out ---
@@ -76,9 +76,9 @@ public class BanditArmorSet extends ArmorSet implements Listener {
 
         // This is much cleaner now!
         if (player.getInventory().getItemInMainHand().getType() == Material.AIR) {
-            AttributesUtil.applySpeed(player, 1.25); // Apply a 25% speed increase
+            AttributesService.applySpeed(player, 1.25); // Apply a 25% speed increase
         } else {
-            AttributesUtil.removeSpeed(player); // Remove the speed increase
+            AttributesService.removeSpeed(player); // Remove the speed increase
         }
     }
 
@@ -119,8 +119,8 @@ public class BanditArmorSet extends ArmorSet implements Listener {
             playerDodges.put(player.getUniqueId(), currentDodges);
 
             // Check if player is out of dodges for ui
-            CooldownBarUtil.setLevel(player, currentDodges);
-            CooldownBarUtil.startMiniCooldownBar(CustomArmorSets.getInstance(), player, DODGE_COOLDOWN);
+            CooldownBarManager.setLevel(player, currentDodges);
+            CooldownBarManager.startMiniCooldownBar(CustomArmorSets.getInstance(), player, DODGE_COOLDOWN);
 
             // Get the normalized direction
             Vector direction = player.getLocation().getDirection().normalize();
@@ -158,7 +158,7 @@ public class BanditArmorSet extends ArmorSet implements Listener {
                     currentDodges++;
                     playerDodges.put(player.getUniqueId(), currentDodges);
                     player.sendMessage("§a§l(!) §aYou regenerated a dodge! Dodges left: " + currentDodges);
-                    CooldownBarUtil.setLevel(player, currentDodges);
+                    CooldownBarManager.setLevel(player, currentDodges);
                 }
 
                 // Cancel the task once the player has max dodges again.

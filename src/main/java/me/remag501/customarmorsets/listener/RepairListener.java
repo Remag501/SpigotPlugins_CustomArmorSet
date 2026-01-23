@@ -1,8 +1,8 @@
 package me.remag501.customarmorsets.listener;
 
-import me.remag501.customarmorsets.service.ArmorUtil;
-import me.remag501.customarmorsets.service.HelmetCosmeticUtil;
-import me.remag501.customarmorsets.service.ItemUtil;
+import me.remag501.customarmorsets.service.ArmorService;
+import me.remag501.customarmorsets.service.CosmeticService;
+import me.remag501.customarmorsets.service.ItemService;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;
@@ -28,7 +28,7 @@ public class RepairListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
         ItemStack cursor = event.getCursor();
-        if (!ItemUtil.isRepairKit(cursor)) return;
+        if (!ItemService.isRepairKit(cursor)) return;
 
         ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
@@ -56,7 +56,7 @@ public class RepairListener implements Listener {
 
     private boolean tryRepair(Player player, ItemStack item, int repairAmount) {
         if (item == null || item.getType() == Material.AIR) return false;
-        if (ArmorUtil.isCustomArmorPiece(item)) {
+        if (ArmorService.isCustomArmorPiece(item)) {
             return customRepair(player, item, repairAmount);
         }
 
@@ -80,7 +80,7 @@ public class RepairListener implements Listener {
     }
 
     private boolean customRepair(Player player, ItemStack item, int repairAmount) {
-        if (!ArmorUtil.isCustomArmorPiece(item)) {
+        if (!ArmorService.isCustomArmorPiece(item)) {
             player.sendMessage(ChatColor.RED + "This is not a custom armor piece.");
             return false;
         }
@@ -106,7 +106,7 @@ public class RepairListener implements Listener {
         String durabilityLine = ChatColor.GRAY + "Durability: " + ChatColor.WHITE + newDurability + " / " + maxDurability;
 
         if (item.getType() == Material.PLAYER_HEAD) {
-            HelmetCosmeticUtil.updateCosmeticHelmetLoreSafely(item, Collections.singletonList(durabilityLine));
+            CosmeticService.updateCosmeticHelmetLoreSafely(item, Collections.singletonList(durabilityLine));
         } else {
             List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
             lore.removeIf(line -> ChatColor.stripColor(line).contains("Durability"));

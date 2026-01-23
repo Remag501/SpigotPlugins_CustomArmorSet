@@ -8,15 +8,25 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.Plugin;
 
 import java.util.Arrays;
 
-public class ItemUtil {
+public class ItemService {
 
-    private static final NamespacedKey REPAIR_KIT_KEY = new NamespacedKey("customarmorsets", "is_repair_kit");
+    private final NamespacedKey REPAIR_KIT_KEY;
+    private final ArmorService armorService;
+
+//    private final Plugin plugin;
+
+    public ItemService(Plugin plugin, ArmorService armorService) {
+//        REPAIR_KIT_KEY = new NamespacedKey("customarmorsets", "is_repair_kit");
+        REPAIR_KIT_KEY = new NamespacedKey(plugin, "is_repair_kit");
+        this.armorService = armorService;
+    }
 
    // int amount, int strength
-   public static ItemStack createRepairKit(int amount, int tier) {
+   public ItemStack createRepairKit(int amount, int tier) {
        ItemStack kit = new ItemStack(Material.SHULKER_SHELL, amount);
        ItemMeta meta = kit.getItemMeta();
 
@@ -42,20 +52,20 @@ public class ItemUtil {
        return kit;
    }
 
-    public static boolean isRepairKit(ItemStack item) {
+    public boolean isRepairKit(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
 
         PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer();
         return container.has(REPAIR_KIT_KEY, PersistentDataType.BYTE);
     }
 
-    public static boolean isBroken(ItemStack item) {
+    public boolean isBroken(ItemStack item) {
         if (item == null || item.getType() == Material.AIR || !item.hasItemMeta()) return false;
 
         ItemMeta meta = item.getItemMeta();
 
         // Custom durability system
-        if (ArmorUtil.isCustomArmorPiece(item)) {
+        if (armorService.isCustomArmorPiece(item)) {
             PersistentDataContainer container = meta.getPersistentDataContainer();
             NamespacedKey durabilityKey = new NamespacedKey("customarmorsets", "internal_durability");
 
