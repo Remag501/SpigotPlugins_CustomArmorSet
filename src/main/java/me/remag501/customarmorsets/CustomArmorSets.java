@@ -35,7 +35,7 @@ public final class CustomArmorSets extends JavaPlugin {
         getLogger().info("Custom Armor Sets have started up!");
 
         // 1. Create managers
-        armorManager = new ArmorManager();
+        armorManager = new ArmorManager(this);
         DamageStatsManager damageStatsManager = new DamageStatsManager();
         DefenseStatsManager defenseStatsManager = new DefenseStatsManager();
         PlayerSyncManager playerSyncManager = new PlayerSyncManager();
@@ -46,12 +46,12 @@ public final class CustomArmorSets extends JavaPlugin {
         // 3. Register all listeners to plugin
 
         // Listeners fo equipping and using armor set
-        getServer().getPluginManager().registerEvents(new ArmorEquipListener(), this);
+        getServer().getPluginManager().registerEvents(new ArmorEquipListener(armorManager), this);
         getServer().getPluginManager().registerEvents(new OffHandAbilityListener(), this);
         getServer().getPluginManager().registerEvents(new DurabilityListener(), this);
         // Listeners for world change and connection
-        getServer().getPluginManager().registerEvents(new DisconnectReconnectListener(), this);
-        getServer().getPluginManager().registerEvents(new WorldChangeListener(), this);
+        getServer().getPluginManager().registerEvents(new DisconnectReconnectListener(armorManager), this);
+        getServer().getPluginManager().registerEvents(new WorldChangeListener(armorManager), this);
         // Listener for broken items
         getServer().getPluginManager().registerEvents(new BrokenItemListener(), this);
         getServer().getPluginManager().registerEvents(new RepairListener(), this);

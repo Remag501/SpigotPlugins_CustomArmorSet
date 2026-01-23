@@ -11,13 +11,19 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 public class DisconnectReconnectListener implements Listener {
 
+    private final ArmorManager armorManager;
+
+    public DisconnectReconnectListener(ArmorManager armorManager) {
+        this.armorManager = armorManager;
+    }
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         ArmorSetType set = ArmorUtil.isFullArmorSet(player);
 
         if (set != null) {
-            ArmorManager.equipArmor(player, set);
+            armorManager.equipArmor(player, set);
         }
     }
 
@@ -27,7 +33,7 @@ public class DisconnectReconnectListener implements Listener {
         ArmorSetType set = ArmorUtil.isFullArmorSet(player);
 
         if (set != null) {
-            ArmorManager.unequipArmor(player);
+            armorManager.unequipArmor(player);
         }
     }
 }

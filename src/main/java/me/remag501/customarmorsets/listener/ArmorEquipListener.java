@@ -14,6 +14,12 @@ import org.bukkit.inventory.ItemStack;
 
 public class ArmorEquipListener implements Listener {
 
+    private final ArmorManager armorManager;
+
+    public ArmorEquipListener(ArmorManager armorManager) {
+        this.armorManager = armorManager;
+    }
+
     @EventHandler
     public void onEquip(ArmorEquipEvent event) {
 
@@ -34,13 +40,13 @@ public class ArmorEquipListener implements Listener {
         ArmorSetType isWearing = ArmorUtil.hasFullArmorSet(player, event.getNewArmorPiece(), event.getType());
 
         if (wasWearing != null && isWearing == null) {
-            ArmorManager.unequipArmor(player);
+            armorManager.unequipArmor(player);
         }
 
         ArmorSetType type = (wasWearing != null) ? wasWearing : isWearing;
 
         if (wasWearing == null && isWearing != null) {
-            ArmorManager.equipArmor(player, type);
+            armorManager.equipArmor(player, type);
         }
     }
 
@@ -52,7 +58,7 @@ public class ArmorEquipListener implements Listener {
         ItemStack heldItem = event.getItem();
         if (heldItem == null)
             return;
-        if (isArmor(heldItem.getType()) && ArmorManager.getArmorSet(event.getPlayer()) != null) {
+        if (isArmor(heldItem.getType()) && armorManager.getArmorSet(event.getPlayer()) != null) {
 //            event.getPlayer().sendMessage(ChatColor.RED + "You can't hotswap armor!");
             event.setCancelled(true);
         }

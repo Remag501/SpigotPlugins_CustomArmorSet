@@ -10,6 +10,7 @@ import org.bukkit.Color;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 
 import java.util.HashMap;
 import java.util.List;
@@ -18,16 +19,22 @@ import java.util.UUID;
 
 public class ArmorManager {
 
+    private static final List<String> bannedWorlds = List.of("spawn", "dungeonhub", "honeyclicker");
+    //    private static List<String> allowedWorlds = List.of("kuroko", "icycaverns", "sahara", "Calino", "Musicland", "Thundra", "test");
+    private static final String bunkerPrefix = "bunker";
+
     private Map<UUID, ArmorSet> equippedArmor = new HashMap<>();
     private Map<UUID, ArmorSetType> equippedHelmet = new HashMap<>();
+    private Plugin plugin;
 
-//    private static List<String> allowedWorlds = List.of("kuroko", "icycaverns", "sahara", "Calino", "Musicland", "Thundra", "test");
-      private static final List<String> bannedWorlds = List.of("spawn", "dungeonhub", "honeyclicker");
-      private static final String bunkerPrefix = "bunker";
+    public ArmorManager(Plugin plugin) {
+        this.plugin = plugin;
+    }
+
 
     public boolean equipArmor(Player player, ArmorSetType type) {
         // Equip player head
-        Bukkit.getScheduler().runTask(CustomArmorSets.getInstance(), () -> {
+        Bukkit.getScheduler().runTask(plugin, () -> {
             ItemStack helmet = player.getInventory().getHelmet();
             if (helmet != null) {
                 player.getInventory().setHelmet(HelmetCosmeticUtil.makeCosmeticHelmet(helmet, type.getHeadUrl()));
