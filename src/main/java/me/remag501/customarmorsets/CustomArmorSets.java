@@ -2,14 +2,13 @@ package me.remag501.customarmorsets;
 
 import me.remag501.customarmorsets.armor.impl.*;
 import me.remag501.customarmorsets.command.CustomArmorSetCommand;
-import me.remag501.customarmorsets.manager.ArmorManager;
+import me.remag501.customarmorsets.manager.*;
 import me.remag501.customarmorsets.listener.*;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorListener;
 import me.remag501.customarmorsets.lib.armorequipevent.DispenserArmorListener;
-import me.remag501.customarmorsets.manager.DamageStatsManager;
-import me.remag501.customarmorsets.manager.DefenseStatsManager;
-import me.remag501.customarmorsets.manager.PlayerSyncManager;
+import me.remag501.customarmorsets.service.*;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -31,27 +30,37 @@ public final class CustomArmorSets extends JavaPlugin {
         // Plugin startup logic
         getLogger().info("Custom Armor Sets have started up!");
 
-        // 1. Create managers
-        armorManager = new ArmorManager(this);
+        // 1. Create managers and services
+
+        // Setup services
+        CosmeticService cosmeticService = new CosmeticService();
+        NamespaceService namespaceService = new NamespaceService(this);
+        ArmorService armorService = new ArmorService(namespaceService);
+        AttributesService attributesService = new AttributesService(this);
+        ItemService itemService = new ItemService(namespaceService, armorService);
+
+        // Setup managers
+        CooldownBarManager cooldownBarManager = new CooldownBarManager();
         DamageStatsManager damageStatsManager = new DamageStatsManager();
         DefenseStatsManager defenseStatsManager = new DefenseStatsManager();
-        PlayerSyncManager playerSyncManager = new PlayerSyncManager();
+        armorManager = new ArmorManager(this, cosmeticService, attributesService);
+        PlayerSyncManager playerSyncManager = new PlayerSyncManager(attributesService);
 
         // 2. Register command to plugin
-        getCommand("customarmorsets").setExecutor(new CustomArmorSetCommand(this));
+        getCommand("customarmorsets").setExecutor(new CustomArmorSetCommand(this, itemService));
 
         // 3. Register all listeners to plugin
 
         // Listeners fo equipping and using armor set
-        getServer().getPluginManager().registerEvents(new ArmorEquipListener(armorManager), this);
+        getServer().getPluginManager().registerEvents(new ArmorEquipListener(armorManager, armorService, itemService), this);
         getServer().getPluginManager().registerEvents(new OffHandAbilityListener(armorManager), this);
-        getServer().getPluginManager().registerEvents(new DurabilityListener(), this);
+        getServer().getPluginManager().registerEvents(new DurabilityListener(armorService, cosmeticService), this);
         // Listeners for world change and connection
-        getServer().getPluginManager().registerEvents(new DisconnectReconnectListener(armorManager), this);
-        getServer().getPluginManager().registerEvents(new WorldChangeListener(armorManager), this);
+        getServer().getPluginManager().registerEvents(new DisconnectReconnectListener(armorManager, armorService), this);
+        getServer().getPluginManager().registerEvents(new WorldChangeListener(armorManager, armorService), this);
         // Listener for broken items
-        getServer().getPluginManager().registerEvents(new BrokenItemListener(), this);
-        getServer().getPluginManager().registerEvents(new RepairListener(), this);
+        getServer().getPluginManager().registerEvents(new BrokenItemListener(itemService), this);
+        getServer().getPluginManager().registerEvents(new RepairListener(armorService, cosmeticService, itemService), this);
         // Listener for damage stats
         getServer().getPluginManager().registerEvents(new DamageListener(damageStatsManager, defenseStatsManager), this);
         // Mythic mobs

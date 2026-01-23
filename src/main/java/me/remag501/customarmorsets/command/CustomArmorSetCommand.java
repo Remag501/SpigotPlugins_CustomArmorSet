@@ -3,6 +3,7 @@ package me.remag501.customarmorsets.command;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.ItemService;
+import me.remag501.customarmorsets.util.ArmorUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
@@ -21,9 +22,11 @@ import java.util.Map;
 public class CustomArmorSetCommand implements CommandExecutor {
 
     private final JavaPlugin plugin;
+    private final ItemService itemService;
 
-    public CustomArmorSetCommand(JavaPlugin plugin) {
+    public CustomArmorSetCommand(JavaPlugin plugin, ItemService itemService) {
         this.plugin = plugin;
+        this.itemService = itemService;
     }
 
     @Override
@@ -92,7 +95,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
         }
 
         else if (args.length == 1 && args[0].equalsIgnoreCase("getrepairkit") && sender instanceof Player player) {
-            ItemStack repairKit = ItemService.createRepairKit(1, 0);
+            ItemStack repairKit = itemService.createRepairKit(1, 0);
             player.getInventory().addItem(repairKit);
             player.sendMessage("§b§lARMOR §8» §7You received an Armor Repair Kit!");
             return true;
@@ -105,7 +108,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
                 return true;
             }
 
-            target.getInventory().addItem(ItemService.createRepairKit(1, 0));
+            target.getInventory().addItem(itemService.createRepairKit(1, 0));
             sender.sendMessage("§b§lARMOR §8» §aRepair kit given to " + target.getName() + "!");
             target.sendMessage("§b§lARMOR §8» §7You received an Armor Repair Kit!");
             return true;
@@ -122,7 +125,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
                     return true;
                 }
 
-                ItemStack repairKit = ItemService.createRepairKit(amount, tier);
+                ItemStack repairKit = itemService.createRepairKit(amount, tier);
                 player.getInventory().addItem(repairKit);
                 player.sendMessage("§b§lARMOR §8» §7You received " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ")!");
             } catch (NumberFormatException e) {
@@ -148,7 +151,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
                     return true;
                 }
 
-                ItemStack repairKit = ItemService.createRepairKit(amount, tier);
+                ItemStack repairKit = itemService.createRepairKit(amount, tier);
                 target.getInventory().addItem(repairKit);
                 sender.sendMessage("§b§lARMOR §8» §aGave " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ") to " + target.getName() + "!");
                 target.sendMessage("§b§lARMOR §8» §7You received " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ")!");
@@ -167,7 +170,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
 
     private void giveArmorSet(Player player, String setId, Map<Enchantment, Integer> enchants) {
         ArmorSetType.fromId(setId).ifPresent(type -> {
-            ItemStack[] armor = ArmorService.createLeatherArmorSet(plugin, type.getDisplayName(), type.getLore(), type.getLeatherColor(), type.getRarity(), type.getCustomModelData(), type.getId(), type.getArmorPoints(), type.getDurability(), type.getArmorToughness());
+            ItemStack[] armor = ArmorUtil.createLeatherArmorSet(plugin, type.getDisplayName(), type.getLore(), type.getLeatherColor(), type.getRarity(), type.getCustomModelData(), type.getId(), type.getArmorPoints(), type.getDurability(), type.getArmorToughness());
             for (ItemStack item : armor) {
                 if (item != null) {
                     enchants.forEach(item::addUnsafeEnchantment);
@@ -226,7 +229,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
 
     private void giveArmorPiece(Player player, String setId, EquipmentSlot slot, Map<Enchantment, Integer> enchants) {
         ArmorSetType.fromId(setId).ifPresentOrElse(type -> {
-            ItemStack[] armor = ArmorService.createLeatherArmorSet(plugin, type.getDisplayName(), type.getLore(), type.getLeatherColor(), type.getRarity(), type.getCustomModelData(), type.getId(), type.getArmorPoints(), type.getDurability(), type.getArmorToughness());
+            ItemStack[] armor = ArmorUtil.createLeatherArmorSet(plugin, type.getDisplayName(), type.getLore(), type.getLeatherColor(), type.getRarity(), type.getCustomModelData(), type.getId(), type.getArmorPoints(), type.getDurability(), type.getArmorToughness());
 
             ItemStack pieceToGive = switch (slot) {
                 case HEAD -> armor[0];
