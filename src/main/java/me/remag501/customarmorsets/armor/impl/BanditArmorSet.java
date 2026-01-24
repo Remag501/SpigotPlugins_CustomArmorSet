@@ -63,14 +63,14 @@ public class BanditArmorSet extends ArmorSet {
         api.subscribe(PlayerMoveEvent.class)
                 .owner(id)
                 .namespace(type.getId())
-                .filter()
-                .handler();
+                .filter(e -> e.getPlayer().getUniqueId().equals(id))
+                .handler(this::onPlayerMove);
 
         api.subscribe(EntityDamageByEntityEvent.class)
                 .owner(id)
                 .namespace(type.getId())
-                .filter()
-                .handler();
+                .filter(e -> e.getDamager().getUniqueId().equals(id) && e.getEntity() instanceof Player)
+                .handler(this::onEntityDamageByEntity);
 
     }
 
