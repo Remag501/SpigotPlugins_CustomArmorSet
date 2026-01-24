@@ -49,7 +49,7 @@ public final class CustomArmorSets extends JavaPlugin {
         DefenseStatsManager defenseStatsManager = new DefenseStatsManager();
         CooldownBarManager cooldownBarManager = new CooldownBarManager(this);
         PlayerSyncManager playerSyncManager = new PlayerSyncManager(attributesService);
-        armorManager = new ArmorManager(this, cosmeticService, attributesService, cooldownBarManager, damageStatsManager, defenseStatsManager, armorService, playerSyncManager);
+        armorManager = new ArmorManager(this, bgsApi, cosmeticService, attributesService, cooldownBarManager, damageStatsManager, defenseStatsManager, armorService, playerSyncManager);
 
         // 3. Register command to plugin
         getCommand("customarmorsets").setExecutor(new CustomArmorSetCommand(this, itemService));
@@ -73,8 +73,9 @@ public final class CustomArmorSets extends JavaPlugin {
 
         // Register listeners for armor sets
         getServer().getPluginManager().registerEvents(new SnowmanArmorSet(), this);
-        getServer().getPluginManager().registerEvents(new InfernusArmorSet(this, armorManager, cooldownBarManager), this);
-        getServer().getPluginManager().registerEvents(new LastSpartanArmorSet(this, armorManager, cooldownBarManager, attributesService), this);
+//        getServer().getPluginManager().registerEvents(, this);
+//        new InfernusArmorSet(bgsApi, cooldownBarManager);
+        getServer().getPluginManager().registerEvents(new LastSpartanArmorSet(this, cooldownBarManager, attributesService, damageStatsManager), this);
         getServer().getPluginManager().registerEvents(new VikingCaptainArmorSet(damageStatsManager, cooldownBarManager), this);
         getServer().getPluginManager().registerEvents(new RoyalKnightArmorSet(armorManager, cooldownBarManager, attributesService), this);
         getServer().getPluginManager().registerEvents(new WorldGuardianArmorSet(this, armorManager, cooldownBarManager, attributesService), this);

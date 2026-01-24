@@ -30,15 +30,13 @@ public class LastSpartanArmorSet extends ArmorSet implements Listener {
     private static final long COOLDOWN = 3 * 1000;
 
     private final Plugin plugin;
-    private final ArmorManager armorManager;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
     private final DamageStatsManager damageStatsManager;
 
-    public LastSpartanArmorSet(Plugin plugin, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService, DamageStatsManager damageStatsManager) {
+    public LastSpartanArmorSet(Plugin plugin, CooldownBarManager cooldownBarManager, AttributesService attributesService, DamageStatsManager damageStatsManager) {
         super(ArmorSetType.LAST_SPARTAN);
         this.plugin = plugin;
-        this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
         this.damageStatsManager = damageStatsManager;

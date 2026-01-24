@@ -1,6 +1,7 @@
 package me.remag501.customarmorsets.manager;
 
 import io.lumine.mythic.bukkit.utils.lib.jooq.impl.QOM;
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.impl.*;
@@ -34,6 +35,7 @@ public class ArmorManager {
     private static final String BUNKER_PREFIX = "bunker";
 
     public ArmorManager(Plugin plugin,
+                        TaskHelper bgsApi,
                         CosmeticService cosmeticService,
                         AttributesService attributesService,
                         CooldownBarManager cooldownManager,
@@ -48,8 +50,8 @@ public class ArmorManager {
         // --- THE WIRING HUB ---
         // Register all sets here. This is where we satisfy those new constructors.
         register(ArmorSetType.SNOWMAN, new SnowmanArmorSet());
-        register(ArmorSetType.INFERNUS, new InfernusArmorSet(plugin, this, cooldownManager));
-        register(ArmorSetType.LAST_SPARTAN, new LastSpartanArmorSet(plugin, this, cooldownManager, attributesService));
+        register(ArmorSetType.INFERNUS, new InfernusArmorSet(bgsApi, cooldownManager));
+        register(ArmorSetType.LAST_SPARTAN, new LastSpartanArmorSet(plugin, cooldownManager, attributesService, damageStatsManager));
         register(ArmorSetType.VIKING_CAPTAIN, new VikingCaptainArmorSet(damageStatsManager, cooldownManager));
         register(ArmorSetType.ROYAL_KNIGHT, new RoyalKnightArmorSet(this, cooldownManager, attributesService));
         register(ArmorSetType.WORLD_GUARDIAN, new WorldGuardianArmorSet(plugin, this, cooldownManager, attributesService));
@@ -65,7 +67,7 @@ public class ArmorManager {
     private void register(ArmorSetType type, ArmorSet instance) {
         setRegistry.put(type, instance);
         // Automatically register each set's @EventHandler methods
-        Bukkit.getPluginManager().registerEvents((Listener) instance, plugin);
+//        Bukkit.getPluginManager().registerEvents((Listener) instance, plugin);
     }
 
     public boolean equipArmor(Player player, ArmorSetType type) {
