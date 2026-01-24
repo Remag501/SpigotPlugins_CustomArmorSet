@@ -21,6 +21,7 @@ import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.manager.PlayerSyncManager;
 import me.remag501.customarmorsets.service.AttributesService;
+import me.remag501.customarmorsets.service.NamespaceService;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -68,14 +69,16 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     private final DamageStatsManager damageStatsManager;
     private final AttributesService attributesService;
     private final PlayerSyncManager playerSyncManager;
+    private final NamespaceService namespaceService;
 
-    public NecromancerArmorSet(TaskHelper api, ArmorManager armorManager, DamageStatsManager damageStatsManager, AttributesService attributesService, PlayerSyncManager playerSyncManager) {
+    public NecromancerArmorSet(TaskHelper api, ArmorManager armorManager, DamageStatsManager damageStatsManager, AttributesService attributesService, PlayerSyncManager playerSyncManager, NamespaceService namespaceService) {
         super(ArmorSetType.NECROMANCER);
         this.api = api;
         this.armorManager = armorManager;
         this.damageStatsManager = damageStatsManager;
         this.attributesService = attributesService;
         this.playerSyncManager = playerSyncManager;
+        this.namespaceService = namespaceService;
     }
 
     @Override
@@ -311,7 +314,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         final int RADIUS = 4;
         for (Entity entity : player.getNearbyEntities(RADIUS, RADIUS, RADIUS)) {
             if (entity instanceof ArmorStand stand) {
-                NamespacedKey key = new NamespacedKey(plugin, "necromancer_" + player.getUniqueId()); // Check PDC lines up
+                NamespacedKey key = namespaceService.getNecromancerNamespace(String.valueOf(player.getUniqueId())); // Check PDC lines up
                 if (stand.getPersistentDataContainer().has(key, PersistentDataType.BYTE)
                         && stand.getLocation().distanceSquared(player.getLocation()) <= RADIUS * RADIUS) {
                     stand.remove();
@@ -874,7 +877,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
 
         // Mark with PDC so it can be tracked/removed
         stand.getPersistentDataContainer().set(
-                new NamespacedKey(plugin, "necromancer_" + uuid), // Use your plugin's specific key
+                namespaceService.getNecromancerNamespace(uuid), // Use your plugin's specific key
                 PersistentDataType.BYTE,
                 (byte) 1
         );

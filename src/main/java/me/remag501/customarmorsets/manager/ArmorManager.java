@@ -8,6 +8,7 @@ import me.remag501.customarmorsets.armor.impl.*;
 import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.service.CosmeticService;
+import me.remag501.customarmorsets.service.NamespaceService;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.World;
@@ -42,7 +43,8 @@ public class ArmorManager {
                         DamageStatsManager damageStatsManager,
                         DefenseStatsManager defenseStatsManager,
                         ArmorService armorService,
-                        PlayerSyncManager playerSyncManager) {
+                        PlayerSyncManager playerSyncManager,
+                        NamespaceService namespaceService) {
         this.plugin = plugin;
         this.cosmeticService = cosmeticService;
         this.attributesService = attributesService;
@@ -56,10 +58,10 @@ public class ArmorManager {
         register(ArmorSetType.VIKING_CAPTAIN, new VikingCaptainArmorSet(bgsApi, damageStatsManager, cooldownManager));
         register(ArmorSetType.ROYAL_KNIGHT, new RoyalKnightArmorSet(bgsApi, cooldownManager, attributesService));
         register(ArmorSetType.WORLD_GUARDIAN, new WorldGuardianArmorSet(bgsApi, this, cooldownManager, attributesService));
-        register(ArmorSetType.VAMPIRE, new VampireArmorSet(bgsApi, this, cooldownManager, attributesService));
+        register(ArmorSetType.VAMPIRE, new VampireArmorSet(bgsApi, this, cooldownManager, attributesService, namespaceService));
         register(ArmorSetType.FISTER, new FisterArmorSet(bgsApi, this, cooldownManager, attributesService, armorService));
         register(ArmorSetType.ARCHER, new ArcherArmorSet(bgsApi, cooldownManager, attributesService));
-        register(ArmorSetType.NECROMANCER, new NecromancerArmorSet(bgsApi, this, damageStatsManager, attributesService, playerSyncManager));
+        register(ArmorSetType.NECROMANCER, new NecromancerArmorSet(bgsApi, this, damageStatsManager, attributesService, playerSyncManager, namespaceService));
         register(ArmorSetType.ICEMAN, new IcemanArmorSet(bgsApi, this, cooldownManager, attributesService));
         register(ArmorSetType.GOLEM_BUSTER, new GolemBusterArmorSet(bgsApi, this, cooldownManager, attributesService, damageStatsManager, defenseStatsManager));
         register(ArmorSetType.BANDIT, new BanditArmorSet(bgsApi, this, cooldownManager, attributesService));

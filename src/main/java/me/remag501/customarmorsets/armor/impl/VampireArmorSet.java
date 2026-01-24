@@ -9,6 +9,7 @@ import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
+import me.remag501.customarmorsets.service.NamespaceService;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
@@ -47,13 +48,15 @@ public class VampireArmorSet extends ArmorSet {
     private final ArmorManager armorManager;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
+    private final NamespaceService namespaceService;
 
-    public VampireArmorSet(TaskHelper api, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public VampireArmorSet(TaskHelper api, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService, NamespaceService namespaceService) {
         super(ArmorSetType.VAMPIRE);
         this.api = api;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
+        this.namespaceService = namespaceService;
     }
 
     @Override
@@ -93,7 +96,7 @@ public class VampireArmorSet extends ArmorSet {
         // Check for vampire orb in 5 block radius
         for (Entity entity : player.getNearbyEntities(RADIUS, RADIUS, RADIUS)) {
             if (entity instanceof ArmorStand stand) {
-                NamespacedKey key = new NamespacedKey(plugin, "vampire_kill_mark");
+                NamespacedKey key = namespaceService.vampireKillMark;
                 if (stand.getPersistentDataContainer().has(key, PersistentDataType.BYTE)
                         && stand.getLocation().distanceSquared(player.getLocation()) <= RADIUS * RADIUS) {
                     stand.remove(); // destroy the orb
@@ -193,7 +196,7 @@ public class VampireArmorSet extends ArmorSet {
         DisguiseAPI.disguiseToAll(player, disguise);
 
         player.setFlySpeed((float) 0.2);
-        bat.getPersistentDataContainer().set(new NamespacedKey(plugin, "bat_form_owner"), PersistentDataType.STRING, player.getUniqueId().toString());
+        bat.getPersistentDataContainer().set(namespaceService.batFormOwner, PersistentDataType.STRING, player.getUniqueId().toString());
 
     }
 
@@ -213,7 +216,7 @@ public class VampireArmorSet extends ArmorSet {
         // Remove bat
         Bukkit.getWorlds().forEach(world ->
                 world.getEntitiesByClass(Bat.class).forEach(bat -> {
-                    String ownerId = bat.getPersistentDataContainer().get(new NamespacedKey(plugin, "bat_form_owner"), PersistentDataType.STRING);
+                    String ownerId = bat.getPersistentDataContainer().get(namespaceService.batFormOwner, PersistentDataType.STRING);
                     if (ownerId != null && ownerId.equals(uuid.toString())) {
                         bat.remove();
                     }
@@ -353,7 +356,7 @@ public class VampireArmorSet extends ArmorSet {
 
         // Mark with PDC so it can be tracked/removed
         stand.getPersistentDataContainer().set(
-                new NamespacedKey(plugin, "vampire_kill_mark"),
+                namespaceService.vampireKillMark,
                 PersistentDataType.BYTE,
                 (byte) 1
         );
