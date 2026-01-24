@@ -33,7 +33,6 @@ public class ArcherArmorSet extends ArmorSet {
     public ArcherArmorSet(TaskHelper api, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.ARCHER);
         this.api = api;
-        this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
     }

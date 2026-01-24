@@ -40,6 +40,8 @@ public class DevoidArmorSet extends ArmorSet {
 
     @Override
     public void removePassive(Player player) {
+        api.stopTask(player.getUniqueId(), "devoid_task");
+        api.stopTask(player.getUniqueId(), "devoid_kinetic_task");
     }
 
     private static class KineticData {
@@ -69,89 +71,85 @@ public class DevoidArmorSet extends ArmorSet {
 
         cooldownBarManager.startCooldownBar(player, 1);
 
-        new BukkitRunnable() {
-            int ticks = 0;
-            Set<LivingEntity> targets = new HashSet<>();
+        // Create task that controls movement of entities
+        Set<LivingEntity> targets = new HashSet<>();
 
-            @Override
-            public void run() {
-                if (ticks <= 6) {
-                    LivingEntity target = getNearestEntityInSight(player, isSneaking ? 15 : 25);
-                    if (target != null) {
-                        targets.add(target);
-                        // Track the target with the tick they were affected
-                        velocityMap.put(target.getUniqueId(), new KineticData(ticks, target.getVelocity()));
-                    }
-                } else if (ticks >= 20) {
-                    cooldownBarManager.startCooldownBar(player, (int) (COOLDOWN / 1000));
-                    abilityCooldowns.put(uuid, now);
-                    cancel();
+        api.subscribe(player.getUniqueId(), "devoid_task", 0, 2, (ticks) -> {
+            if (ticks <= 6) {
+                LivingEntity target = getNearestEntityInSight(player, isSneaking ? 15 : 25);
+                if (target != null) {
+                    targets.add(target);
+                    // Track the target with the tick they were affected
+                    velocityMap.put(target.getUniqueId(), new KineticData(ticks, target.getVelocity()));
                 }
-
-                for (LivingEntity target : targets) {
-                    if (target == null || !target.isValid()) continue;
-
-                    Location playerLoc = player.getLocation();
-                    Location targetLoc = target.getLocation();
-                    double distance = playerLoc.distance(targetLoc);
-
-                    Vector direction;
-                    double strength;
-                    if (isSneaking) {
-                        // Pull
-                        strength = Math.min(1.5, 0.1 * distance);
-                        direction = playerLoc.toVector().subtract(targetLoc.toVector()).normalize().multiply(strength);
-                    } else {
-                        // Push
-                        strength = Math.max(0.5, 2.5 - 0.1 * distance);
-                        direction = targetLoc.toVector().subtract(playerLoc.toVector()).normalize().multiply(strength);
-                    }
-
-                    double yDiff = playerLoc.getY() - targetLoc.getY();
-                    direction.setY(Math.max(0.05, 0.2 + yDiff * (isSneaking ? 0.15 : 0.1)));
-
-                    target.setVelocity(direction);
-                }
-
-                ticks += 2;
+            } else if (ticks >= 20) {
+                cooldownBarManager.startCooldownBar(player, (int) (COOLDOWN / 1000));
+                abilityCooldowns.put(uuid, now);
+                return true;
             }
-        }.runTaskTimer(plugin, 0, 2L);
 
-        // Run kinetic damage checker every tick
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                Iterator<Map.Entry<UUID, KineticData>> iterator = velocityMap.entrySet().iterator();
-                while (iterator.hasNext()) {
-                    Map.Entry<UUID, KineticData> entry = iterator.next();
-                    LivingEntity target = Bukkit.getEntity(entry.getKey()) instanceof LivingEntity le ? le : null;
-                    if (target == null || !target.isValid()) {
-                        iterator.remove();
-                        continue;
-                    }
+            for (LivingEntity target : targets) {
+                if (target == null || !target.isValid()) continue;
 
-                    Vector currentVelocity = target.getVelocity();
-                    Vector previousVelocity = entry.getValue().lastVelocity;
-                    double speedDelta = previousVelocity.length() - currentVelocity.length();
+                Location playerLoc = player.getLocation();
+                Location targetLoc = target.getLocation();
+                double distance = playerLoc.distance(targetLoc);
 
-                    // Wait at least 3 ticks (6L with 2L intervals)
-                    if (System.currentTimeMillis() - entry.getValue().tickCreated * 50L < 150L) continue;
-
-                    if (speedDelta > 0.6 && currentVelocity.length() < 0.1) {
-                        double damage = Math.min(10.0, speedDelta * 5.0);
-                        target.damage(damage);
-                        target.getWorld().spawnParticle(Particle.CRIT, target.getLocation(), 10);
-                        iterator.remove();
-                    } else {
-                        entry.getValue().lastVelocity = currentVelocity;
-                    }
+                Vector direction;
+                double strength;
+                if (isSneaking) {
+                    // Pull
+                    strength = Math.min(1.5, 0.1 * distance);
+                    direction = playerLoc.toVector().subtract(targetLoc.toVector()).normalize().multiply(strength);
+                } else {
+                    // Push
+                    strength = Math.max(0.5, 2.5 - 0.1 * distance);
+                    direction = targetLoc.toVector().subtract(playerLoc.toVector()).normalize().multiply(strength);
                 }
 
-                if (velocityMap.isEmpty()) {
-                    cancel(); // Stop this task when no more tracked entities
+                double yDiff = playerLoc.getY() - targetLoc.getY();
+                direction.setY(Math.max(0.05, 0.2 + yDiff * (isSneaking ? 0.15 : 0.1)));
+
+                target.setVelocity(direction);
+            }
+
+            return false;
+        });
+
+
+        api.subscribe(player.getUniqueId(), "devoid_kinetic_task", 0, 2, (ticks) -> {
+            Iterator<Map.Entry<UUID, KineticData>> iterator = velocityMap.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<UUID, KineticData> entry = iterator.next();
+                LivingEntity target = Bukkit.getEntity(entry.getKey()) instanceof LivingEntity le ? le : null;
+                if (target == null || !target.isValid()) {
+                    iterator.remove();
+                    continue;
+                }
+
+                Vector currentVelocity = target.getVelocity();
+                Vector previousVelocity = entry.getValue().lastVelocity;
+                double speedDelta = previousVelocity.length() - currentVelocity.length();
+
+                // Wait at least 3 ticks (6L with 2L intervals)
+                if (System.currentTimeMillis() - entry.getValue().tickCreated * 50L < 150L) continue;
+
+                if (speedDelta > 0.6 && currentVelocity.length() < 0.1) {
+                    double damage = Math.min(10.0, speedDelta * 5.0);
+                    target.damage(damage);
+                    target.getWorld().spawnParticle(Particle.CRIT, target.getLocation(), 10);
+                    iterator.remove();
+                } else {
+                    entry.getValue().lastVelocity = currentVelocity;
                 }
             }
-        }.runTaskTimer(plugin, 0, 1L);
+
+            if (velocityMap.isEmpty()) {
+                return true;
+            }
+
+            return false;
+        });
 
         player.sendMessage(isSneaking ? "§a§l(!) §aYou pulled enemies!" : "§a§l(!) §aYou pushed enemies!");
     }

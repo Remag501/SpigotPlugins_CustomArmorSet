@@ -51,6 +51,7 @@ public class ArmorManager {
         // Register all sets here. This is where we satisfy those new constructors.
         register(ArmorSetType.SNOWMAN, new SnowmanArmorSet());
         register(ArmorSetType.INFERNUS, new InfernusArmorSet(bgsApi, cooldownManager));
+        register(ArmorSetType.DEVOID, new DevoidArmorSet(bgsApi, cooldownManager));
         register(ArmorSetType.LAST_SPARTAN, new LastSpartanArmorSet(bgsApi, cooldownManager, attributesService, damageStatsManager));
         register(ArmorSetType.VIKING_CAPTAIN, new VikingCaptainArmorSet(bgsApi, damageStatsManager, cooldownManager));
         register(ArmorSetType.ROYAL_KNIGHT, new RoyalKnightArmorSet(bgsApi, cooldownManager, attributesService));

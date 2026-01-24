@@ -13,13 +13,11 @@ import me.libraryaddict.disguise.disguisetypes.*;
 import me.libraryaddict.disguise.disguisetypes.watchers.AreaEffectCloudWatcher;
 import me.libraryaddict.disguise.disguisetypes.watchers.PlayerWatcher;
 import me.remag501.bgscore.api.TaskHelper;
-import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.TargetCategory;
 import me.remag501.customarmorsets.listener.MythicMobsListener;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.manager.CooldownBarManager;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.manager.PlayerSyncManager;
 import me.remag501.customarmorsets.service.AttributesService;
@@ -35,7 +33,6 @@ import org.bukkit.event.player.PlayerToggleSprintEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.profile.PlayerProfile;
@@ -47,6 +44,9 @@ import org.bukkit.util.Vector;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class NecromancerArmorSet extends ArmorSet implements Listener {
 
@@ -54,12 +54,12 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, Long> resurrectionCooldowns = new HashMap<>();
     private static final Map<ArmorStand, MythicMob> killedMobs = new HashMap<>();
     private static final Map<UUID, List<ActiveMob>> summonedMobs = new HashMap<>();
-    private static final Map<UUID, BukkitTask> summonsTask = new HashMap<>();
+//    private static final Map<UUID, BukkitTask> summonsTask = new HashMap<>();
     private static final Map<ActiveMob, Long> summonTime = new HashMap<>();
     private static final Map<UUID, ActiveMob> controlledMobs = new HashMap<>();
-    private static final Map<UUID, BukkitTask> controlTasks = new HashMap<>();
+//    private static final Map<UUID, BukkitTask> controlTasks = new HashMap<>();
     private static final Map<UUID, ArmorStand> decoys = new HashMap<>();
-    private static final Map<UUID, BukkitRunnable> decoyTasks = new HashMap<>();
+//    private static final Map<UUID, BukkitRunnable> decoyTasks = new HashMap<>();
 
     private static final String RESURRECTED_MOB_PREFIX = MythicMobsListener.getPrefix();
 
@@ -84,108 +84,108 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         damageStatsManager.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.UNDEAD);
         UUID uuid = player.getUniqueId();
         summonedMobs.put(uuid, new ArrayList<>());
-        summonsTask.put(uuid, new BukkitRunnable() {
-            private boolean notified = false;
-            private long lastStartTime = 0L;
-            @Override
-            public void run() {
-                List<ActiveMob> mobs = summonedMobs.get(uuid);
 
-                // Skip if cooldown is not running
-                if (!resurrectionCooldowns.containsKey(uuid)) {
-                    notified = false; // Reset when cooldown not present
-                    lastStartTime = 0L;
-                } else {
-                    long startTime = resurrectionCooldowns.get(uuid);
-                    long now = System.currentTimeMillis();
+        // Start task for summons
+        AtomicBoolean notified = new AtomicBoolean(false);
+        AtomicLong lastStartTime = new AtomicLong(0L);
 
-                    // Detect passive reset: start time changed (new cooldown started)
-                    if (startTime > lastStartTime) {
-                        notified = false; // Allow next notification
-                        lastStartTime = startTime;
-                    }
+        api.subscribe(player.getUniqueId(), "necromancer_summons", 0, 10, (ticks) -> {
+            List<ActiveMob> mobs = summonedMobs.get(uuid);
 
-                    // If cooldown has expired and player wasn't notified yet
-                    if (!notified && now - startTime >= RESURRECTION_COOLDOWN) {
-                        player.sendMessage( "§c§l(!) §cYour resurrection is ready!");
-                        notified = true; // Prevent spam until reset
-                    }
+            // Skip if cooldown is not running
+            if (!resurrectionCooldowns.containsKey(uuid)) {
+                notified.set(false); // Reset when cooldown not present
+                lastStartTime.set(0L);
+            } else {
+                long startTime = resurrectionCooldowns.get(uuid);
+                long now = System.currentTimeMillis();
+
+                // Detect passive reset: start time changed (new cooldown started)
+                if (startTime > lastStartTime.get()) {
+                    notified.set(false); // Allow next notification
+                    lastStartTime.set(startTime);
                 }
 
-
-                if (mobs == null || mobs.isEmpty()) return;
-
-                for (int i = 0; i < mobs.size(); i++) {
-                    ActiveMob activeMob = mobs.get(i);
-                    if (activeMob == null || activeMob.getEntity() == null || !activeMob.getEntity().isValid())
-                        continue;
-
-                    AbstractEntity abstractEntity = activeMob.getEntity();
-                    if (abstractEntity == null) continue;
-
-                    // Check time entity is alive
-                    long oldTime = summonTime.get(activeMob);
-                    long newTime = System.currentTimeMillis();
-                    int secondsPassed = (int) ((newTime - oldTime) / 1000);
-
-                    if (secondsPassed > 30) {
-                        despawnMob(activeMob);
-                        i--;
-                        continue;
-                    }
-
-                    Entity entity = abstractEntity.getBukkitEntity();
-                    // Check if player is controlling entity
-                    boolean isControlledByPlayer = false;
-                    ActiveMob controlledMob = controlledMobs.get(player.getUniqueId());
-                    if (controlledMob != null && controlledMob.equals(activeMob))
-                        isControlledByPlayer = true;
-
-                    // Slowly kill off mobs over 5 seconds
-                    if (secondsPassed >= 25) {
-                        //
-                        if (isControlledByPlayer) {
-                            player.sendMessage("§c§l(!) §cThis summon is decaying, it cannot be controlled.");
-                            stopControlling(player);
-                        }
-                        // Hurt gradually
-                        double newHealth = Math.max(0, abstractEntity.getHealth() * 0.8); // heal 0.5 heart per tick
-                        abstractEntity.setHealth(newHealth);
-
-                        abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 100, 2, false, false));
-                        abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 100, 2, false, false));
-                        abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 100, 2, false, false));
-                        entity.getWorld().spawnParticle(
-                                Particle.SMOKE_LARGE,
-                                entity.getLocation().add(0, 0.5, 0),
-                                10, 0.3, 0.3, 0.3, 0.01
-                        );
-                        entity.addScoreboardTag("isDecaying");
-                    } else {
-                        double maxHealth = abstractEntity.getMaxHealth();
-                        double newHealth = Math.min(maxHealth, abstractEntity.getHealth() + 1.0); // heal 0.5 heart per tick
-                        // Heal gradually
-                        if (isControlledByPlayer)
-                            player.setHealth(newHealth);
-                        else
-                            abstractEntity.setHealth(newHealth);
-
-                        // Normal Particle trail
-                        entity.getWorld().spawnParticle(
-                                Particle.SOUL,
-                                entity.getLocation().add(0, 0.5, 0),
-                                5, 0.3, 0.3, 0.3, 0.01
-                        );
-                    }
-
-                    // Teleport if too far
-                    if (entity.getLocation().distanceSquared(player.getLocation()) > 400) { // 20 blocks squared
-                        Location safeLoc = player.getLocation().clone().add(0, 1, 0);
-                        entity.teleport(safeLoc);
-                    }
+                // If cooldown has expired and player wasn't notified yet
+                if (!notified.get() && now - startTime >= RESURRECTION_COOLDOWN) {
+                    player.sendMessage( "§c§l(!) §cYour resurrection is ready!");
+                    notified.set(true); // Prevent spam until reset
                 }
             }
-        }.runTaskTimer(plugin, 0, 10));
+
+            if (mobs == null || mobs.isEmpty()) return false;
+
+            for (int i = 0; i < mobs.size(); i++) {
+                ActiveMob activeMob = mobs.get(i);
+                if (activeMob == null || activeMob.getEntity() == null || !activeMob.getEntity().isValid())
+                    continue;
+
+                AbstractEntity abstractEntity = activeMob.getEntity();
+                if (abstractEntity == null) continue;
+
+                // Check time entity is alive
+                long oldTime = summonTime.get(activeMob);
+                long newTime = System.currentTimeMillis();
+                int secondsPassed = (int) ((newTime - oldTime) / 1000);
+
+                if (secondsPassed > 30) {
+                    despawnMob(activeMob);
+                    i--;
+                    continue;
+                }
+
+                Entity entity = abstractEntity.getBukkitEntity();
+                // Check if player is controlling entity
+                boolean isControlledByPlayer = false;
+                ActiveMob controlledMob = controlledMobs.get(player.getUniqueId());
+                if (controlledMob != null && controlledMob.equals(activeMob))
+                    isControlledByPlayer = true;
+
+                // Slowly kill off mobs over 5 seconds
+                if (secondsPassed >= 25) {
+                    //
+                    if (isControlledByPlayer) {
+                        player.sendMessage("§c§l(!) §cThis summon is decaying, it cannot be controlled.");
+                        stopControlling(player);
+                    }
+                    // Hurt gradually
+                    double newHealth = Math.max(0, abstractEntity.getHealth() * 0.8); // heal 0.5 heart per tick
+                    abstractEntity.setHealth(newHealth);
+
+                    abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 100, 2, false, false));
+                    abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 100, 2, false, false));
+                    abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 100, 2, false, false));
+                    entity.getWorld().spawnParticle(
+                            Particle.SMOKE_LARGE,
+                            entity.getLocation().add(0, 0.5, 0),
+                            10, 0.3, 0.3, 0.3, 0.01
+                    );
+                    entity.addScoreboardTag("isDecaying");
+                } else {
+                    double maxHealth = abstractEntity.getMaxHealth();
+                    double newHealth = Math.min(maxHealth, abstractEntity.getHealth() + 1.0); // heal 0.5 heart per tick
+                    // Heal gradually
+                    if (isControlledByPlayer)
+                        player.setHealth(newHealth);
+                    else
+                        abstractEntity.setHealth(newHealth);
+
+                    // Normal Particle trail
+                    entity.getWorld().spawnParticle(
+                            Particle.SOUL,
+                            entity.getLocation().add(0, 0.5, 0),
+                            5, 0.3, 0.3, 0.3, 0.01
+                    );
+                }
+
+                // Teleport if too far
+                if (entity.getLocation().distanceSquared(player.getLocation()) > 400) { // 20 blocks squared
+                    Location safeLoc = player.getLocation().clone().add(0, 1, 0);
+                    entity.teleport(safeLoc);
+                }
+            }
+            return false;
+        });
 
         // Register listener(s)
         UUID id = player.getUniqueId();
@@ -240,9 +240,11 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             despawnMob(mobs.get(0));
         }
         summonedMobs.remove(player.getUniqueId());
-        summonsTask.get(player.getUniqueId()).cancel();
 
         api.unregisterListener(player.getUniqueId(), type.getId());
+        api.stopTask(player.getUniqueId(), "necromancer_summons");
+        api.stopTask(player.getUniqueId(), "necromancer_sync");
+        api.stopTask(player.getUniqueId(), "necromancer_decoy");
     }
 
     @Override
@@ -312,8 +314,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                 NamespacedKey key = new NamespacedKey(plugin, "necromancer_" + player.getUniqueId()); // Check PDC lines up
                 if (stand.getPersistentDataContainer().has(key, PersistentDataType.BYTE)
                         && stand.getLocation().distanceSquared(player.getLocation()) <= RADIUS * RADIUS) {
-                    stand.remove(); // destroy the orb
-//                    player.sendMessage("§a§l(!) §aBorn Again!");
+                    stand.remove();
                     // Add mob to set
                     ActiveMob revivedMob = reviveMob(player, killedMobs.get(entity));
                     mobs.add(revivedMob);
@@ -422,33 +423,26 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             playerSyncManager.syncHealth(player, livingEntity);
         }
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        api.delay(2, () -> {
             player.setHealth(controlledMob.getEntity().getHealth()); // Prevent bugs where health doesn't sync in time
-        }, 2L);
+        });
 
         // 4. Start sync task
-        BukkitTask task = new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (!player.isOnline() || !controlledMobs.containsKey(uuid)) {
-                    cancel();
-                }
-
-                // Teleport mob to player's position
-                Vector velocity = player.getLocation().toVector()
-                        .subtract(mobEntity.getLocation().toVector())
-                        .multiply(0.5); // follow speed
-                mobEntity.setVelocity(velocity);
-
-//                 Sync health (player HP → mob HP)
-                controlledMob.getEntity().setHealth(player.getHealth());
-
-                // Optional: Sync mob health back to player (technically won't work due to multiple threads overriding)
-//                 player.setHealth(controlledMob.getEntity().getHealth());
+        api.subscribe(player.getUniqueId(), "necromancer_sync", 0, 2, (ticks) -> {
+            if (!player.isOnline() || !controlledMobs.containsKey(uuid)) {
+                return true;
             }
-        }.runTaskTimer(plugin, 0L, 2L); // update every 2 ticks
 
-        controlTasks.put(uuid, task);
+            // Teleport mob to player's position
+            Vector velocity = player.getLocation().toVector()
+                    .subtract(mobEntity.getLocation().toVector())
+                    .multiply(0.5); // follow speed
+            mobEntity.setVelocity(velocity);
+
+//          Sync health (player HP → mob HP)
+            controlledMob.getEntity().setHealth(player.getHealth());
+            return false;
+        });
 
         player.sendMessage("§a§l(!) §aYou are now controlling " + controlledMob.getDisplayName() + "!");
     }
@@ -462,10 +456,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         }
 
         // 1. Cancel control loop
-        if (controlTasks.containsKey(uuid)) {
-            controlTasks.get(uuid).cancel();
-            controlTasks.remove(uuid);
-        }
+        api.stopTask(player.getUniqueId(), "necromancer_sync");
 
         // 2. Remove disguise
         DisguiseAPI.undisguiseToAll(player);
@@ -649,66 +640,60 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         disguise.setWatcher(watcher);
         DisguiseAPI.disguiseToAll(player, disguise);
         // Start scheduler to handle lots revival logic
-        new BukkitRunnable() {
-            int timeLeft = 10;
-            int timeControl = 5;
-            @Override
-            public void run() {
-                if (timeControl <= 0) {
-                    cancel();
-                    despawnMob(controlledMobs.get(player.getUniqueId()));
-                    resurrectionCooldowns.put(uuid, now);
-                    // Play a bunch of particles, sound and lightning
-                    World world = player.getWorld();
-                    Location playerLocation = player.getLocation();
-                    world.spawnParticle(Particle.PORTAL, playerLocation, 50, 0.5, 1.5, 0.5, 0.1);
-                    world.spawnParticle(Particle.SOUL_FIRE_FLAME, playerLocation, 25, 0.5, 1.0, 0.5, 0.1);
-                    world.spawnParticle(Particle.SMOKE_NORMAL, playerLocation, 100, 0.5, 1.5, 0.5, 0.1);
-                    world.spawnParticle(Particle.FLASH, playerLocation, 1);
-                    world.playSound(player, Sound.ENTITY_WITHER_SPAWN, 1, 2); // Sound
-                    playerLocation.getWorld().strikeLightningEffect(playerLocation);
-                    // Remove potion effects
-                    for (PotionEffect effect : player.getActivePotionEffects()) {
-                        if (effect.getDuration() != PotionEffect.INFINITE_DURATION) { // Prevent perk potions from getting removed
-                            player.removePotionEffect(effect.getType());
-                        }
+        AtomicInteger timeLeft = new AtomicInteger(10);
+        AtomicInteger timeControl = new AtomicInteger(5);
+        api.subscribe(player.getUniqueId(), 0, 20, (ticks) -> {
+            if (timeControl.get() <= 0) {
+                despawnMob(controlledMobs.get(player.getUniqueId()));
+                resurrectionCooldowns.put(uuid, now);
+                // Play a bunch of particles, sound and lightning
+                World world = player.getWorld();
+                Location playerLocation = player.getLocation();
+                world.spawnParticle(Particle.PORTAL, playerLocation, 50, 0.5, 1.5, 0.5, 0.1);
+                world.spawnParticle(Particle.SOUL_FIRE_FLAME, playerLocation, 25, 0.5, 1.0, 0.5, 0.1);
+                world.spawnParticle(Particle.SMOKE_NORMAL, playerLocation, 100, 0.5, 1.5, 0.5, 0.1);
+                world.spawnParticle(Particle.FLASH, playerLocation, 1);
+                world.playSound(player, Sound.ENTITY_WITHER_SPAWN, 1, 2); // Sound
+                playerLocation.getWorld().strikeLightningEffect(playerLocation);
+                // Remove potion effects
+                for (PotionEffect effect : player.getActivePotionEffects()) {
+                    if (effect.getDuration() != PotionEffect.INFINITE_DURATION) { // Prevent perk potions from getting removed
+                        player.removePotionEffect(effect.getType());
                     }
-                    // Set to half hp
-                    player.setHealth(10);
-                    player.sendMessage("§a§l(!) §aBack from the dead!");
-                    return;
-                } else if (timeLeft <= 0) {
-                    cancel();
-                    player.sendMessage( "§c§l(!) §cYour soul decays away without a host!");
-                    player.setHealth(0.0);
-                    player.setAllowFlight(false);
-                    player.setInvulnerable(false);
-                    DisguiseAPI.undisguiseToAll(player);
-                    resurrectionCooldowns.remove(player.getUniqueId());
-                    return;
-                } else if (controlledMobs.get(player.getUniqueId()) != null) { // Player is possesing mob
-                    player.sendMessage("§a§l(!) §aPossess this host for " + timeControl + " to resurrect yourself.");
-                    timeControl--;
-                } else {
-                    player.sendMessage("§c§l(!) §cFind a host for your soul to possess. You will decay in " + timeLeft);
-                    timeLeft--;
-                    timeControl = 5; // Reset if player left host
-
-                    // Check for nearby MythicMobs to possess
-                    for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
-                        // Ensure the entity is a MythicMob
-                        Optional<ActiveMob> activeMob = MythicBukkit.inst().getMobManager().getActiveMob(entity.getUniqueId());
-                        if (activeMob.isPresent() && summonedMobs.get(player.getUniqueId()).contains(activeMob.get())) {
-                            // Call your method to control the mob
-                            controlMob(player, activeMob.get());
-                            break; // Stop after finding the first mob
-                        }
-                    }
-
                 }
+                // Set to half hp
+                player.setHealth(10);
+                player.sendMessage("§a§l(!) §aBack from the dead!");
+                return true;
+            } else if (timeLeft.get() <= 0) {
+                player.sendMessage( "§c§l(!) §cYour soul decays away without a host!");
+                player.setHealth(0.0);
+                player.setAllowFlight(false);
+                player.setInvulnerable(false);
+                DisguiseAPI.undisguiseToAll(player);
+                resurrectionCooldowns.remove(player.getUniqueId());
+                return true;
+            } else if (controlledMobs.get(player.getUniqueId()) != null) { // Player is possesing mob
+                player.sendMessage("§a§l(!) §aPossess this host for " + timeControl + " to resurrect yourself.");
+                timeControl.getAndDecrement();
+            } else {
+                player.sendMessage("§c§l(!) §cFind a host for your soul to possess. You will decay in " + timeLeft);
+                timeLeft.getAndDecrement();
+                timeControl.set(5); // Reset if player left host
 
+                // Check for nearby MythicMobs to possess
+                for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
+                    // Ensure the entity is a MythicMob
+                    Optional<ActiveMob> activeMob = MythicBukkit.inst().getMobManager().getActiveMob(entity.getUniqueId());
+                    if (activeMob.isPresent() && summonedMobs.get(player.getUniqueId()).contains(activeMob.get())) {
+                        // Call your method to control the mob
+                        controlMob(player, activeMob.get());
+                        break; // Stop after finding the first mob
+                    }
+                }
             }
-        }.runTaskTimer(plugin, 0, 20); // Every second
+            return false;
+        });
         return true;
     }
 
@@ -836,29 +821,23 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         DisguiseAPI.disguiseToAll(decoy, disguise);
 
         // 2. Run AI task
-        BukkitRunnable task = new BukkitRunnable() {
+        api.subscribe(player.getUniqueId(), "necromancer_decoy", 0, 20, (tick) -> {
+            if (!decoy.isValid()) {
+                decoy.remove();
+                return true;
+            }
 
-            @Override
-            public void run() {
-                if (!decoy.isValid()) {
-                    decoy.remove();
-                    cancel();
-                    return;
-                }
-
-                for (Entity nearby : decoy.getNearbyEntities(20, 20, 20)) {
-                    if (nearby instanceof Mob mob) {
-                        if (mob.getTarget() == null || mob.getTarget().equals(player)) {
-                            mob.setTarget(decoy); // force target only if free/targeting player
-                        }
+            for (Entity nearby : decoy.getNearbyEntities(20, 20, 20)) {
+                if (nearby instanceof Mob mob) {
+                    if (mob.getTarget() == null || mob.getTarget().equals(player)) {
+                        mob.setTarget(decoy); // force target only if free/targeting player
                     }
                 }
-
             }
-        };
 
-        task.runTaskTimer(plugin, 0L, 20L); // check every second
-        decoyTasks.put(uuid, task);
+            return false;
+        });
+
     }
 
     private void removeDecoy(Player player) {
@@ -866,7 +845,6 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         if (decoy == null) return;
         player.teleport(decoy.getLocation());
         decoy.remove();
-        decoyTasks.get(player.getUniqueId()).cancel();
 
     }
 
@@ -905,11 +883,12 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         killedMobs.put(stand, activeMob.getType());
 
         // Remove the armor stand after 5 seconds (100 ticks)
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        api.delay(100, () -> {
             if (!stand.isDead() && stand.isValid()) {
                 stand.remove();
             }
-        }, 100L);
+        });
+
     }
 
     public static ItemStack getCustomSkull(String textureUrl) {

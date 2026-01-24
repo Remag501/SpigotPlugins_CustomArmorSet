@@ -13,12 +13,10 @@ import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.profile.PlayerProfile;
@@ -29,6 +27,7 @@ import org.bukkit.util.Vector;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 public class VampireArmorSet extends ArmorSet {
@@ -42,7 +41,7 @@ public class VampireArmorSet extends ArmorSet {
     private static final Map<UUID, Long> cooldowns = new HashMap<>();
     private static final Set<UUID> batForm = new HashSet<>();
     private final Map<UUID, List<Bat>> cosmeticBats = new HashMap<>();
-    private final Map<UUID, BukkitRunnable> batTasks = new HashMap<>();
+    private final List<UUID> batTasks = new ArrayList<>();
 
     private final TaskHelper api;
     private final ArmorManager armorManager;
@@ -76,6 +75,7 @@ public class VampireArmorSet extends ArmorSet {
         batForm.remove(player.getUniqueId());
 
         api.unregisterListener(player.getUniqueId(), type.getId());
+        api.stopTask(player.getUniqueId(), "vampire_bats");
     }
 
     @Override
@@ -101,12 +101,13 @@ public class VampireArmorSet extends ArmorSet {
 
                     // Logic for morphing or healing
                     if (player.isSneaking()) {
+
                         // Bat form logic
                         enterBatForm(player);
                         spawnBatStorm(player);
-                        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        api.delay(DURATION_TICKS, () -> {
                             if (batForm.contains(uuid)) cancelBatForm(player);
-                        }, DURATION_TICKS);
+                        });
                         return;
 
                     } else {
@@ -136,27 +137,20 @@ public class VampireArmorSet extends ArmorSet {
                 .map(e -> (LivingEntity) e)
                 .toList();
 
-        new BukkitRunnable() {
-            int ticksRun = 0;
-
-            @Override
-            public void run() {
-                if (ticksRun >= DURATION_TICKS || player.isDead()) {
-                    cancel();
-                    return;
-                }
-
-                for (LivingEntity target : targets) {
-                    if (!target.isDead() && target.getLocation().distanceSquared(player.getLocation()) <= RADIUS * RADIUS) {
-                        target.damage(3, player);
-                        player.setHealth(Math.min(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(), player.getHealth() + 1.0));
-                        drawParticleLine(target.getEyeLocation(), player.getEyeLocation(), Particle.REDSTONE, Color.MAROON);
-                    }
-                }
-
-                ticksRun += INTERVAL_TICKS;
+        api.subscribe(player.getUniqueId(), type.getId(), 0, INTERVAL_TICKS, (ticksRun) -> {
+            if (ticksRun >= DURATION_TICKS || player.isDead()) {
+                return true;
             }
-        }.runTaskTimer(plugin, 0L, INTERVAL_TICKS);
+
+            for (LivingEntity target : targets) {
+                if (!target.isDead() && target.getLocation().distanceSquared(player.getLocation()) <= RADIUS * RADIUS) {
+                    target.damage(3, player);
+                    player.setHealth(Math.min(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(), player.getHealth() + 1.0));
+                    drawParticleLine(target.getEyeLocation(), player.getEyeLocation(), Particle.REDSTONE, Color.MAROON);
+                }
+            }
+            return false;
+        });
 
         // Store cooldown
         cooldowns.put(uuid, now + COOLDOWN_TICKS * 50);
@@ -249,51 +243,45 @@ public class VampireArmorSet extends ArmorSet {
         cosmeticBats.put(uuid, bats);
 
         // Task to move bats and do AoE damage + warning circle
-        BukkitRunnable task = new BukkitRunnable() {
-            double t = 0;
-            int tickCount = 0;
+        AtomicReference<Double> t = new AtomicReference<>((double) 0);
+        api.subscribe(player.getUniqueId(), "vampire_bats", 0, 2, (tickCount) -> {
+            if (!player.isOnline() || !batForm.contains(uuid)) {
+                // Cleanup bats
+                List<Bat> toRemove = cosmeticBats.remove(uuid);
+                if (toRemove != null) toRemove.forEach(Entity::remove);
+                batTasks.remove(uuid);
+                return true;
+            }
 
-            @Override
-            public void run() {
-                if (!player.isOnline() || !batForm.contains(uuid)) {
-                    cancel();
-                    // Cleanup bats
-                    List<Bat> toRemove = cosmeticBats.remove(uuid);
-                    if (toRemove != null) toRemove.forEach(Entity::remove);
-                    batTasks.remove(uuid);
-                    return;
-                }
+            Location center = player.getLocation().add(0, 1.8, 0);
 
-                Location center = player.getLocation().add(0, 1.8, 0);
+            // Move bats in circle
+            int i = 0;
+            for (Bat bat : bats) {
+                Location batLocation = bat.getLocation();
+                if (batLocation.distance(center) > 2)
+                    bat.teleport(center.add(0, 1.5*Math.random()-1.5, 0));
+                i++;
+            }
 
-                // Move bats in circle
-                int i = 0;
-                for (Bat bat : bats) {
-                    Location batLocation = bat.getLocation();
-                    if (batLocation.distance(center) > 2)
-                        bat.teleport(center.add(0, 1.5*Math.random()-1.5, 0));
-                    i++;
-                }
+            // Spawn ambient dark particles around player continuously
+            center.getWorld().spawnParticle(Particle.SMOKE_NORMAL, center, 3, 0.3, 0.1, 0.3, 0.01);
+            tickCount++;
 
-                // Spawn ambient dark particles around player continuously
-                center.getWorld().spawnParticle(Particle.SMOKE_NORMAL, center, 3, 0.3, 0.1, 0.3, 0.01);
-                tickCount++;
-
-                if (tickCount % 5 == 0) {
-                    double radius = 2.5;
-                    for (Entity entity : center.getWorld().getNearbyEntities(center, radius, radius, radius)) {
-                        if (entity instanceof LivingEntity living && !entity.equals(player)) {
-                            living.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 40, 3)); // 2 sec Wither 4
-                        }
+            if (tickCount % 5 == 0) {
+                double radius = 2.5;
+                for (Entity entity : center.getWorld().getNearbyEntities(center, radius, radius, radius)) {
+                    if (entity instanceof LivingEntity living && !entity.equals(player)) {
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 40, 3)); // 2 sec Wither 4
                     }
                 }
-
-                t += 0.05;
             }
-        };
 
-        task.runTaskTimer(plugin, 0L, 2L);
-        batTasks.put(uuid, task);
+            t.updateAndGet(v -> ((double) (v + 0.05)));
+            return false;
+        });
+
+        batTasks.add(uuid);
     }
 
     private void cleanupBatForm(Player player) {
@@ -306,9 +294,8 @@ public class VampireArmorSet extends ArmorSet {
         }
 
         // Cancel running tasks
-        BukkitRunnable task = batTasks.remove(uuid);
-        if (task != null) {
-            task.cancel();
+        if (batTasks.contains(uuid)) {
+            api.stopTask(uuid, "vampire_bats");
         }
 
         // Reset player states you set in enterBatForm if needed
@@ -345,9 +332,10 @@ public class VampireArmorSet extends ArmorSet {
         if (finalHealth > 0) return;
 
         // Delay spawning until after entity death is processed
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        api.delay(1, () -> {
             spawnCosmeticHead(victim.getLocation(), damager);
-        }, 1L);
+        });
+
     }
 
     private void spawnCosmeticHead(Location loc, Player source) {
@@ -371,9 +359,9 @@ public class VampireArmorSet extends ArmorSet {
         );
 
         // Optional: remove it later
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        api.delay(100, () -> {
             if (!stand.isDead() && stand.isValid()) stand.remove();
-        }, 100L); // 5 seconds later
+        });
     }
 
     public static ItemStack getCustomSkull(String textureUrl) {

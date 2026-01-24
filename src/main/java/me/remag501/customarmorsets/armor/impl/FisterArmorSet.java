@@ -1,7 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.bgscore.api.TaskHelper;
-import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
@@ -16,13 +15,11 @@ import org.bukkit.*;
 //import org.bukkit.entity.;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -30,9 +27,8 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class FisterArmorSet extends ArmorSet {
 
@@ -43,7 +39,7 @@ public class FisterArmorSet extends ArmorSet {
     private static Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static Map<UUID, Entity> dodging = new HashMap<>();
 
-    private static final Map<UUID, BukkitTask> meditating = new HashMap<>();
+    private static final List<UUID> meditating = new ArrayList<UUID>();
 
     private static final int DODGING_COOLDOWN_TICKS = 2 * 20;
     private static final int ABILITY_COOLDOWN_TICKS = 15 * 20;
@@ -94,7 +90,7 @@ public class FisterArmorSet extends ArmorSet {
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getPlayer().getUniqueId().equals(id))
-                .filter(e -> meditating.containsKey(e.getPlayer().getUniqueId()))
+                .filter(e -> meditating.contains(e.getPlayer().getUniqueId()))
                 .handler(this::onMoveWhileMeditating);
 
         // 4. Interact Listener
@@ -118,6 +114,8 @@ public class FisterArmorSet extends ArmorSet {
         attributesService.removeAttackSpeed(player);
 
         api.unregisterListener(player.getUniqueId(), type.getId());
+        api.stopTask(player.getUniqueId(), "fister_meditate");
+        api.stopTask(player.getUniqueId(), "fister_task");
     }
 
     @Override
@@ -126,7 +124,7 @@ public class FisterArmorSet extends ArmorSet {
         long now = System.currentTimeMillis();
 
         // Cancel meditative state if already active
-        if (meditating.containsKey(uuid)) {
+        if (meditating.contains(uuid)) {
             Vector launch = player.getLocation().getDirection().multiply(1.2).setY(0.4);
             player.setVelocity(launch);
             endMeditation(player);
@@ -151,26 +149,24 @@ public class FisterArmorSet extends ArmorSet {
 
         // Ring particles + aura
         World world = player.getWorld();
-        new BukkitRunnable() {
-            double angle = 0;
-            @Override
-            public void run() {
-                if (!meditating.containsKey(uuid)) {
-                    cancel();
-                    return;
-                }
-                angle += Math.PI / 8;
-                for (double i = 0; i < 2 * Math.PI; i += Math.PI / 8) {
-                    double x = Math.cos(i + angle) * 2;
-                    double z = Math.sin(i + angle) * 2;
-                    world.spawnParticle(Particle.END_ROD, floatLocation.clone().add(x, -1, z), 0);
-                }
-                world.spawnParticle(Particle.ENCHANTMENT_TABLE, floatLocation, 5, 0.5, 0.5, 0.5, 0);
-                // Constantly add regen
-                player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20, 3));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, 20, 3));
+        AtomicReference<Double> angle = new AtomicReference<>((double) 0);
+
+        api.subscribe(player.getUniqueId(), "fister_meditate", 0, 4, (ticks) -> {
+            if (!meditating.contains(uuid)) {
+                return true;
             }
-        }.runTaskTimer(plugin, 0L, 4L);
+            angle.updateAndGet(v -> (double) (v + Math.PI / 8));
+            for (double i = 0; i < 2 * Math.PI; i += Math.PI / 8) {
+                double x = Math.cos(i + angle.get()) * 2;
+                double z = Math.sin(i + angle.get()) * 2;
+                world.spawnParticle(Particle.END_ROD, floatLocation.clone().add(x, -1, z), 0);
+            }
+            world.spawnParticle(Particle.ENCHANTMENT_TABLE, floatLocation, 5, 0.5, 0.5, 0.5, 0);
+            // Constantly add regen
+            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20, 3));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, 20, 3));
+            return false;
+        });
 
         // Sound effect
         world.playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1f, 1f);
@@ -188,15 +184,12 @@ public class FisterArmorSet extends ArmorSet {
             }
         }
 
-        // Store and auto-end after 3 seconds
-        BukkitTask task = new BukkitRunnable() {
-            @Override
-            public void run() {
-                endMeditation(player);
-            }
-        }.runTaskLater(plugin, 60L); // 3 seconds
+        api.delay(60, () -> {
+            endMeditation(player);
+        });
 
-        meditating.put(uuid, task);
+
+        meditating.add(uuid);
     }
 
     private void endMeditation(Player player) {
@@ -216,16 +209,12 @@ public class FisterArmorSet extends ArmorSet {
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1f, 1.2f);
         player.getWorld().spawnParticle(Particle.EXPLOSION_NORMAL, player.getLocation(), 10);
 
-        BukkitTask task = meditating.remove(uuid);
-        if (task != null) task.cancel();
+        meditating.remove(uuid);
 
         // Start timer to remove hp
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                attributesService.removeHealth(player);
-            }
-        }.runTaskLater(plugin, 100);
+        api.delay(100, () -> {
+            attributesService.removeHealth(player);
+        });
 
         // Start the cooldown
         abilityCooldowns.put(uuid, System.currentTimeMillis() + ABILITY_COOLDOWN_TICKS * 50);
@@ -235,7 +224,7 @@ public class FisterArmorSet extends ArmorSet {
     @EventHandler
     public void detectFlight(PlayerToggleFlightEvent event) {
         // We already know it's the right player because of .owner(id)
-        if (meditating.containsKey(event.getPlayer().getUniqueId())) {
+        if (meditating.contains(event.getPlayer().getUniqueId())) {
             endMeditation(event.getPlayer());
         }
     }
@@ -286,28 +275,25 @@ public class FisterArmorSet extends ArmorSet {
         NPC afterImageOne = afterImagesOne.get(player.getUniqueId());
         NPC afterImageTwo = afterImagesTwo.get(player.getUniqueId());
 
-        new BukkitRunnable() {
-            int tick = 0;
+        api.subscribe(player.getUniqueId(), "fister_task", 0, 5, (tick) -> {
 
-            @Override
-            public void run() {
-                if (tick == 5 || tick == 10) {
-                    Location offset = target.getLocation().add(randomOffset(player, target, tick == 5 ? 1 : -1));
-                    NPC afterImage = tick == 5 ? afterImageOne : afterImageTwo;
-                    spawnAfterImage(afterImage, offset, target);
-                    giveNPCArmor(player, afterImage);
-                }
-                if (tick == 15) {
-                    afterImageOne.despawn();
-                }
-                if (tick == 20) {
-                    afterImageTwo.despawn();
-                    cancel();
-                }
-
-                tick += 5;
+            if (tick == 5 || tick == 10) {
+                Location offset = target.getLocation().add(randomOffset(player, target, tick == 5 ? 1 : -1));
+                NPC afterImage = tick == 5 ? afterImageOne : afterImageTwo;
+                spawnAfterImage(afterImage, offset, target);
+                giveNPCArmor(player, afterImage);
             }
-        }.runTaskTimer(plugin, 0, 5);
+            if (tick == 15) {
+                afterImageOne.despawn();
+            }
+            if (tick == 20) {
+                afterImageTwo.despawn();
+                return true;
+            }
+
+            return false;
+        });
+
     }
 
     private void giveNPCArmor(Player player, NPC npc) {
@@ -391,15 +377,13 @@ public class FisterArmorSet extends ArmorSet {
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
             return;
         }
-        // Player is invulnerable for half a second
+
         dodging.put(uuid, clicked);
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                dodging.remove(uuid);
-                cancel();
-            }
-        }.runTaskLater(plugin, 10);
+        // Player is invulnerable for half a second
+        api.delay(10, () -> {
+            dodging.remove(uuid);
+        });
+
         dodgeCooldowns.put(uuid, now + DODGING_COOLDOWN_TICKS * 50);
 
     }

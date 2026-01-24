@@ -83,40 +83,31 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
         thrownAxe.setPickupDelay(Integer.MAX_VALUE); // Prevent anyone from picking it up
         thrownAxe.setVelocity(player.getLocation().getDirection().multiply(1.5));
 
-        // Task to track the axe
-        new BukkitRunnable() {
-            int ticks = 0;
+        api.subscribe(player.getUniqueId(), 0, 1, (ticks) -> {
+            if (!thrownAxe.isValid() || !thrownAxe.getWorld().equals(player.getWorld())) {
+                returnAxe(player, thrownAxeStack);
+                return true;
+            }
 
-            @Override
-            public void run() {
-                if (!thrownAxe.isValid() || !thrownAxe.getWorld().equals(player.getWorld())) {
-                    returnAxe(player, thrownAxeStack);
-                    cancel();
-                    return;
-                }
-
-                // Check for nearby entities (2 block radius)
-                for (Entity entity : thrownAxe.getNearbyEntities(1.2, 1.2, 1.2)) {
-                    if (entity instanceof LivingEntity && entity != player) {
-                        ((LivingEntity) entity).damage(calculateAxeDamage(thrownAxeStack) * 1.25, player);
-                        player.sendMessage("§cYou hit " + entity.getName() + " with your axe!");
-                        thrownAxe.remove();
-                        returnAxe(player, thrownAxeStack);
-                        cancel();
-                        return;
-                    }
-                }
-
-                // If the axe hits the ground (very low Y velocity)
-                if (thrownAxe.isOnGround() || ticks > 40) {
+            // Check for nearby entities (2 block radius)
+            for (Entity entity : thrownAxe.getNearbyEntities(1.2, 1.2, 1.2)) {
+                if (entity instanceof LivingEntity && entity != player) {
+                    ((LivingEntity) entity).damage(calculateAxeDamage(thrownAxeStack) * 1.25, player);
+                    player.sendMessage("§cYou hit " + entity.getName() + " with your axe!");
                     thrownAxe.remove();
                     returnAxe(player, thrownAxeStack);
-                    cancel();
+                    return true;
                 }
-
-                ticks++;
             }
-        }.runTaskTimer(plugin, 0L, 1L);
+
+            // If the axe hits the ground (very low Y velocity)
+            if (thrownAxe.isOnGround() || ticks > 40) {
+                thrownAxe.remove();
+                returnAxe(player, thrownAxeStack);
+                return true;
+            }
+            return false;
+        });
 
         // Start cooldown and cooldown bar
         cooldownBarManager.startCooldownBar(player, (int) (COOLDOWN / 1000));

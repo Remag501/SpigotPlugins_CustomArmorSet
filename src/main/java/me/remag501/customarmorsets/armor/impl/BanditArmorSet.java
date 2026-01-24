@@ -85,6 +85,7 @@ public class BanditArmorSet extends ArmorSet {
         cooldownBarManager.restorePlayerBar(player);
 
         api.unregisterListener(player.getUniqueId(), type.getId());
+        api.stopTask(player.getUniqueId(), "bandit_task");
     }
 
     // --- Passive 1: Run Faster With Fists Out ---
@@ -172,25 +173,21 @@ public class BanditArmorSet extends ArmorSet {
     }
 
     private void startDodgeRegenTask(Player player) {
-        BukkitTask task = new BukkitRunnable() {
-            @Override
-            public void run() {
-                int currentDodges = playerDodges.getOrDefault(player.getUniqueId(), 0);
-                if (currentDodges < MAX_DODGES) {
-                    currentDodges++;
-                    playerDodges.put(player.getUniqueId(), currentDodges);
-                    player.sendMessage("§a§l(!) §aYou regenerated a dodge! Dodges left: " + currentDodges);
-                    cooldownBarManager.setLevel(player, currentDodges);
-                }
+         api.subscribe(player.getUniqueId(), "bandit_task", 20 * DODGE_COOLDOWN, 20 * DODGE_COOLDOWN, (ticks) -> {
+             int currentDodges = playerDodges.getOrDefault(player.getUniqueId(), 0);
+             if (currentDodges < MAX_DODGES) {
+                 currentDodges++;
+                 playerDodges.put(player.getUniqueId(), currentDodges);
+                 player.sendMessage("§a§l(!) §aYou regenerated a dodge! Dodges left: " + currentDodges);
+                 cooldownBarManager.setLevel(player, currentDodges);
+             }
 
-                // Cancel the task once the player has max dodges again.
-                if (currentDodges >= MAX_DODGES) {
-                    this.cancel();
-                    regenTasks.remove(player.getUniqueId());
-                }
-            }
-        }.runTaskTimer(plugin, 20 * DODGE_COOLDOWN, 20 * DODGE_COOLDOWN);
+             // Cancel the task once the player has max dodges again.
+             if (currentDodges >= MAX_DODGES) {
+                 return true;
+             }
 
-        regenTasks.put(player.getUniqueId(), task);
+             return false;
+         } );
     }
 }

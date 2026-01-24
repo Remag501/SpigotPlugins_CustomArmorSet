@@ -73,16 +73,13 @@ public class WorldGuardianArmorSet extends ArmorSet {
 
         isInvulnerable = true;
 
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
         cooldownBarManager.startCooldownBar(player, 3);
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                isInvulnerable = false;
-                cooldownBarManager.startCooldownBar(player, (int)(COOLDOWN / 1000));
-                abilityCooldowns.put(uuid, now);
-            }
-        }.runTaskLater(plugin, 60L);
+
+        api.delay(60, () -> {
+            isInvulnerable = false;
+            cooldownBarManager.startCooldownBar(player, (int)(COOLDOWN / 1000));
+            abilityCooldowns.put(uuid, now);
+        });
 
         player.sendMessage("§aYou are invulnerable for 3 seconds!");
     }
@@ -93,7 +90,7 @@ public class WorldGuardianArmorSet extends ArmorSet {
         ArmorSet set = armorManager.getArmorSet(player);
         if (!(set instanceof WorldGuardianArmorSet armorSet)) return;
 
-        if (armorSet.isInvulnerable == true) {
+        if (armorSet.isInvulnerable) {
             event.setCancelled(true);
         }
 

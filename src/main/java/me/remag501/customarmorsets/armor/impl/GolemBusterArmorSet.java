@@ -40,8 +40,8 @@ public class GolemBusterArmorSet extends ArmorSet {
 
     private static final Map<UUID, Integer> playerEnergy = new HashMap<>();
     private static final Map<UUID, Boolean> playerIsGolem = new HashMap<>();
-    private final Map<UUID, BukkitRunnable> particleTasks = new HashMap<>();
-    private static final Map<GolemBusterArmorSet, BukkitTask> energyLoop = new HashMap<>();
+    private final List<UUID> particleTasks = new ArrayList<>();
+//    private static final Map<GolemBusterArmorSet, BukkitTask> energyLoop = new HashMap<>();
     private static final Map<UUID, Long> stunCooldown = new HashMap<>();
 
     private final TaskHelper api;
@@ -72,24 +72,21 @@ public class GolemBusterArmorSet extends ArmorSet {
         defenseStatsManager.setSourceReduction(player.getUniqueId(), 0.75f, TargetCategory.NON_PLAYER);
 
         // Start energy loop timer
-        energyLoop.put(this, new BukkitRunnable() {
-
-            @Override
-            public void run() {
-                int energy;
-                if (playerIsGolem.get(id)) {
-                    energy = consumePlayerEnergy(player, -5);
-                    if (energy <= 0) {
-                        transformBack(player);
-                        return;
-                    }
+        api.subscribe(player.getUniqueId(), "golem_energy_loop", 0, 20, (ticks) -> {
+            int energy;
+            if (playerIsGolem.get(id)) {
+                energy = consumePlayerEnergy(player, -5);
+                if (energy <= 0) {
+                    transformBack(player);
+                    return false;
                 }
-                else
-                    energy = consumePlayerEnergy(player, 1);
-
-                cooldownBarManager.setLevel(player, energy);
             }
-        }.runTaskTimer(plugin, 0, 20));
+            else
+                energy = consumePlayerEnergy(player, 1);
+
+            cooldownBarManager.setLevel(player, energy);
+            return false;
+        });
 
         // Register listener(s)
         api.subscribe(EntityDeathEvent.class)
@@ -103,13 +100,14 @@ public class GolemBusterArmorSet extends ArmorSet {
     @Override
     public void removePassive(Player player) {
         transformBack(player);
-        energyLoop.get(this).cancel();
         cooldownBarManager.restorePlayerBar(player);
         attributesService.restoreDefaults(player); // Just in case
         damageStatsManager.clearAll(player.getUniqueId());
         defenseStatsManager.clearAll(player.getUniqueId());
 
         api.unregisterListener(player.getUniqueId(), type.getId());
+        api.stopTask(player.getUniqueId(), "golem_energy_loop");
+        api.stopTask(player.getUniqueId(), "golem_particle");
     }
 
     @Override
@@ -218,26 +216,20 @@ public class GolemBusterArmorSet extends ArmorSet {
     }
 
     public void startTargetEffect(LivingEntity target) {
-        new BukkitRunnable() {
-            int ticks = 0;
-
-            @Override
-            public void run() {
-                if (ticks >= 60 || target.isDead()) {
-                    cancel();
-                    return;
-                }
-
-                // Location slightly above the target (head level)
-                Location loc = target.getLocation().add(0, 1.2, 0);
-
-                // Redstone-like particle effect
-                Particle.DustOptions redDust = new Particle.DustOptions(Color.RED, 1.2F);
-                target.getWorld().spawnParticle(Particle.REDSTONE, loc, 10, 0.3, 0.4, 0.3, 0, redDust);
-
-                ticks++;
+        api.subscribe(target.getUniqueId(), (ticks) -> {
+            if (ticks >= 60 || target.isDead()) {
+                return true;
             }
-        }.runTaskTimer(plugin, 0L, 1L); // Run every tick (1L) for 60 ticks = 3 seconds
+
+            // Location slightly above the target (head level)
+            Location loc = target.getLocation().add(0, 1.2, 0);
+
+            // Redstone-like particle effect
+            Particle.DustOptions redDust = new Particle.DustOptions(Color.RED, 1.2F);
+            target.getWorld().spawnParticle(Particle.REDSTONE, loc, 10, 0.3, 0.4, 0.3, 0, redDust);
+
+            return false;
+        });
     }
 
     private void golemTransform(Player player) {
@@ -268,9 +260,11 @@ public class GolemBusterArmorSet extends ArmorSet {
         attributesService.applySpeed(player, 0.5);
         damageStatsManager.setMobMultiplier(player.getUniqueId(), 2, TargetCategory.NON_PLAYER);
         defenseStatsManager.setSourceReduction(player.getUniqueId(), 0.25f, TargetCategory.NON_PLAYER);
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+
+        api.delay(2, () -> {
             player.setHealth(40.0);
-        }, 2L);
+        });
+
     }
 
     private void transformBack(Player player)  {
@@ -293,10 +287,9 @@ public class GolemBusterArmorSet extends ArmorSet {
                 0.01 // Speed
         );
 
-        // Cancel particle task
-        BukkitRunnable task = particleTasks.remove(uuid);
-        if (task != null) {
-            task.cancel();
+        // Cancel existing task if one exists
+        if (particleTasks.contains(uuid)) {
+            api.stopTask(player.getUniqueId(), "golem_particle");
         }
 
         // Remove disguise
@@ -309,41 +302,25 @@ public class GolemBusterArmorSet extends ArmorSet {
         UUID uuid = player.getUniqueId();
 
         // Cancel existing task if one exists
-        BukkitRunnable existing = particleTasks.get(uuid);
-        if (existing != null) {
-            existing.cancel();
+        if (particleTasks.contains(uuid)) {
+            api.stopTask(player.getUniqueId(), "golem_particle");
         }
 
         // Create a new particle task
-        BukkitRunnable task = new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (!player.isOnline() || !playerIsGolem.getOrDefault(uuid, false)) {
-                    this.cancel();
-                    particleTasks.remove(uuid);
-                    return;
-                }
-
-                // Spawn particles around the player's body
-                Location loc = player.getLocation().add(0, 1, 0); // Adjust Y as needed
-                player.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, loc, 3, 0.3, 0.5, 0.3, 0.01);
+        api.subscribe(player.getUniqueId(), "golem_particle", 0, 10, (ticks) -> {
+            if (!player.isOnline() || !playerIsGolem.getOrDefault(uuid, false)) {
+                particleTasks.remove(uuid);
+                return true;
             }
-        };
 
-        task.runTaskTimer(plugin, 0L, 10L); // Every 10 ticks (0.5s)
-        particleTasks.put(uuid, task);
+            // Spawn particles around the player's body
+            Location loc = player.getLocation().add(0, 1, 0); // Adjust Y as needed
+            player.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, loc, 3, 0.3, 0.5, 0.3, 0.01);
+            return false;
+        });
+
+        particleTasks.add(uuid);
     }
-
-    // Already handled in attributes
-//    @EventHandler
-//    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-//        if (!(event.getDamager() instanceof Player player)) return;
-//        if (!(armorManager.getArmorSet(player) instanceof GolemBusterArmorSet)) return;
-//
-//        if (event.getEntity() instanceof Monster) {
-//            event.setDamage(event.getDamage() * 0.8); // Reduced damage from mobs
-//        }
-//    }
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {

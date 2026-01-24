@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.BGSCore;
 import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
@@ -53,7 +54,9 @@ public class LastSpartanArmorSet extends ArmorSet {
     public void removePassive(Player player) {
         attributesService.removeHealth(player);
         damageStatsManager.clearAll(player.getUniqueId());
+
         api.unregisterListener(player.getUniqueId(), type.getId());
+        api.stopTask(player.getUniqueId(), type.getId());
     }
 
     @Override
@@ -84,53 +87,52 @@ public class LastSpartanArmorSet extends ArmorSet {
 
             // Tp player to entity if they are close to them
             LivingEntity finalNearest = nearest;
-            new BukkitRunnable() {
-                int ticks = 0;
-                @Override
-                public void run() {
-                    double distance = Math.sqrt(Math.pow(player.getLocation().getX() - finalNearest.getLocation().getX(), 2) + Math.pow(player.getLocation().getZ() - finalNearest.getLocation().getZ(), 2));
-                    if (distance < 1) {
-                        // Activate spartan sequence here
-                        Location landing = finalNearest.getLocation();
-                        landing.setDirection(player.getLocation().getDirection());
-                        player.teleport(landing);
+            api.subscribe(player.getUniqueId(), type.getId(), 0, 1, (ticks) -> {
+                double distance = Math.sqrt(Math.pow(player.getLocation().getX() - finalNearest.getLocation().getX(), 2) + Math.pow(player.getLocation().getZ() - finalNearest.getLocation().getZ(), 2));
+                if (distance < 1) {
+                    // Activate spartan sequence here
+                    Location landing = finalNearest.getLocation();
+                    landing.setDirection(player.getLocation().getDirection());
+                    player.teleport(landing);
 
-                        // Add particle effect
-                        // Play a big poof effect to notify others
-                        player.getWorld().spawnParticle(
-                                Particle.EXPLOSION_NORMAL,
-                                player.getLocation(),
-                                50, // number of particles
-                                1.5, 0.2, 1.5, // wide spread on ground
-                                0.1 // speed
-                        );
+                    // Add particle effect
+                    // Play a big poof effect to notify others
+                    player.getWorld().spawnParticle(
+                            Particle.EXPLOSION_NORMAL,
+                            player.getLocation(),
+                            50, // number of particles
+                            1.5, 0.2, 1.5, // wide spread on ground
+                            0.1 // speed
+                    );
 
-                        // Optionally add a little dust/sand effect for extra flair
-                        player.getWorld().spawnParticle(
-                                Particle.BLOCK_DUST,
-                                player.getLocation(),
-                                80, // number of particles
-                                1.5, 0.2, 1.5, // wide spread
-                                0.1, // speed
-                                Material.SAND.createBlockData() // looks like sand blast
-                        );
+                    // Optionally add a little dust/sand effect for extra flair
+                    player.getWorld().spawnParticle(
+                            Particle.BLOCK_DUST,
+                            player.getLocation(),
+                            80, // number of particles
+                            1.5, 0.2, 1.5, // wide spread
+                            0.1, // speed
+                            Material.SAND.createBlockData() // looks like sand blast
+                    );
 
-                        // Apply effects on enemy
-                        finalNearest.setVelocity(player.getLocation().getDirection().normalize().multiply(2).setY(1));
-                        finalNearest.damage(10, player);
+                    // Apply effects on enemy
+                    finalNearest.setVelocity(player.getLocation().getDirection().normalize().multiply(2).setY(1));
+                    finalNearest.damage(10, player);
 
-                        cancel();
-                    } else if (player.isOnGround() && ticks > 10) { // Enemy got away from spartan jump
-                        player.sendMessage("§c§l(!) §cYou missed!");
-                        cancel();
-                    } else if (ticks >= 100) {
-                        // Reduce lag, likely if occurs if player's client is bugged/spoof or player is air
-                        cancel();
-                    }
-                    ticks++;
+                    return true;
+                } else if (player.isOnGround() && ticks > 10) { // Enemy got away from spartan jump
+                    player.sendMessage("§c§l(!) §cYou missed!");
+                    return true;
+                } else if (ticks >= 100) {
+                    // Reduce lag, likely if occurs if player's client is bugged/spoof or player is air
+                    return true;
                 }
-            }.runTaskTimer(plugin, 0, 1L);
 
+                return false;
+
+            });
+
+            // Add cooldown and visualize
             abilityCooldowns.put(uuid, now);
             cooldownBarManager.startCooldownBar(player, (int) (COOLDOWN / 1000));
 
