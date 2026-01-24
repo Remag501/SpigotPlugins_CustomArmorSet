@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
@@ -32,7 +33,7 @@ import org.bukkit.util.Vector;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class IcemanArmorSet extends ArmorSet implements Listener {
+public class IcemanArmorSet extends ArmorSet {
 
     // Constants for balancing and readability
     private static final int ULT_DURATION_SECONDS = 10;
@@ -60,14 +61,14 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, Long> mobChargeCooldowns = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> freezeStacks = new ConcurrentHashMap<>();
 
-    private final Plugin plugin;
+    private final TaskHelper api;
     private final ArmorManager armorManager;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
 
-    public IcemanArmorSet(Plugin plugin, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public IcemanArmorSet(TaskHelper api, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.ICEMAN);
-        this.plugin = plugin;
+        this.api = api;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
@@ -76,8 +77,7 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
     @Override
     public void applyPassive(Player player) {
         attributesService.applySpeed(player, 1.25);
-//        player.sendMessage("❄ You equipped the Iceman set");
-        // Populate maps
+
         UUID uuid = player.getUniqueId();
         cooldowns.put(uuid, System.currentTimeMillis());
         domeCharge.put(uuid, 0);
@@ -85,9 +85,54 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         playerBlocksToReset.put(uuid, new HashMap<>());
         playerIceBeam.put(uuid, false);
         playerInUlt.put(uuid, false);
+
         // Start task for ult
         startTask(player);
 
+        // Register listener(s)
+        UUID id = player.getUniqueId();
+        // 1. Sprinting Listener (Ice Mode Entry)
+        api.subscribe(PlayerToggleSprintEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getPlayer().getUniqueId().equals(id))
+                .handler(this::onSpint);
+
+        // 2. Flight Listener (Ice Bridge Activation)
+        api.subscribe(PlayerToggleFlightEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getPlayer().getUniqueId().equals(id))
+                .handler(this::onToggleFlight);
+
+        // 3. Move Listener (Bridge Construction)
+        api.subscribe(PlayerMoveEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getPlayer().getUniqueId().equals(id))
+                .handler(this::onPlayerMove);
+
+        // 4. Melee Combat (Freeze Stacks)
+        api.subscribe(EntityDamageByEntityEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getDamager().getUniqueId().equals(id))
+                .handler(this::onEntityDamageByEntity);
+
+        // 5. Thaw Reaction (Player Fire Aspect / Direct Fire Hit)
+        api.subscribe(EntityDamageByEntityEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getDamager().getUniqueId().equals(id))
+                .handler(this::onPlayerFireDamageMob);
+
+        // 6. Global Thaw Reaction (Environmental Fire/Lava)
+        // Note: We don't filter for 'id' here because this logic applies to MOBS
+        // that were frozen by the player. The task cleanup relies on the mob's UUID.
+        api.subscribe(EntityDamageEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .handler(this::onEntityFireDamage);
     }
 
     @Override
@@ -105,8 +150,9 @@ public class IcemanArmorSet extends ArmorSet implements Listener {
         playerBlocksToReset.remove(uuid);
         playerIceBeam.remove(uuid);
         playerIceBeam.remove(uuid);
-//        player.sendMessage("❄ You removed the Iceman set");
         cooldownBarManager.restorePlayerBar(player);
+
+        api.unregisterListener(player.getUniqueId(), type.getId());
     }
 
     @Override

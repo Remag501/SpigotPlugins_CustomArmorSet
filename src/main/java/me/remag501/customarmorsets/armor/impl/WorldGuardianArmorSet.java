@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
@@ -17,21 +18,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class WorldGuardianArmorSet extends ArmorSet implements Listener {
+public class WorldGuardianArmorSet extends ArmorSet {
 
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 25 * 1000;
 
     private boolean isInvulnerable = false;
 
-    private final Plugin plugin;
+    private final TaskHelper api;
     private final ArmorManager armorManager;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
 
-    public WorldGuardianArmorSet(Plugin plugin, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public WorldGuardianArmorSet(TaskHelper api, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.WORLD_GUARDIAN);
-        this.plugin = plugin;
+        this.api = api;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
@@ -41,15 +42,22 @@ public class WorldGuardianArmorSet extends ArmorSet implements Listener {
     public void applyPassive(Player player) {
         attributesService.applyHealth(player, 1.5);
         attributesService.applySpeed(player, 0.8);
-        player.sendMessage("You equipped the World Guardian set");
 
+        // Register listener(s)
+        UUID id = player.getUniqueId();
+        api.subscribe(EntityDamageEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+//                .filter(e -> )
+                .handler(this::onEntityDamageEvent);
     }
 
     @Override
     public void removePassive(Player player) {
         attributesService.removeHealth(player);
         attributesService.removeSpeed(player);
-        player.sendMessage("You removed the World Guardian set");
+
+        api.unregisterListener(player.getUniqueId(), type.getId());
     }
 
     @Override
@@ -79,9 +87,8 @@ public class WorldGuardianArmorSet extends ArmorSet implements Listener {
         player.sendMessage("§aYou are invulnerable for 3 seconds!");
     }
 
-    @EventHandler
     public void onEntityDamageEvent(EntityDamageEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
+        Player player = (Player) event.getEntity();
 
         ArmorSet set = armorManager.getArmorSet(player);
         if (!(set instanceof WorldGuardianArmorSet armorSet)) return;

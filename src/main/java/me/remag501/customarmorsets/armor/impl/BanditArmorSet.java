@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
@@ -25,7 +26,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
-public class BanditArmorSet extends ArmorSet implements Listener {
+public class BanditArmorSet extends ArmorSet {
 
     // A map to store the number of available dodges for each player.
     private final Map<UUID, Integer> playerDodges = new HashMap<>();
@@ -45,11 +46,11 @@ public class BanditArmorSet extends ArmorSet implements Listener {
     private final ArmorManager armorManager;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
-    private final Plugin plugin;
+    private final TaskHelper api;
 
-    public BanditArmorSet(Plugin plugin, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public BanditArmorSet(TaskHelper api, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.BANDIT);
-        this.plugin = plugin;
+        this.api = api;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
@@ -57,15 +58,24 @@ public class BanditArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void applyPassive(Player player) {
-//        player.sendMessage("✅ You equipped the Bandit set!");
+
+        UUID id = player.getUniqueId();
+        api.subscribe(PlayerMoveEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter()
+                .handler();
+
+        api.subscribe(EntityDamageByEntityEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter()
+                .handler();
+
     }
 
     @Override
     public void removePassive(Player player) {
-//        player.sendMessage("❌ You removed the Bandit set.");
-        // The speed attribute is handled conditionally in the PlayerMoveEvent handler.
-        // It will be removed automatically once the player's hands are no longer empty.
-
         // Cancel the regeneration task when the set is removed.
         BukkitTask task = regenTasks.remove(player.getUniqueId());
         if (task != null) {
@@ -73,6 +83,8 @@ public class BanditArmorSet extends ArmorSet implements Listener {
         }
 
         cooldownBarManager.restorePlayerBar(player);
+
+        api.unregisterListener(player.getUniqueId(), type.getId());
     }
 
     // --- Passive 1: Run Faster With Fists Out ---

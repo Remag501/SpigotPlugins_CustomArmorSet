@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.WeaponType;
@@ -24,19 +25,19 @@ import java.util.*;
 
 import static me.remag501.customarmorsets.util.LookEntitiesUtil.getNearestEntityInSight;
 
-public class LastSpartanArmorSet extends ArmorSet implements Listener {
+public class LastSpartanArmorSet extends ArmorSet {
 
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 3 * 1000;
 
-    private final Plugin plugin;
+    private final TaskHelper api;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
     private final DamageStatsManager damageStatsManager;
 
-    public LastSpartanArmorSet(Plugin plugin, CooldownBarManager cooldownBarManager, AttributesService attributesService, DamageStatsManager damageStatsManager) {
+    public LastSpartanArmorSet(TaskHelper api, CooldownBarManager cooldownBarManager, AttributesService attributesService, DamageStatsManager damageStatsManager) {
         super(ArmorSetType.LAST_SPARTAN);
-        this.plugin = plugin;
+        this.api = api;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
         this.damageStatsManager = damageStatsManager;
@@ -52,6 +53,7 @@ public class LastSpartanArmorSet extends ArmorSet implements Listener {
     public void removePassive(Player player) {
         attributesService.removeHealth(player);
         damageStatsManager.clearAll(player.getUniqueId());
+        api.unregisterListener(player.getUniqueId(), type.getId());
     }
 
     @Override

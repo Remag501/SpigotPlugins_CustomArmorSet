@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
@@ -18,33 +19,34 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class RoyalKnightArmorSet extends ArmorSet implements Listener {
+public class RoyalKnightArmorSet extends ArmorSet {
 
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 7 * 1000; // 7 seconds cooldown
 
-    private final ArmorManager armorManager;
+    private final TaskHelper api;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
 
-    public RoyalKnightArmorSet(ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public RoyalKnightArmorSet(TaskHelper api, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.ROYAL_KNIGHT);
-        this.armorManager = armorManager;
+        this.api = api;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
     }
 
     @Override
     public void applyPassive(Player player) {
-        // 125% max hp
         attributesService.applyHealth(player, 1.25);
-//        player.sendMessage("You equipped the Royal Knight set");
+        attributesService.applyDamage(player, 0.85);
+
     }
 
     @Override
     public void removePassive(Player player) {
         attributesService.removeHealth(player);
-//        player.sendMessage("You removed the Royal Knight set");
+        attributesService.removeDamage(player);
+
     }
 
     @Override
@@ -64,41 +66,6 @@ public class RoyalKnightArmorSet extends ArmorSet implements Listener {
 
         cooldownBarManager.startCooldownBar(player, (int)(COOLDOWN / 1000));
         abilityCooldowns.put(uuid, now);
-    }
-
-    @EventHandler
-    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        Entity damager = event.getDamager();
-        Player player = null;
-
-        // Case 1: Direct melee damage by player
-        if (damager instanceof Player p) {
-            player = p;
-
-            Material weapon = player.getInventory().getItemInMainHand().getType();
-            String name = weapon.name();
-            // Reduce damage only for sword or axe
-            if (!(name.endsWith("_SWORD") || name.endsWith("_AXE") || name.endsWith("TRIDENT"))) {
-                return;
-            }
-        }
-
-        // Case 2: Projectile damage (arrow, trident) shot by player
-        else if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player p) {
-            player = p;
-
-            if (!(damager instanceof Arrow || damager instanceof Trident)) {
-                return; // Only reduce for arrow/trident, not snowball/egg/etc.
-            }
-        }
-
-        if (player == null) return;
-
-        ArmorSet set = armorManager.getArmorSet(player);
-        if (!(set instanceof RoyalKnightArmorSet)) return;
-
-        double originalDamage = event.getDamage();
-        event.setDamage(originalDamage * 0.85); // Reduce outgoing damage by 15%
     }
 
 }

@@ -51,17 +51,17 @@ public class ArmorManager {
         // Register all sets here. This is where we satisfy those new constructors.
         register(ArmorSetType.SNOWMAN, new SnowmanArmorSet());
         register(ArmorSetType.INFERNUS, new InfernusArmorSet(bgsApi, cooldownManager));
-        register(ArmorSetType.LAST_SPARTAN, new LastSpartanArmorSet(plugin, cooldownManager, attributesService, damageStatsManager));
-        register(ArmorSetType.VIKING_CAPTAIN, new VikingCaptainArmorSet(damageStatsManager, cooldownManager));
-        register(ArmorSetType.ROYAL_KNIGHT, new RoyalKnightArmorSet(this, cooldownManager, attributesService));
-        register(ArmorSetType.WORLD_GUARDIAN, new WorldGuardianArmorSet(plugin, this, cooldownManager, attributesService));
-        register(ArmorSetType.VAMPIRE, new VampireArmorSet(plugin, this, cooldownManager, attributesService));
-        register(ArmorSetType.FISTER, new FisterArmorSet(plugin, this, cooldownManager, attributesService, armorService));
-        register(ArmorSetType.ARCHER, new ArcherArmorSet(this, cooldownManager, attributesService));
-        register(ArmorSetType.NECROMANCER, new NecromancerArmorSet(plugin, this, damageStatsManager, attributesService, playerSyncManager));
-        register(ArmorSetType.ICEMAN, new IcemanArmorSet(plugin, this, cooldownManager, attributesService));
-        register(ArmorSetType.GOLEM_BUSTER, new GolemBusterArmorSet(plugin, this, cooldownManager, attributesService, damageStatsManager, defenseStatsManager));
-        register(ArmorSetType.BANDIT, new BanditArmorSet(plugin, this, cooldownManager, attributesService));
+        register(ArmorSetType.LAST_SPARTAN, new LastSpartanArmorSet(bgsApi, cooldownManager, attributesService, damageStatsManager));
+        register(ArmorSetType.VIKING_CAPTAIN, new VikingCaptainArmorSet(bgsApi, damageStatsManager, cooldownManager));
+        register(ArmorSetType.ROYAL_KNIGHT, new RoyalKnightArmorSet(bgsApi, cooldownManager, attributesService));
+        register(ArmorSetType.WORLD_GUARDIAN, new WorldGuardianArmorSet(bgsApi, this, cooldownManager, attributesService));
+        register(ArmorSetType.VAMPIRE, new VampireArmorSet(bgsApi, this, cooldownManager, attributesService));
+        register(ArmorSetType.FISTER, new FisterArmorSet(bgsApi, this, cooldownManager, attributesService, armorService));
+        register(ArmorSetType.ARCHER, new ArcherArmorSet(bgsApi, cooldownManager, attributesService));
+        register(ArmorSetType.NECROMANCER, new NecromancerArmorSet(bgsApi, this, damageStatsManager, attributesService, playerSyncManager));
+        register(ArmorSetType.ICEMAN, new IcemanArmorSet(bgsApi, this, cooldownManager, attributesService));
+        register(ArmorSetType.GOLEM_BUSTER, new GolemBusterArmorSet(bgsApi, this, cooldownManager, attributesService, damageStatsManager, defenseStatsManager));
+        register(ArmorSetType.BANDIT, new BanditArmorSet(bgsApi, this, cooldownManager, attributesService));
     }
 
     private void register(ArmorSetType type, ArmorSet instance) {

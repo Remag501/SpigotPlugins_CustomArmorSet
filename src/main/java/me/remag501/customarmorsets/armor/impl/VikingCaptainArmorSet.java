@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.WeaponType;
@@ -30,11 +31,13 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 7 * 1000; // 7 seconds cooldown
 
+    private final TaskHelper api;
     private final DamageStatsManager damageStatsManager;
     private final CooldownBarManager cooldownBarManager;
 
-    public VikingCaptainArmorSet(DamageStatsManager damageStatsManager, CooldownBarManager cooldownBarManager) {
+    public VikingCaptainArmorSet(TaskHelper api, DamageStatsManager damageStatsManager, CooldownBarManager cooldownBarManager) {
         super(ArmorSetType.VIKING_CAPTAIN);
+        this.api = api;
         this.damageStatsManager = damageStatsManager;
         this.cooldownBarManager = cooldownBarManager;
 
@@ -42,15 +45,15 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void applyPassive(Player player) {
-//        player.sendMessage("You equipped the Viking Captain set");
         damageStatsManager.setWeaponMultiplier(player.getUniqueId(), (float) 0.75, WeaponType.SWORD);
         damageStatsManager.setWeaponMultiplier(player.getUniqueId(), (float) 1.25, WeaponType.AXE);
     }
 
     @Override
     public void removePassive(Player player) {
-//        player.sendMessage("You removed the Viking Captain set");
         damageStatsManager.clearAll(player.getUniqueId());
+
+        api.unregisterListener(player.getUniqueId(), type.getId());
     }
 
     @Override
@@ -79,8 +82,6 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
         Item thrownAxe = player.getWorld().dropItem(player.getEyeLocation(), thrownAxeStack);
         thrownAxe.setPickupDelay(Integer.MAX_VALUE); // Prevent anyone from picking it up
         thrownAxe.setVelocity(player.getLocation().getDirection().multiply(1.5));
-
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("CustomArmorSets");
 
         // Task to track the axe
         new BukkitRunnable() {

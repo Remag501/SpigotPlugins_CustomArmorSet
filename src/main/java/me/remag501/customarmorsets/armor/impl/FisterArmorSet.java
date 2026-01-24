@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
@@ -33,7 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class FisterArmorSet extends ArmorSet implements Listener {
+public class FisterArmorSet extends ArmorSet {
 
     private static Map<UUID, NPC> afterImagesOne = new HashMap<>();
     private static Map<UUID, NPC> afterImagesTwo = new HashMap<>();
@@ -51,11 +52,11 @@ public class FisterArmorSet extends ArmorSet implements Listener {
     private final ArmorManager armorManager;
     private final AttributesService attributesService;
     private final ArmorService armorService;
-    private final Plugin plugin;
+    private final TaskHelper api;
 
-    public FisterArmorSet(Plugin plugin, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService, ArmorService armorService) {
+    public FisterArmorSet(TaskHelper api, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService, ArmorService armorService) {
         super(ArmorSetType.FISTER);
-        this.plugin = plugin;
+        this.api = api;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
@@ -63,7 +64,6 @@ public class FisterArmorSet extends ArmorSet implements Listener {
     }
 
     public void applyPassive(Player player) {
-        // Give player attack speed
         attributesService.applyAttackSpeed(player, 3.0);
 
         // Create npc after images
@@ -72,6 +72,44 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
         afterImagesOne.put(player.getUniqueId(), afterImageOne);
         afterImagesTwo.put(player.getUniqueId(), afterImageTwo);
+
+        // Register listener(s)
+        UUID id = player.getUniqueId();
+        // 1. Flight Listener
+        api.subscribe(PlayerToggleFlightEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getPlayer().getUniqueId().equals(id))
+                .handler(this::detectFlight);
+
+        // 2. Damage Listener
+        api.subscribe(EntityDamageByEntityEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getDamager() instanceof Player || e.getDamager() instanceof Projectile || e.getEntity() instanceof Player)
+                .handler(this::playerAttack);
+
+        // 3. Move Listener
+        api.subscribe(PlayerMoveEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getPlayer().getUniqueId().equals(id))
+                .filter(e -> meditating.containsKey(e.getPlayer().getUniqueId()))
+                .handler(this::onMoveWhileMeditating);
+
+        // 4. Interact Listener
+        api.subscribe(PlayerInteractAtEntityEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getPlayer().getUniqueId().equals(id) && e.getHand() == EquipmentSlot.HAND)
+                .handler(this::playerInteract);
+
+        // 5. Animation (Swing) Listener
+        api.subscribe(PlayerAnimationEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getPlayer().getUniqueId().equals(id) && e.getAnimationType() == PlayerAnimationType.ARM_SWING)
+                .handler(this::onSwing);
     }
 
     @Override
@@ -79,10 +117,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
         // Remove player attack speed
         attributesService.removeAttackSpeed(player);
 
-        NPC afterImageOne = afterImagesOne.remove(player.getUniqueId());
-        NPC afterImageTwo = afterImagesTwo.remove(player.getUniqueId());
-        afterImageOne.destroy();
-        afterImageTwo.destroy();
+        api.unregisterListener(player.getUniqueId(), type.getId());
     }
 
     @Override
@@ -199,24 +234,16 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
     @EventHandler
     public void detectFlight(PlayerToggleFlightEvent event) {
-        Player player = event.getPlayer();
-        UUID uuid = player.getUniqueId();
-
-        if (meditating.containsKey(uuid)) {
-            // Cancel the toggle and freeze the player mid-air
-            endMeditation(player);
+        // We already know it's the right player because of .owner(id)
+        if (meditating.containsKey(event.getPlayer().getUniqueId())) {
+            endMeditation(event.getPlayer());
         }
     }
 
     @EventHandler
     public void onMoveWhileMeditating(PlayerMoveEvent event) {
-        Player player = event.getPlayer();
-        UUID uuid = player.getUniqueId();
-
-        if (meditating.containsKey(uuid)) {
-            if (!event.getFrom().toVector().equals(event.getTo().toVector())) {
-                event.setCancelled(true);
-            }
+        if (!event.getFrom().toVector().equals(event.getTo().toVector())) {
+            event.setCancelled(true);
         }
     }
 
@@ -253,11 +280,6 @@ public class FisterArmorSet extends ArmorSet implements Listener {
             event.setCancelled(true);
             return;
         }
-
-//        if (true) {
-//            player.sendMessage("you can fist");
-//            return;
-//        }
 
         Entity target = event.getEntity();
 
@@ -341,12 +363,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
     @EventHandler
     public void playerInteract(PlayerInteractAtEntityEvent event) {
-        // Filter out off-hand interactions
-        if (event.getHand() != EquipmentSlot.HAND) return;
-
         Player player = event.getPlayer();
-        if (armorService.isFullArmorSet(player) != ArmorSetType.FISTER) return;
-
         Entity clicked = event.getRightClicked();
 
         // Handle npc case
@@ -395,11 +412,7 @@ public class FisterArmorSet extends ArmorSet implements Listener {
 
     @EventHandler
     public void onSwing(PlayerAnimationEvent event) {
-        if (event.getAnimationType() != PlayerAnimationType.ARM_SWING) return;
-
         Player player = event.getPlayer();
-        if (armorService.isFullArmorSet(player) != ArmorSetType.FISTER) return;
-
         Entity target = getTargetedEntity(player, 4);
 
         if (target instanceof Arrow arrow) {

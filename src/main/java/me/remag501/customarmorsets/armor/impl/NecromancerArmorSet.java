@@ -12,6 +12,7 @@ import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.*;
 import me.libraryaddict.disguise.disguisetypes.watchers.AreaEffectCloudWatcher;
 import me.libraryaddict.disguise.disguisetypes.watchers.PlayerWatcher;
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
@@ -62,15 +63,15 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
 
     private static final String RESURRECTED_MOB_PREFIX = MythicMobsListener.getPrefix();
 
-    private final Plugin plugin;
+    private final TaskHelper api;
     private final ArmorManager armorManager;
     private final DamageStatsManager damageStatsManager;
     private final AttributesService attributesService;
     private final PlayerSyncManager playerSyncManager;
 
-    public NecromancerArmorSet(Plugin plugin, ArmorManager armorManager, DamageStatsManager damageStatsManager, AttributesService attributesService, PlayerSyncManager playerSyncManager) {
+    public NecromancerArmorSet(TaskHelper api, ArmorManager armorManager, DamageStatsManager damageStatsManager, AttributesService attributesService, PlayerSyncManager playerSyncManager) {
         super(ArmorSetType.NECROMANCER);
-        this.plugin = plugin;
+        this.api = api;
         this.armorManager = armorManager;
         this.damageStatsManager = damageStatsManager;
         this.attributesService = attributesService;
@@ -185,11 +186,54 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                 }
             }
         }.runTaskTimer(plugin, 0, 10));
+
+        // Register listener(s)
+        UUID id = player.getUniqueId();
+        // 1. Flight Control (Stop controlling mobs)
+        api.subscribe(PlayerToggleFlightEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getPlayer().getUniqueId().equals(id))
+                .handler(this::onPlayerCancelFlight);
+
+        // 2. Soul Harvest (Killing MythicMobs)
+        api.subscribe(EntityDeathEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getEntity().getKiller() != null && e.getEntity().getKiller().getUniqueId().equals(id))
+                .handler(this::onPlayerKillMob);
+
+        // 3. Life & Death Logic (Resurrection / Controlled Death)
+        // We use a lighter filter here because the player is often the Victim
+        api.subscribe(EntityDamageEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getEntity() instanceof Player || MythicBukkit.inst().getMobManager().isActiveMob(e.getEntity().getUniqueId()))
+                .handler(this::onEntityDamage);
+
+        // 4. Combat & Decoy Logic
+        api.subscribe(EntityDamageByEntityEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .handler(this::onEntityHit);
+
+        // 5. Restriction: No Sprinting while controlling
+        api.subscribe(PlayerToggleSprintEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getPlayer().getUniqueId().equals(id))
+                .handler(this::onSprint);
+
+        // 6. Restriction: No Item Pickup while "Dead" or Controlling
+        api.subscribe(EntityPickupItemEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getEntity().getUniqueId().equals(id))
+                .handler(this::onPickup);
     }
 
     @Override
     public void removePassive(Player player) {
-//        player.sendMessage("You removed the Necromancer set");
         damageStatsManager.clearAll(player.getUniqueId());
         List<ActiveMob> mobs = summonedMobs.get(player.getUniqueId());
         while (!mobs.isEmpty()) {
@@ -197,6 +241,8 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         }
         summonedMobs.remove(player.getUniqueId());
         summonsTask.get(player.getUniqueId()).cancel();
+
+        api.unregisterListener(player.getUniqueId(), type.getId());
     }
 
     @Override

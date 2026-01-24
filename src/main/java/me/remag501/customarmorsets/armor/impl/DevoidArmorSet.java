@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
@@ -18,28 +19,27 @@ import java.util.*;
 
 import static me.remag501.customarmorsets.util.LookEntitiesUtil.getNearestEntityInSight;
 
-public class DevoidArmorSet extends ArmorSet implements Listener {
+public class DevoidArmorSet extends ArmorSet {
 
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 10 * 1000;
 
     private final CooldownBarManager cooldownBarManager;
-    private final Plugin plugin;
+    private final TaskHelper api;
 
-    public DevoidArmorSet(Plugin plugin, CooldownBarManager cooldownBarManager) {
+    public DevoidArmorSet(TaskHelper api, CooldownBarManager cooldownBarManager) {
         super(ArmorSetType.DEVOID);
-        this.plugin = plugin;
+        this.api = api;
         this.cooldownBarManager = cooldownBarManager;
     }
 
     @Override
     public void applyPassive(Player player) {
-//        player.sendMessage("You equipped the Devoid set");
+
     }
 
     @Override
     public void removePassive(Player player) {
-//        player.sendMessage("You removed the Devoid set");
     }
 
     private static class KineticData {

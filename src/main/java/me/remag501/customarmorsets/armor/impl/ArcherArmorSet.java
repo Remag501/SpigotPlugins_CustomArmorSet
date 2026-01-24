@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
@@ -20,17 +21,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public class ArcherArmorSet extends ArmorSet implements Listener {
+public class ArcherArmorSet extends ArmorSet {
 
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 5 * 1000; // 5 seconds
 
-    private final ArmorManager armorManager;
+    private final TaskHelper api;
     private final CooldownBarManager cooldownBarManager;;
     private final AttributesService attributesService;
 
-    public ArcherArmorSet(ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public ArcherArmorSet(TaskHelper api, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.ARCHER);
+        this.api = api;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
@@ -38,17 +40,33 @@ public class ArcherArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void applyPassive(Player player) {
-        // Halve max HP (set max health to 10) and give Speed 1.25x
         attributesService.applySpeed(player, 1.5);
         attributesService.applyHealth(player, 0.5);
-//        player.sendMessage("✅ You equipped the Archer set");
+        UUID id = player.getUniqueId();
+
+        api.subscribe(EntityDamageByEntityEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> {
+                    // Case 1: Direct Melee
+                    if (e.getDamager() instanceof Player p) {
+                        return p.getUniqueId().equals(id);
+                    }
+                    // Case 2: Bow/Projectile
+                    if (e.getDamager() instanceof Projectile proj && proj.getShooter() instanceof Player shooter) {
+                        return shooter.getUniqueId().equals(id);
+                    }
+                    return false;
+                })
+                .handler(this::onEntityDamageByEntity);
     }
 
     @Override
     public void removePassive(Player player) {
         attributesService.removeSpeed(player);
         attributesService.removeHealth(player);
-//        player.sendMessage("❌ You removed the Archer set");
+
+        api.unregisterListener(player.getUniqueId(), type.getId());
     }
 
     @Override
@@ -98,50 +116,35 @@ public class ArcherArmorSet extends ArmorSet implements Listener {
         cooldownBarManager.startCooldownBar(player, (int) COOLDOWN / 1000);
     }
 
-    @EventHandler(ignoreCancelled = true)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        Player player = null;
-        boolean isProjectile = false;
+        // We know the damager (or shooter) is the owner of this listener
+        boolean isProjectile = event.getDamager() instanceof Projectile;
 
-        // Determine damager and shooter
-        if (event.getDamager() instanceof Arrow arrow && arrow.getShooter() instanceof Player p) {
-            player = p;
-            isProjectile = true;
+        // We can safely grab the shooter or the damager as the 'player'
+        Player player = (isProjectile)
+                ? (Player) ((Projectile) event.getDamager()).getShooter()
+                : (Player) event.getDamager();
 
-            // Headshot logic
-            if (event.getEntity() instanceof LivingEntity target) {
-                // Check for humanoid target
-                Set<Class<?>> humanoidTypes = Set.of(
-                        Player.class, Zombie.class, Skeleton.class, Villager.class,
-                        Piglin.class, Vindicator.class, Evoker.class, Pillager.class
-                );
-
-                boolean isHumanoid = humanoidTypes.stream().anyMatch(type -> type.isInstance(target));
-                if (isHumanoid) {
-                    double targetHeight = target.getHeight();
-                    double hitY = arrow.getLocation().getY() - target.getLocation().getY();
-
-                    if (hitY > targetHeight * 0.75) {
-                        event.setDamage(event.getDamage() * 1.5); // Headshot bonus
-                        player.sendMessage("§a§l(!) §aHeadshot!");
-                    }
+        if (isProjectile) {
+            // 1. Headshot Logic
+            if (event.getDamager() instanceof Arrow arrow && event.getEntity() instanceof LivingEntity target) {
+                if (isHeadshot(arrow, target)) {
+                    event.setDamage(event.getDamage() * 1.5);
+                    player.sendMessage("§a§l(!) §aHeadshot!");
                 }
             }
-        } else if (event.getDamager() instanceof Player p) {
-            player = p;
+            // 2. Global Bow Bonus
+            event.setDamage(event.getDamage() * 1.25);
+        } else {
+            // 3. Melee Penalty
+            event.setDamage(event.getDamage() * 0.5);
         }
+    }
 
-        if (player == null) return;
-
-        // Check if player is wearing Archer armor
-        if (!(armorManager.getArmorSet(player) instanceof ArcherArmorSet)) return;
-
-        // Apply Archer bonuses
-        if (isProjectile) {
-            event.setDamage(event.getDamage() * 1.25); // Bow bonus
-        } else if (event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
-            event.setDamage(event.getDamage() * 0.5);  // Melee penalty
-        }
+    private boolean isHeadshot(Arrow arrow, LivingEntity target) {
+        // Keep your humanoid list here or in a static set
+        double hitY = arrow.getLocation().getY() - target.getLocation().getY();
+        return hitY > target.getHeight() * 0.75;
     }
 
 

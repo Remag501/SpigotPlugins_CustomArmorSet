@@ -3,6 +3,7 @@ package me.remag501.customarmorsets.armor.impl;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
@@ -30,7 +31,7 @@ import java.net.URL;
 import java.util.*;
 
 
-public class VampireArmorSet extends ArmorSet implements Listener {
+public class VampireArmorSet extends ArmorSet {
 
     private static final int RADIUS = 7;
     private static final int DURATION_TICKS = 60; // 3 seconds
@@ -43,14 +44,14 @@ public class VampireArmorSet extends ArmorSet implements Listener {
     private final Map<UUID, List<Bat>> cosmeticBats = new HashMap<>();
     private final Map<UUID, BukkitRunnable> batTasks = new HashMap<>();
 
-    private final Plugin plugin;
+    private final TaskHelper api;
     private final ArmorManager armorManager;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
 
-    public VampireArmorSet(Plugin plugin, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public VampireArmorSet(TaskHelper api, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.VAMPIRE);
-        this.plugin = plugin;
+        this.api = api;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
@@ -59,12 +60,22 @@ public class VampireArmorSet extends ArmorSet implements Listener {
     @Override
     public void applyPassive(Player player) {
         attributesService.applyHealth(player, 0.5);
+
+        // Register listener(s)
+        UUID id = player.getUniqueId();
+        api.subscribe(EntityDamageByEntityEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                .filter(e -> e.getDamager().getUniqueId().equals(id))
+                .handler(this::playerDamageEvent);
     }
 
     @Override
     public void removePassive(Player player) {
         attributesService.removeHealth(player);
         batForm.remove(player.getUniqueId());
+
+        api.unregisterListener(player.getUniqueId(), type.getId());
     }
 
     @Override
@@ -217,7 +228,7 @@ public class VampireArmorSet extends ArmorSet implements Listener {
 
         cleanupBatForm(player);
 
-        player.sendMessage(ChatColor.GRAY + "You return to your true form.");
+        player.sendMessage(ChatColor.GRAY + "You return to your human form.");
     }
 
     private void spawnBatStorm(Player player) {
@@ -309,7 +320,9 @@ public class VampireArmorSet extends ArmorSet implements Listener {
 
     @EventHandler
     public void playerDamageEvent(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player damager)) return;
+        // Filter ensures damager is our Player and matches the 'id'
+        Player damager = (Player) event.getDamager();
+
         if (!(event.getEntity() instanceof LivingEntity victim)) return;
         if (damager == victim) return;
         if (batForm.contains(damager.getUniqueId())) {

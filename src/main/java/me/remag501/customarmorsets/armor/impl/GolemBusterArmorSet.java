@@ -3,6 +3,7 @@ package me.remag501.customarmorsets.armor.impl;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
+import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.CustomArmorSets;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
@@ -35,7 +36,7 @@ import java.util.*;
 
 //import static me.remag501.customarmorsets.manager.CooldownBarManager.setLevel;
 
-public class GolemBusterArmorSet extends ArmorSet implements Listener {
+public class GolemBusterArmorSet extends ArmorSet {
 
     private static final Map<UUID, Integer> playerEnergy = new HashMap<>();
     private static final Map<UUID, Boolean> playerIsGolem = new HashMap<>();
@@ -43,16 +44,16 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
     private static final Map<GolemBusterArmorSet, BukkitTask> energyLoop = new HashMap<>();
     private static final Map<UUID, Long> stunCooldown = new HashMap<>();
 
-    private final Plugin plugin;
+    private final TaskHelper api;
     private final ArmorManager armorManager;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
     private final DamageStatsManager damageStatsManager;
     private final DefenseStatsManager defenseStatsManager;
 
-    public GolemBusterArmorSet(Plugin plugin, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService, DamageStatsManager damageStatsManager, DefenseStatsManager defenseStatsManager) {
+    public GolemBusterArmorSet(TaskHelper api, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService, DamageStatsManager damageStatsManager, DefenseStatsManager defenseStatsManager) {
         super(ArmorSetType.GOLEM_BUSTER);
-        this.plugin = plugin;
+        this.api = api;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
@@ -62,21 +63,21 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void applyPassive(Player player) {
-//        player.sendMessage("✅ You equipped the Golem Buster set");
-        UUID uuid = player.getUniqueId();
-        playerEnergy.put(uuid, 0);
-        playerIsGolem.put(uuid, false);
+        UUID id = player.getUniqueId();
+        playerEnergy.put(id, 0);
+        playerIsGolem.put(id, false);
+
         // Apply Damage Stats
         damageStatsManager.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.NON_PLAYER);
         defenseStatsManager.setSourceReduction(player.getUniqueId(), 0.75f, TargetCategory.NON_PLAYER);
-//        DefenseStats.setWeaponReduction(player.getUniqueId(), 0.25f, WeaponType.);
-        // Apply 1.8 pvp later
+
+        // Start energy loop timer
         energyLoop.put(this, new BukkitRunnable() {
 
             @Override
             public void run() {
                 int energy;
-                if (playerIsGolem.get(uuid)) {
+                if (playerIsGolem.get(id)) {
                     energy = consumePlayerEnergy(player, -5);
                     if (energy <= 0) {
                         transformBack(player);
@@ -89,18 +90,26 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
                 cooldownBarManager.setLevel(player, energy);
             }
         }.runTaskTimer(plugin, 0, 20));
+
+        // Register listener(s)
+        api.subscribe(EntityDeathEvent.class)
+                .owner(id)
+                .namespace(type.getId())
+                // Filter: The killer exists and is the owner of this armor set
+                .filter(e -> e.getEntity().getKiller() != null && e.getEntity().getKiller().getUniqueId().equals(id))
+                .handler(this::onEntityDeath);
     }
 
     @Override
     public void removePassive(Player player) {
-//        player.sendMessage("❌ You removed the Golem Buster set");
-        // End the bukkit task
         transformBack(player);
         energyLoop.get(this).cancel();
         cooldownBarManager.restorePlayerBar(player);
         attributesService.restoreDefaults(player); // Just in case
         damageStatsManager.clearAll(player.getUniqueId());
         defenseStatsManager.clearAll(player.getUniqueId());
+
+        api.unregisterListener(player.getUniqueId(), type.getId());
     }
 
     @Override
@@ -325,22 +334,20 @@ public class GolemBusterArmorSet extends ArmorSet implements Listener {
         particleTasks.put(uuid, task);
     }
 
-    @EventHandler
-    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player player)) return;
-        if (!(armorManager.getArmorSet(player) instanceof GolemBusterArmorSet)) return;
-
-        if (event.getEntity() instanceof Monster) {
-            event.setDamage(event.getDamage() * 0.8); // Reduced damage from mobs
-        }
-    }
+    // Already handled in attributes
+//    @EventHandler
+//    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+//        if (!(event.getDamager() instanceof Player player)) return;
+//        if (!(armorManager.getArmorSet(player) instanceof GolemBusterArmorSet)) return;
+//
+//        if (event.getEntity() instanceof Monster) {
+//            event.setDamage(event.getDamage() * 0.8); // Reduced damage from mobs
+//        }
+//    }
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
-//        if (!(event.getEntity().getKiller())) return;
         Player player = event.getEntity().getKiller();
-        if (player == null) return;
-        if (!(armorManager.getArmorSet(player) instanceof GolemBusterArmorSet)) return;
 
         // Get all attributes about entity killed
         double mobMaxHealth = 0;
