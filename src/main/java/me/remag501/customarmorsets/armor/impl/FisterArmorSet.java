@@ -113,6 +113,9 @@ public class FisterArmorSet extends ArmorSet {
         // Remove player attack speed
         attributesService.removeAttackSpeed(player);
 
+        afterImagesOne.remove(player.getUniqueId()).destroy();
+        afterImagesTwo.remove(player.getUniqueId()).destroy();;
+
         api.unregisterListener(player.getUniqueId(), type.getId());
         api.stopTask(player.getUniqueId(), "fister_meditate");
         api.stopTask(player.getUniqueId(), "fister_task");

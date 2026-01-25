@@ -116,14 +116,14 @@ public class IcemanArmorSet extends ArmorSet {
         api.subscribe(EntityDamageByEntityEvent.class)
                 .owner(id)
                 .namespace(type.getId())
-                .filter(e -> e.getDamager().getUniqueId().equals(id))
+                .filter(e -> e.getDamager() instanceof Player && e.getDamager().getUniqueId().equals(id))
                 .handler(this::onEntityDamageByEntity);
 
         // 5. Thaw Reaction (Player Fire Aspect / Direct Fire Hit)
         api.subscribe(EntityDamageByEntityEvent.class)
                 .owner(id)
-                .namespace(type.getId())
-                .filter(e -> e.getDamager().getUniqueId().equals(id))
+                .namespace(type.getId() + "_fire")
+                .filter(e -> e.getDamager() instanceof Player && e.getDamager().getUniqueId().equals(id))
                 .handler(this::onPlayerFireDamageMob);
 
         // 6. Global Thaw Reaction (Environmental Fire/Lava)
@@ -153,6 +153,7 @@ public class IcemanArmorSet extends ArmorSet {
         cooldownBarManager.restorePlayerBar(player);
 
         api.unregisterListener(player.getUniqueId(), type.getId());
+        api.unregisterListener(player.getUniqueId(), type.getId() + "_fire");
         api.stopTask(player.getUniqueId(), "iceman_run");
         api.stopTask(player.getUniqueId(), "iceman_charge");
         api.stopTask(player.getUniqueId(), "iceman_ability");
@@ -266,8 +267,10 @@ public class IcemanArmorSet extends ArmorSet {
 
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player player)) return;
-        if (!(armorManager.getArmorSet(player) instanceof IcemanArmorSet)) return; // Corrected this line
+//        if (!(event.getDamager() instanceof Player player)) return;
+//        if (!(armorManager.getArmorSet(player) instanceof IcemanArmorSet)) return; // Corrected this line
+
+        Player player = (Player) event.getDamager();
 
         if (event.getEntity() instanceof LivingEntity target) {
             // Check if the player's attack is a fully charged melee hit (cooldown is >= 1.0)

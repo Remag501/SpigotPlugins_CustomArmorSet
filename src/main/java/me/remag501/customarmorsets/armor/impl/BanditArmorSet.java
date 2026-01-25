@@ -177,9 +177,9 @@ public class BanditArmorSet extends ArmorSet {
              int currentDodges = playerDodges.getOrDefault(player.getUniqueId(), 0);
              if (currentDodges < MAX_DODGES) {
                  currentDodges++;
+                 cooldownBarManager.setLevel(player, currentDodges);
                  playerDodges.put(player.getUniqueId(), currentDodges);
                  player.sendMessage("§a§l(!) §aYou regenerated a dodge! Dodges left: " + currentDodges);
-                 cooldownBarManager.setLevel(player, currentDodges);
              }
 
              // Cancel the task once the player has max dodges again.

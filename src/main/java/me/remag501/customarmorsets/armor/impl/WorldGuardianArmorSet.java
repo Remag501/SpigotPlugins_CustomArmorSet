@@ -48,7 +48,7 @@ public class WorldGuardianArmorSet extends ArmorSet {
         api.subscribe(EntityDamageEvent.class)
                 .owner(id)
                 .namespace(type.getId())
-//                .filter(e -> )
+                .filter(e -> e.getEntity() instanceof Player p && p.getUniqueId().equals(id))
                 .handler(this::onEntityDamageEvent);
     }
 
