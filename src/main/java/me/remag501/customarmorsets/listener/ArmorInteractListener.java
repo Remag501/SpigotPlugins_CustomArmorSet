@@ -30,7 +30,6 @@ public class ArmorInteractListener {
         return name.endsWith("_HELMET") ||
                 name.endsWith("_CHESTPLATE") ||
                 name.endsWith("_LEGGINGS") ||
-                name.endsWith("_BOOTS") ||
-                material == Material.PLAYER_HEAD; // Added support for your custom helmets
+                name.endsWith("_BOOTS");
     }
 }

@@ -33,7 +33,8 @@ public final class CustomArmorSets extends JavaPlugin {
         getLogger().info("Custom Armor Sets have started up!");
 
         // 1. Get the API from the Core ONCE
-        TaskHelper bgsApi = BGSCore.getInstance().getApi();
+        BGSCore bgsCore = BGSCore.getInstance();
+        TaskHelper bgsApi = bgsCore.getApi();
 
         // 2. Initialize services and managers
 
@@ -53,12 +54,15 @@ public final class CustomArmorSets extends JavaPlugin {
                 damageStatsManager, defenseStatsManager, armorService, playerSyncManager, namespaceService);
 
         // 3. Register command to plugin
-        getCommand("customarmorsets").setExecutor(new CustomArmorSetCommand(this, itemService));
+        CustomArmorSetCommand armorSetCommand = new CustomArmorSetCommand(this, itemService);
+        getCommand("customarmorsets").setExecutor(armorSetCommand);
+        bgsCore.getCommandRouter().registerSubcommand("armor", armorSetCommand);
 
         // 4. Register all listeners to plugin
 
         // Listeners fo equipping and using armor set
         getServer().getPluginManager().registerEvents(new ArmorEquipListener(armorManager, armorService, itemService), this);
+        new ArmorInteractListener(armorManager, bgsApi);
         new OffHandAbilityListener(armorManager, bgsApi);
         new DurabilityListener(armorService, cosmeticService, namespaceService, bgsApi);
         // Listeners for world change and connection
