@@ -156,9 +156,17 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                     double newHealth = Math.max(0, abstractEntity.getHealth() * 0.8); // heal 0.5 heart per tick
                     abstractEntity.setHealth(newHealth);
 
-                    abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 100, 2, false, false));
-                    abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 100, 2, false, false));
-                    abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 100, 2, false, false));
+//                    abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 100, 2, false, false));
+//                    abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 100, 2, false, false));
+//                    abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 100, 2, false, false));
+                    // Unwrap the Mythic AbstractEntity to get the Bukkit LivingEntity
+                    if (abstractEntity.getBukkitEntity() instanceof LivingEntity living) {
+                        // Now you can use standard Bukkit code with ZERO compatibility issues
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 100, 2, false, false));
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 100, 2, false, false));
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 100, 2, false, false));
+                    }
+
                     entity.getWorld().spawnParticle(
                             Particle.SMOKE,
                             entity.getLocation().add(0, 0.5, 0),
@@ -552,7 +560,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         }
 
         // --- 5. Explicitly set owner (redundant with spawnData but harmless and adds robustness) ---
-        activeMob.setOwner(ownerUUID);
+        activeMob.setOwnerUUID(ownerUUID);
 
         // Set name of the mob
         String mobName = activeMob.getDisplayName();

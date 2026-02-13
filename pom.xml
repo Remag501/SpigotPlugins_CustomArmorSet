@@ -12,9 +12,9 @@
     <name>CustomArmorSets</name>
 
     <properties>
-        <java.version>17</java.version>
-<!--        <maven.compiler.source>17</maven.compiler.source>-->
-<!--        <maven.compiler.target>17</maven.compiler.target>-->
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -23,11 +23,8 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <source>17</source>
-                    <target>17</target>
-                </configuration>
+                <version>3.13.0</version> <configuration>
+                <release>21</release> </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -89,27 +86,20 @@
 
     <dependencies>
         <dependency>
-            <groupId>oldcombatmechanics</groupId>
-            <artifactId>OldCombatMechanics</artifactId>
-            <version>1.12.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/libs/OldCombatMechanics.jar</systemPath>
-        </dependency>
-        <dependency>
             <groupId>com.github.retrooper</groupId>
             <artifactId>packetevents-api</artifactId>
-            <version>2.9.4-SNAPSHOT</version>
+            <version>2.11.2-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>2.2</version> <!-- Use the latest stable version -->
+            <version>2.2</version>
         </dependency>
         <dependency>
             <groupId>io.lumine</groupId>
             <artifactId>Mythic-Dist</artifactId>
-            <version>5.3.0</version>
+            <version>5.11.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -119,21 +109,15 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.comphenix.protocol</groupId>
-            <artifactId>ProtocolLib</artifactId>
-            <version>5.3.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>me.libraryaddict.disguises</groupId>
             <artifactId>libsdisguises</artifactId>
-            <version>11.0.0</version>
+            <version>11.0.14</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>net.citizensnpcs</groupId>
             <artifactId>citizensapi</artifactId>
-            <version>2.0.35-SNAPSHOT</version>
+            <version>2.0.39-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -141,19 +125,6 @@
             <artifactId>bgscore</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mcmonkey</groupId>
-            <artifactId>sentinel</artifactId>
-            <version>2.9.2-SNAPSHOT</version>
-            <type>jar</type>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
     </dependencies>
 </project>
