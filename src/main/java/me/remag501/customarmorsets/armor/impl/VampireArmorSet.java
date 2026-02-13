@@ -150,8 +150,8 @@ public class VampireArmorSet extends ArmorSet {
             for (LivingEntity target : targets) {
                 if (!target.isDead() && target.getLocation().distanceSquared(player.getLocation()) <= RADIUS * RADIUS) {
                     target.damage(3, player);
-                    player.setHealth(Math.min(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(), player.getHealth() + 1.0));
-                    drawParticleLine(target.getEyeLocation(), player.getEyeLocation(), Particle.REDSTONE, Color.MAROON);
+                    player.setHealth(Math.min(player.getAttribute(Attribute.MAX_HEALTH).getValue(), player.getHealth() + 1.0));
+                    drawParticleLine(target.getEyeLocation(), player.getEyeLocation(), Particle.BLOCK, Color.MAROON);
                 }
             }
             return false;
@@ -270,7 +270,7 @@ public class VampireArmorSet extends ArmorSet {
             }
 
             // Spawn ambient dark particles around player continuously
-            center.getWorld().spawnParticle(Particle.SMOKE_NORMAL, center, 3, 0.3, 0.1, 0.3, 0.01);
+            center.getWorld().spawnParticle(Particle.SMOKE, center, 3, 0.3, 0.1, 0.3, 0.01);
             tickCount++;
 
             if (tickCount % 5 == 0) {
@@ -327,7 +327,7 @@ public class VampireArmorSet extends ArmorSet {
 
         // Heal the player by a portion of the damage dealt
         double newHealth = Math.min(
-                damager.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(),
+                damager.getAttribute(Attribute.MAX_HEALTH).getValue(),
                 damager.getHealth() + LIFESTEAL_AMOUNT
         );
         damager.setHealth(newHealth);

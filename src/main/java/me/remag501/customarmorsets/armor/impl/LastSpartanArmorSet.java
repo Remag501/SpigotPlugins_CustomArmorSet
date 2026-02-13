@@ -73,7 +73,7 @@ public class LastSpartanArmorSet extends ArmorSet {
 
             // Play firework sparks at the player's feet when they leap
             player.getWorld().spawnParticle(
-                    Particle.FIREWORKS_SPARK,
+                    Particle.FIREWORK,
                     player.getLocation().add(0, 0.1, 0), // slightly above ground
                     30, // number of particles
                     0.2, 0.1, 0.2, // spread in x, y, z
@@ -93,7 +93,7 @@ public class LastSpartanArmorSet extends ArmorSet {
                     // Add particle effect
                     // Play a big poof effect to notify others
                     player.getWorld().spawnParticle(
-                            Particle.EXPLOSION_NORMAL,
+                            Particle.EXPLOSION,
                             player.getLocation(),
                             50, // number of particles
                             1.5, 0.2, 1.5, // wide spread on ground
@@ -102,7 +102,7 @@ public class LastSpartanArmorSet extends ArmorSet {
 
                     // Optionally add a little dust/sand effect for extra flair
                     player.getWorld().spawnParticle(
-                            Particle.BLOCK_DUST,
+                            Particle.BLOCK,
                             player.getLocation(),
                             80, // number of particles
                             1.5, 0.2, 1.5, // wide spread

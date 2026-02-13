@@ -158,9 +158,9 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
 
                     abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 100, 2, false, false));
                     abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 100, 2, false, false));
-                    abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 100, 2, false, false));
+                    abstractEntity.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 100, 2, false, false));
                     entity.getWorld().spawnParticle(
-                            Particle.SMOKE_LARGE,
+                            Particle.SMOKE,
                             entity.getLocation().add(0, 0.5, 0),
                             10, 0.3, 0.3, 0.3, 0.01
                     );
@@ -380,7 +380,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         // MythicMobs config didn’t define speed
         if (speed == -1.0) {
             if (mobEntity instanceof LivingEntity living) {
-                AttributeInstance attr = living.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
+                AttributeInstance attr = living.getAttribute(Attribute.MOVEMENT_SPEED);
                 if (attr != null) {
                     speed = attr.getValue() / 0.1;
                 } else {
@@ -402,7 +402,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             float flySpeed = (float) controlledMob.getType().getFlyingSpeed(controlledMob);
             if (flySpeed == -1) { // Not setup in config
                 if (mobEntity instanceof LivingEntity living) {
-                    AttributeInstance attr = living.getAttribute(Attribute.GENERIC_FLYING_SPEED);
+                    AttributeInstance attr = living.getAttribute(Attribute.FLYING_SPEED);
                     if (attr != null) {
                         flySpeed = (float) (attr.getValue());
                     } else {
@@ -655,7 +655,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
                 Location playerLocation = player.getLocation();
                 world.spawnParticle(Particle.PORTAL, playerLocation, 50, 0.5, 1.5, 0.5, 0.1);
                 world.spawnParticle(Particle.SOUL_FIRE_FLAME, playerLocation, 25, 0.5, 1.0, 0.5, 0.1);
-                world.spawnParticle(Particle.SMOKE_NORMAL, playerLocation, 100, 0.5, 1.5, 0.5, 0.1);
+                world.spawnParticle(Particle.SMOKE, playerLocation, 100, 0.5, 1.5, 0.5, 0.1);
                 world.spawnParticle(Particle.FLASH, playerLocation, 1);
                 world.playSound(player, Sound.ENTITY_WITHER_SPAWN, 1, 2); // Sound
                 playerLocation.getWorld().strikeLightningEffect(playerLocation);

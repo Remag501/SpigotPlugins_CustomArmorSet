@@ -134,7 +134,7 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
             default -> 1.0;
         };
 
-        int sharpnessLevel = item.getEnchantmentLevel(Enchantment.DAMAGE_ALL);
+        int sharpnessLevel = item.getEnchantmentLevel(Enchantment.SHARPNESS);
         if (sharpnessLevel > 0) {
             // Sharpness formula: 1 + (level - 1) * 0.5
             baseDamage += 1.0 + 0.5 * (sharpnessLevel - 1);

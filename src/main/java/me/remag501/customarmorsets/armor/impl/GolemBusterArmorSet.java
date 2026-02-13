@@ -149,7 +149,7 @@ public class GolemBusterArmorSet extends ArmorSet {
 
                         // Apply stun (Weakness II + Slowness III for 2 seconds)
                         target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 60, 1));
-                        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 60, 2));
+                        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 2));
 
                         // Particles
                         player.getWorld().spawnParticle(Particle.CRIT, target.getLocation().add(0, 1, 0), 20, 0.3, 0.5, 0.3);
@@ -216,7 +216,7 @@ public class GolemBusterArmorSet extends ArmorSet {
 
             // Redstone-like particle effect
             Particle.DustOptions redDust = new Particle.DustOptions(Color.RED, 1.2F);
-            target.getWorld().spawnParticle(Particle.REDSTONE, loc, 10, 0.3, 0.4, 0.3, 0, redDust);
+            target.getWorld().spawnParticle(Particle.FIREWORK, loc, 10, 0.3, 0.4, 0.3, 0, redDust);
 
             return false;
         });
@@ -305,7 +305,7 @@ public class GolemBusterArmorSet extends ArmorSet {
 
             // Spawn particles around the player's body
             Location loc = player.getLocation().add(0, 1, 0); // Adjust Y as needed
-            player.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, loc, 3, 0.3, 0.5, 0.3, 0.01);
+            player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, loc, 3, 0.3, 0.5, 0.3, 0.01);
             return false;
         });
 
@@ -319,8 +319,8 @@ public class GolemBusterArmorSet extends ArmorSet {
         // Get all attributes about entity killed
         double mobMaxHealth = 0;
         double mobBaseDamage = 0;
-        AttributeInstance maxHealthAttribute = event.getEntity().getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        AttributeInstance attackDamageAttribute = event.getEntity().getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
+        AttributeInstance maxHealthAttribute = event.getEntity().getAttribute(Attribute.MAX_HEALTH);
+        AttributeInstance attackDamageAttribute = event.getEntity().getAttribute(Attribute.ATTACK_DAMAGE);
         if (maxHealthAttribute != null) {
             mobMaxHealth = maxHealthAttribute.getBaseValue(); // Get the base value of the max health
         }
@@ -377,7 +377,7 @@ public class GolemBusterArmorSet extends ArmorSet {
                 double z = Math.sin(angle) * radius;
                 Location particleLoc = center.clone().add(x, 0, z);
 
-                world.spawnParticle(Particle.SMOKE_NORMAL, particleLoc, 0, 0, 0.1, 0, 0.01);
+                world.spawnParticle(Particle.SMOKE, particleLoc, 0, 0, 0.1, 0, 0.01);
             }
         }
     }

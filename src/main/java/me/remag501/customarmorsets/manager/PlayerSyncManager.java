@@ -86,9 +86,9 @@ public class PlayerSyncManager {
 
         // Set current health proportionally
         double scaledHealth = (mob.getHealth() / mob.getMaxHealth()) *
-                player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+                player.getAttribute(Attribute.MAX_HEALTH).getValue();
 
-        player.setHealth(Math.min(scaledHealth, player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()));
+        player.setHealth(Math.min(scaledHealth, player.getAttribute(Attribute.MAX_HEALTH).getValue()));
     }
 
 
@@ -121,7 +121,7 @@ public class PlayerSyncManager {
         Double health = originalHealth.remove(player.getUniqueId());
         if (health != null) {
             attributesService.removeHealth(player);
-            player.setHealth(Math.min(health, player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()));
+            player.setHealth(Math.min(health, player.getAttribute(Attribute.MAX_HEALTH).getValue()));
         }
     }
 

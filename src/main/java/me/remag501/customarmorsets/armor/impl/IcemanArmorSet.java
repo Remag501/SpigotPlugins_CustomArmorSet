@@ -377,14 +377,14 @@ public class IcemanArmorSet extends ArmorSet {
 
         // Apply effects based on stacks
         if (currentStacks >= FREEZE_CHARGE_MAX) {
-            mob.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 40, 5));
+            mob.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 5));
             mob.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 1));
             mob.setAI(false);
         } else if (currentStacks >= 3) {
-            mob.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 40, 2));
+            mob.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 2));
             mob.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 20, 1));
         } else {
-            mob.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20, 0));
+            mob.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 0));
         }
 
         // Cancel existing tasks to prevent conflicts
@@ -414,7 +414,7 @@ public class IcemanArmorSet extends ArmorSet {
         taskService.subscribe(mobUUID, "particle", 0, 10, (ticks) -> {
             int stacks = freezeStacks.getOrDefault(mobUUID, 0);
             if (stacks >= FREEZE_CHARGE_MAX) {
-                mob.getWorld().spawnParticle(Particle.BLOCK_CRACK, mob.getLocation().add(0, 1, 0), 200, 0.5, 0.5, 0.5, Material.ICE.createBlockData());
+                mob.getWorld().spawnParticle(Particle.BLOCK, mob.getLocation().add(0, 1, 0), 200, 0.5, 0.5, 0.5, Material.ICE.createBlockData());
             } else if (stacks >= 3) {
                 mob.getWorld().spawnParticle(Particle.CLOUD, mob.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 0.1);
             } else if (stacks >= 1) {
@@ -644,7 +644,7 @@ public class IcemanArmorSet extends ArmorSet {
                     taskService.subscribe(mobUUID, "particle", 0, 10, (ticks) -> {
                         int stacks = freezeStacks.getOrDefault(mobUUID, 0);
                         if (stacks >= 5) {
-                            mob.getWorld().spawnParticle(Particle.BLOCK_CRACK, mob.getLocation().add(0, 1, 0), 200, 0.5, 0.5, 0.5, Material.ICE.createBlockData());
+                            mob.getWorld().spawnParticle(Particle.BLOCK, mob.getLocation().add(0, 1, 0), 200, 0.5, 0.5, 0.5, Material.ICE.createBlockData());
                         } else if (stacks >= 3) {
                             mob.getWorld().spawnParticle(Particle.CLOUD, mob.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 0.1);
                         } else if (stacks >= 1) {
@@ -673,7 +673,7 @@ public class IcemanArmorSet extends ArmorSet {
                 if (freezeStacks.get(mob.getUniqueId()) < 3)
                     manageMobFreezeTask(mob, 1);
                 // Add a chilling effect particle
-                mob.getWorld().spawnParticle(Particle.DRIP_WATER, mob.getLocation().add(0, 1, 0), 5, 0.5, 0.5, 0.5);
+                mob.getWorld().spawnParticle(Particle.DRIPPING_WATER, mob.getLocation().add(0, 1, 0), 5, 0.5, 0.5, 0.5);
             }
             // Apply a buff to the player.
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 25, 1));
@@ -690,7 +690,7 @@ public class IcemanArmorSet extends ArmorSet {
 
             // Remove potion effects from trapped mobs and the player.
             for (LivingEntity mob : trappedMobs) {
-                mob.removePotionEffect(PotionEffectType.SLOW);
+                mob.removePotionEffect(PotionEffectType.SLOWNESS);
                 mob.removePotionEffect(PotionEffectType.BLINDNESS);
             }
             player.removePotionEffect(PotionEffectType.SPEED);

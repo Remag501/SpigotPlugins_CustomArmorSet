@@ -10,5 +10,5 @@ commands:
 
 depend:
   - BGSCore
-#  - MythicMobs
-#  - LibsDisguises
+  - MythicMobs
+  - LibsDisguises

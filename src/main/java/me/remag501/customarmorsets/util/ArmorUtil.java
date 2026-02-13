@@ -56,9 +56,9 @@ public class ArmorUtil {
 
         // Adjust set armor points, durability, and toughness
         AttributeModifier modifier = new AttributeModifier(UUID.randomUUID(), "generic.armor", armorPoints, AttributeModifier.Operation.ADD_NUMBER, slot);
-        meta.addAttributeModifier(Attribute.GENERIC_ARMOR, modifier);
+        meta.addAttributeModifier(Attribute.ARMOR, modifier);
         modifier = new AttributeModifier(UUID.randomUUID(), "generic.armor.toughness", armorToughness, AttributeModifier.Operation.ADD_NUMBER, slot);
-        meta.addAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS, modifier);
+        meta.addAttributeModifier(Attribute.ARMOR_TOUGHNESS, modifier);
 //        meta.setUnbreakable(true); // Make default unbreakable so we use internal durability
         lore = new ArrayList<>(lore); // Make lore mutable
         lore.add("§7Durability: " + durability + "/" + durability);

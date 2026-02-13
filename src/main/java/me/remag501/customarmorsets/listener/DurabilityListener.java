@@ -68,7 +68,7 @@ public class DurabilityListener {
         int currentDurability = container.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 100);
         int maxDurability = container.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 100);
 
-        int unbreakingLevel = damagedItem.getEnchantmentLevel(Enchantment.DURABILITY);
+        int unbreakingLevel = damagedItem.getEnchantmentLevel(Enchantment.UNBREAKING);
         boolean shouldTakeDamage = shouldTakeDurabilityLoss(unbreakingLevel);
 
         int newDurability = shouldTakeDamage ? Math.max(0, currentDurability - 1) : currentDurability;
@@ -113,7 +113,7 @@ public class DurabilityListener {
                 int headDurability = headContainer.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 100);
                 int headMaxDurability = headContainer.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 100);
 
-                unbreakingLevel = helmet.getEnchantmentLevel(Enchantment.DURABILITY);
+                unbreakingLevel = helmet.getEnchantmentLevel(Enchantment.UNBREAKING);
                 shouldTakeDamage = shouldTakeDurabilityLoss(unbreakingLevel);
 
                 int newHeadDurability = shouldTakeDamage ? Math.max(0, headDurability - 1) : headDurability;

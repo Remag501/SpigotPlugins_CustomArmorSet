@@ -51,7 +51,7 @@ public class RoyalKnightArmorSet extends ArmorSet {
         }
 
         // Heal 3 hearts (6 health)
-        player.setHealth(Math.min(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(), player.getHealth() + 6));
+        player.setHealth(Math.min(player.getAttribute(Attribute.MAX_HEALTH).getValue(), player.getHealth() + 6));
         player.sendMessage("§a§l(!) §aYou used Royal Knight's Healing!");
 
         cooldownBarManager.startCooldownBar(player, (int)(COOLDOWN / 1000));

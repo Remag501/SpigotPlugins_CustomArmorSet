@@ -161,7 +161,7 @@ public class FisterArmorSet extends ArmorSet {
                 double z = Math.sin(i + angle.get()) * 2;
                 world.spawnParticle(Particle.END_ROD, floatLocation.clone().add(x, -1, z), 0);
             }
-            world.spawnParticle(Particle.ENCHANTMENT_TABLE, floatLocation, 5, 0.5, 0.5, 0.5, 0);
+            world.spawnParticle(Particle.ENCHANT, floatLocation, 5, 0.5, 0.5, 0.5, 0);
             // Constantly add regen
             player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20, 3));
             player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, 20, 3));
@@ -179,8 +179,8 @@ public class FisterArmorSet extends ArmorSet {
                 le.setVelocity(knockback);
 
                 le.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 60, 1));
-                le.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 60, 2));
-                le.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, 60, 0));
+                le.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 2));
+                le.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 60, 0));
             }
         }
 
@@ -203,11 +203,11 @@ public class FisterArmorSet extends ArmorSet {
         // Apply potion effects
         player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 60, 1)); // 3 seconds
         player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 100, 1));
-        player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 100, 0));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 100, 0));
 
         // Play exit sound and particles
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1f, 1.2f);
-        player.getWorld().spawnParticle(Particle.EXPLOSION_NORMAL, player.getLocation(), 10);
+        player.getWorld().spawnParticle(Particle.EXPLOSION, player.getLocation(), 10);
 
         meditating.remove(uuid);
 
@@ -405,7 +405,7 @@ public class FisterArmorSet extends ArmorSet {
 
             loc.getWorld().playSound(loc, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.2f);
 
-            loc.getWorld().spawnParticle(Particle.ITEM_CRACK, loc, 10, 0.1, 0.1, 0.1, new ItemStack(Material.ARROW));
+            loc.getWorld().spawnParticle(Particle.ITEM, loc, 10, 0.1, 0.1, 0.1, new ItemStack(Material.ARROW));
             player.sendMessage("§a§l(!) §aArrow shattered!");
         }
     }

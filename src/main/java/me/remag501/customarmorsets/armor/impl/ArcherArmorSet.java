@@ -86,7 +86,7 @@ public class ArcherArmorSet extends ArmorSet {
         }
 
         // Give player jump boost
-        player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 3*20, 1), false);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 3*20, 1), false);
 
         // Play sound globally
         for (Player p : Bukkit.getOnlinePlayers()) {
