@@ -12,7 +12,8 @@ import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.*;
 import me.libraryaddict.disguise.disguisetypes.watchers.AreaEffectCloudWatcher;
 import me.libraryaddict.disguise.disguisetypes.watchers.PlayerWatcher;
-import me.remag501.bgscore.api.TaskHelper;
+import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.TargetCategory;
@@ -38,8 +39,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.net.MalformedURLException;
@@ -64,16 +63,18 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
 
     private static final String RESURRECTED_MOB_PREFIX = MythicMobsListener.getPrefix();
 
-    private final TaskHelper api;
+    private final EventService eventService;
+    private final TaskService taskService;
     private final ArmorManager armorManager;
     private final DamageStatsManager damageStatsManager;
     private final AttributesService attributesService;
     private final PlayerSyncManager playerSyncManager;
     private final NamespaceService namespaceService;
 
-    public NecromancerArmorSet(TaskHelper api, ArmorManager armorManager, DamageStatsManager damageStatsManager, AttributesService attributesService, PlayerSyncManager playerSyncManager, NamespaceService namespaceService) {
+    public NecromancerArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, DamageStatsManager damageStatsManager, AttributesService attributesService, PlayerSyncManager playerSyncManager, NamespaceService namespaceService) {
         super(ArmorSetType.NECROMANCER);
-        this.api = api;
+        this.eventService = eventService;
+        this.taskService = taskService;
         this.armorManager = armorManager;
         this.damageStatsManager = damageStatsManager;
         this.attributesService = attributesService;
@@ -92,7 +93,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         AtomicBoolean notified = new AtomicBoolean(false);
         AtomicLong lastStartTime = new AtomicLong(0L);
 
-        api.subscribe(player.getUniqueId(), "necromancer_summons", 0, 10, (ticks) -> {
+        taskService.subscribe(player.getUniqueId(), "necromancer_summons", 0, 10, (ticks) -> {
             List<ActiveMob> mobs = summonedMobs.get(uuid);
 
             // Skip if cooldown is not running
@@ -193,14 +194,14 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         // Register listener(s)
         UUID id = player.getUniqueId();
         // 1. Flight Control (Stop controlling mobs)
-        api.subscribe(PlayerToggleFlightEvent.class)
+        eventService.subscribe(PlayerToggleFlightEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getPlayer().getUniqueId().equals(id))
                 .handler(this::onPlayerCancelFlight);
 
         // 2. Soul Harvest (Killing MythicMobs)
-        api.subscribe(EntityDeathEvent.class)
+        eventService.subscribe(EntityDeathEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getEntity().getKiller() != null && e.getEntity().getKiller().getUniqueId().equals(id))
@@ -208,27 +209,27 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
 
         // 3. Life & Death Logic (Resurrection / Controlled Death)
         // We use a lighter filter here because the player is often the Victim
-        api.subscribe(EntityDamageEvent.class)
+        eventService.subscribe(EntityDamageEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getEntity() instanceof Player || MythicBukkit.inst().getMobManager().isActiveMob(e.getEntity().getUniqueId()))
                 .handler(this::onEntityDamage);
 
         // 4. Combat & Decoy Logic
-        api.subscribe(EntityDamageByEntityEvent.class)
+        eventService.subscribe(EntityDamageByEntityEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .handler(this::onEntityHit);
 
         // 5. Restriction: No Sprinting while controlling
-        api.subscribe(PlayerToggleSprintEvent.class)
+        eventService.subscribe(PlayerToggleSprintEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getPlayer().getUniqueId().equals(id))
                 .handler(this::onSprint);
 
         // 6. Restriction: No Item Pickup while "Dead" or Controlling
-        api.subscribe(EntityPickupItemEvent.class)
+        eventService.subscribe(EntityPickupItemEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getEntity().getUniqueId().equals(id))
@@ -244,10 +245,10 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         }
         summonedMobs.remove(player.getUniqueId());
 
-        api.unregisterListener(player.getUniqueId(), type.getId());
-        api.stopTask(player.getUniqueId(), "necromancer_summons");
-        api.stopTask(player.getUniqueId(), "necromancer_sync");
-        api.stopTask(player.getUniqueId(), "necromancer_decoy");
+        eventService.unregisterListener(player.getUniqueId(), type.getId());
+        taskService.stopTask(player.getUniqueId(), "necromancer_summons");
+        taskService.stopTask(player.getUniqueId(), "necromancer_sync");
+        taskService.stopTask(player.getUniqueId(), "necromancer_decoy");
     }
 
     @Override
@@ -426,12 +427,12 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             playerSyncManager.syncHealth(player, livingEntity);
         }
 
-        api.delay(2, () -> {
+        taskService.delay(2, () -> {
             player.setHealth(controlledMob.getEntity().getHealth()); // Prevent bugs where health doesn't sync in time
         });
 
         // 4. Start sync task
-        api.subscribe(player.getUniqueId(), "necromancer_sync", 0, 2, (ticks) -> {
+        taskService.subscribe(player.getUniqueId(), "necromancer_sync", 0, 2, (ticks) -> {
             if (!player.isOnline() || !controlledMobs.containsKey(uuid)) {
                 return true;
             }
@@ -459,7 +460,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         }
 
         // 1. Cancel control loop
-        api.stopTask(player.getUniqueId(), "necromancer_sync");
+        taskService.stopTask(player.getUniqueId(), "necromancer_sync");
 
         // 2. Remove disguise
         DisguiseAPI.undisguiseToAll(player);
@@ -645,7 +646,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         // Start scheduler to handle lots revival logic
         AtomicInteger timeLeft = new AtomicInteger(10);
         AtomicInteger timeControl = new AtomicInteger(5);
-        api.subscribe(player.getUniqueId(), 0, 20, (ticks) -> {
+        taskService.subscribe(player.getUniqueId(), 0, 20, (ticks) -> {
             if (timeControl.get() <= 0) {
                 despawnMob(controlledMobs.get(player.getUniqueId()));
                 resurrectionCooldowns.put(uuid, now);
@@ -824,7 +825,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         DisguiseAPI.disguiseToAll(decoy, disguise);
 
         // 2. Run AI task
-        api.subscribe(player.getUniqueId(), "necromancer_decoy", 0, 20, (tick) -> {
+        taskService.subscribe(player.getUniqueId(), "necromancer_decoy", 0, 20, (tick) -> {
             if (!decoy.isValid()) {
                 decoy.remove();
                 return true;
@@ -886,7 +887,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         killedMobs.put(stand, activeMob.getType());
 
         // Remove the armor stand after 5 seconds (100 ticks)
-        api.delay(100, () -> {
+        taskService.delay(100, () -> {
             if (!stand.isDead() && stand.isValid()) {
                 stand.remove();
             }

@@ -1,14 +1,12 @@
 package me.remag501.customarmorsets.listener;
 
-import me.remag501.bgscore.api.TaskHelper;
+import me.remag501.bgscore.api.event.EventService;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.manager.DefenseStatsManager;
 import me.remag501.customarmorsets.armor.TargetCategory;
 import me.remag501.customarmorsets.armor.WeaponType;
 import org.bukkit.Material;
 import org.bukkit.entity.*;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -19,12 +17,12 @@ public class DamageListener {
     private final DamageStatsManager damageStatsManager;
     private final DefenseStatsManager defenseStatsManager;
 
-    public DamageListener(DamageStatsManager damageStatsManager, DefenseStatsManager defenseStatsManager, TaskHelper bgsApi) {
+    public DamageListener(DamageStatsManager damageStatsManager, DefenseStatsManager defenseStatsManager, EventService eventService) {
         this.damageStatsManager = damageStatsManager;
         this.defenseStatsManager = defenseStatsManager;
 
         // Subscribe to the Damage Event via Core
-        bgsApi.subscribe(EntityDamageByEntityEvent.class)
+        eventService.subscribe(EntityDamageByEntityEvent.class)
                 .filter(e -> e.getEntity() instanceof LivingEntity) // Must involve a LivingEntity victim
                 .handler(this::onEntityDamageByEntity);
     }

@@ -1,6 +1,6 @@
 package me.remag501.customarmorsets.listener;
 
-import me.remag501.bgscore.api.TaskHelper;
+import me.remag501.bgscore.api.event.EventService;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.service.ArmorService;
@@ -9,9 +9,9 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 
 public class WorldChangeListener {
 
-    public WorldChangeListener(ArmorManager armorManager, ArmorService armorService, TaskHelper bgsApi) {
+    public WorldChangeListener(ArmorManager armorManager, ArmorService armorService, EventService eventService) {
 
-        bgsApi.subscribe(PlayerChangedWorldEvent.class)
+        eventService.subscribe(PlayerChangedWorldEvent.class)
                 .handler(e -> {
                     Player player = e.getPlayer();
 

@@ -1,13 +1,11 @@
 package me.remag501.customarmorsets.armor.impl;
 
-import me.remag501.bgscore.api.TaskHelper;
+import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.WeaponType;
-import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
@@ -15,13 +13,8 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -31,13 +24,13 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 7 * 1000; // 7 seconds cooldown
 
-    private final TaskHelper api;
+    private final TaskService taskService;
     private final DamageStatsManager damageStatsManager;
     private final CooldownBarManager cooldownBarManager;
 
-    public VikingCaptainArmorSet(TaskHelper api, DamageStatsManager damageStatsManager, CooldownBarManager cooldownBarManager) {
+    public VikingCaptainArmorSet(TaskService taskService, DamageStatsManager damageStatsManager, CooldownBarManager cooldownBarManager) {
         super(ArmorSetType.VIKING_CAPTAIN);
-        this.api = api;
+        this.taskService = taskService;
         this.damageStatsManager = damageStatsManager;
         this.cooldownBarManager = cooldownBarManager;
 
@@ -52,8 +45,6 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
     @Override
     public void removePassive(Player player) {
         damageStatsManager.clearAll(player.getUniqueId());
-
-        api.unregisterListener(player.getUniqueId(), type.getId());
     }
 
     @Override
@@ -83,7 +74,7 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
         thrownAxe.setPickupDelay(Integer.MAX_VALUE); // Prevent anyone from picking it up
         thrownAxe.setVelocity(player.getLocation().getDirection().multiply(1.5));
 
-        api.subscribe(player.getUniqueId(), 0, 1, (ticks) -> {
+        taskService.subscribe(player.getUniqueId(), 0, 1, (ticks) -> {
             if (!thrownAxe.isValid() || !thrownAxe.getWorld().equals(player.getWorld())) {
                 returnAxe(player, thrownAxeStack);
                 return true;

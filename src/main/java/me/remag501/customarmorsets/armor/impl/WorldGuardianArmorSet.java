@@ -1,18 +1,15 @@
 package me.remag501.customarmorsets.armor.impl;
 
-import me.remag501.bgscore.api.TaskHelper;
+import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
+import org.bukkit.event.Event;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,19 +18,18 @@ import java.util.UUID;
 public class WorldGuardianArmorSet extends ArmorSet {
 
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
+    private static final Map<UUID, Boolean> isInvulnerable = new HashMap<>();
     private static final long COOLDOWN = 25 * 1000;
 
-    private boolean isInvulnerable = false;
-
-    private final TaskHelper api;
-    private final ArmorManager armorManager;
+    private final EventService eventService;
+    private final TaskService taskService;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
 
-    public WorldGuardianArmorSet(TaskHelper api, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public WorldGuardianArmorSet(EventService eventService, TaskService taskService, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.WORLD_GUARDIAN);
-        this.api = api;
-        this.armorManager = armorManager;
+        this.eventService = eventService;
+        this.taskService = taskService;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
     }
@@ -45,11 +41,12 @@ public class WorldGuardianArmorSet extends ArmorSet {
 
         // Register listener(s)
         UUID id = player.getUniqueId();
-        api.subscribe(EntityDamageEvent.class)
+        eventService.subscribe(EntityDamageEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getEntity() instanceof Player p && p.getUniqueId().equals(id))
-                .handler(this::onEntityDamageEvent);
+                .filter(e -> isInvulnerable.get(id) == true)
+                .handler(e -> e.setCancelled(true));
     }
 
     @Override
@@ -57,7 +54,7 @@ public class WorldGuardianArmorSet extends ArmorSet {
         attributesService.removeHealth(player);
         attributesService.removeSpeed(player);
 
-        api.unregisterListener(player.getUniqueId(), type.getId());
+        eventService.unregisterListener(player.getUniqueId(), type.getId());
     }
 
     @Override
@@ -71,12 +68,12 @@ public class WorldGuardianArmorSet extends ArmorSet {
             return;
         }
 
-        isInvulnerable = true;
+        isInvulnerable.put(uuid, true);
 
         cooldownBarManager.startCooldownBar(player, 3);
 
-        api.delay(60, () -> {
-            isInvulnerable = false;
+        taskService.delay(60, () -> {
+            isInvulnerable.put(uuid, false);
             cooldownBarManager.startCooldownBar(player, (int)(COOLDOWN / 1000));
             abilityCooldowns.put(uuid, now);
         });
@@ -84,16 +81,4 @@ public class WorldGuardianArmorSet extends ArmorSet {
         player.sendMessage("§aYou are invulnerable for 3 seconds!");
     }
 
-    public void onEntityDamageEvent(EntityDamageEvent event) {
-        Player player = (Player) event.getEntity();
-
-        ArmorSet set = armorManager.getArmorSet(player);
-        if (!(set instanceof WorldGuardianArmorSet armorSet)) return;
-
-        if (armorSet.isInvulnerable) {
-            event.setCancelled(true);
-        }
-
-
-    }
 }

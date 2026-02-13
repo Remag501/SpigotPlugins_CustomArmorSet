@@ -1,18 +1,14 @@
 package me.remag501.customarmorsets.armor.impl;
 
-import me.remag501.bgscore.api.TaskHelper;
+import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -25,11 +21,11 @@ public class DevoidArmorSet extends ArmorSet {
     private static final long COOLDOWN = 10 * 1000;
 
     private final CooldownBarManager cooldownBarManager;
-    private final TaskHelper api;
+    private final TaskService taskService;
 
-    public DevoidArmorSet(TaskHelper api, CooldownBarManager cooldownBarManager) {
+    public DevoidArmorSet(TaskService taskService, CooldownBarManager cooldownBarManager) {
         super(ArmorSetType.DEVOID);
-        this.api = api;
+        this.taskService = taskService;
         this.cooldownBarManager = cooldownBarManager;
     }
 
@@ -40,8 +36,8 @@ public class DevoidArmorSet extends ArmorSet {
 
     @Override
     public void removePassive(Player player) {
-        api.stopTask(player.getUniqueId(), "devoid_task");
-        api.stopTask(player.getUniqueId(), "devoid_kinetic_task");
+        taskService.stopTask(player.getUniqueId(), "devoid_task");
+        taskService.stopTask(player.getUniqueId(), "devoid_kinetic_task");
     }
 
     private static class KineticData {
@@ -74,7 +70,7 @@ public class DevoidArmorSet extends ArmorSet {
         // Create task that controls movement of entities
         Set<LivingEntity> targets = new HashSet<>();
 
-        api.subscribe(player.getUniqueId(), "devoid_task", 0, 2, (ticks) -> {
+        taskService.subscribe(player.getUniqueId(), "devoid_task", 0, 2, (ticks) -> {
             if (ticks <= 6) {
                 LivingEntity target = getNearestEntityInSight(player, isSneaking ? 15 : 25);
                 if (target != null) {
@@ -117,7 +113,7 @@ public class DevoidArmorSet extends ArmorSet {
         });
 
 
-        api.subscribe(player.getUniqueId(), "devoid_kinetic_task", 0, 2, (ticks) -> {
+        taskService.subscribe(player.getUniqueId(), "devoid_kinetic_task", 0, 2, (ticks) -> {
             Iterator<Map.Entry<UUID, KineticData>> iterator = velocityMap.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<UUID, KineticData> entry = iterator.next();

@@ -1,7 +1,7 @@
 package me.remag501.customarmorsets.armor.impl;
 
-import me.remag501.bgscore.api.TaskHelper;
-import me.remag501.customarmorsets.CustomArmorSets;
+import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
@@ -11,13 +11,10 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
@@ -46,11 +43,13 @@ public class BanditArmorSet extends ArmorSet {
     private final ArmorManager armorManager;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
-    private final TaskHelper api;
+    private final EventService eventService;
+    private final TaskService taskService;
 
-    public BanditArmorSet(TaskHelper api, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public BanditArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.BANDIT);
-        this.api = api;
+        this.eventService = eventService;
+        this.taskService = taskService;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
@@ -60,13 +59,13 @@ public class BanditArmorSet extends ArmorSet {
     public void applyPassive(Player player) {
 
         UUID id = player.getUniqueId();
-        api.subscribe(PlayerMoveEvent.class)
+        eventService.subscribe(PlayerMoveEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getPlayer().getUniqueId().equals(id))
                 .handler(this::onPlayerMove);
 
-        api.subscribe(EntityDamageByEntityEvent.class)
+        eventService.subscribe(EntityDamageByEntityEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getDamager().getUniqueId().equals(id) && e.getEntity() instanceof Player)
@@ -84,8 +83,8 @@ public class BanditArmorSet extends ArmorSet {
 
         cooldownBarManager.restorePlayerBar(player);
 
-        api.unregisterListener(player.getUniqueId(), type.getId());
-        api.stopTask(player.getUniqueId(), "bandit_task");
+        eventService.unregisterListener(player.getUniqueId(), type.getId());
+        taskService.stopTask(player.getUniqueId(), "bandit_task");
     }
 
     // --- Passive 1: Run Faster With Fists Out ---
@@ -173,7 +172,7 @@ public class BanditArmorSet extends ArmorSet {
     }
 
     private void startDodgeRegenTask(Player player) {
-         api.subscribe(player.getUniqueId(), "bandit_task", 20 * DODGE_COOLDOWN, 20 * DODGE_COOLDOWN, (ticks) -> {
+        taskService.subscribe(player.getUniqueId(), "bandit_task", 20 * DODGE_COOLDOWN, 20 * DODGE_COOLDOWN, (ticks) -> {
              int currentDodges = playerDodges.getOrDefault(player.getUniqueId(), 0);
              if (currentDodges < MAX_DODGES) {
                  currentDodges++;

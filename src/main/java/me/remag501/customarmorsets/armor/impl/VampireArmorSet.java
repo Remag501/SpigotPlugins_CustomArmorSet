@@ -3,7 +3,8 @@ package me.remag501.customarmorsets.armor.impl;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
-import me.remag501.bgscore.api.TaskHelper;
+import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
@@ -22,7 +23,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.net.MalformedURLException;
@@ -44,15 +44,17 @@ public class VampireArmorSet extends ArmorSet {
     private final Map<UUID, List<Bat>> cosmeticBats = new HashMap<>();
     private final List<UUID> batTasks = new ArrayList<>();
 
-    private final TaskHelper api;
+    private final EventService eventService;
+    private final TaskService taskService;
     private final ArmorManager armorManager;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
     private final NamespaceService namespaceService;
 
-    public VampireArmorSet(TaskHelper api, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService, NamespaceService namespaceService) {
+    public VampireArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService, NamespaceService namespaceService) {
         super(ArmorSetType.VAMPIRE);
-        this.api = api;
+        this.eventService = eventService;
+        this.taskService = taskService;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
@@ -65,7 +67,7 @@ public class VampireArmorSet extends ArmorSet {
 
         // Register listener(s)
         UUID id = player.getUniqueId();
-        api.subscribe(EntityDamageByEntityEvent.class)
+        eventService.subscribe(EntityDamageByEntityEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getDamager().getUniqueId().equals(id))
@@ -77,8 +79,8 @@ public class VampireArmorSet extends ArmorSet {
         attributesService.removeHealth(player);
         batForm.remove(player.getUniqueId());
 
-        api.unregisterListener(player.getUniqueId(), type.getId());
-        api.stopTask(player.getUniqueId(), "vampire_bats");
+        eventService.unregisterListener(player.getUniqueId(), type.getId());
+        taskService.stopTask(player.getUniqueId(), "vampire_bats");
     }
 
     @Override
@@ -108,7 +110,7 @@ public class VampireArmorSet extends ArmorSet {
                         // Bat form logic
                         enterBatForm(player);
                         spawnBatStorm(player);
-                        api.delay(DURATION_TICKS, () -> {
+                        taskService.delay(DURATION_TICKS, () -> {
                             if (batForm.contains(uuid)) cancelBatForm(player);
                         });
                         return;
@@ -140,7 +142,7 @@ public class VampireArmorSet extends ArmorSet {
                 .map(e -> (LivingEntity) e)
                 .toList();
 
-        api.subscribe(player.getUniqueId(), type.getId(), 0, INTERVAL_TICKS, (ticksRun) -> {
+        taskService.subscribe(player.getUniqueId(), type.getId(), 0, INTERVAL_TICKS, (ticksRun) -> {
             if (ticksRun >= DURATION_TICKS || player.isDead()) {
                 return true;
             }
@@ -247,7 +249,7 @@ public class VampireArmorSet extends ArmorSet {
 
         // Task to move bats and do AoE damage + warning circle
         AtomicReference<Double> t = new AtomicReference<>((double) 0);
-        api.subscribe(player.getUniqueId(), "vampire_bats", 0, 2, (tickCount) -> {
+        taskService.subscribe(player.getUniqueId(), "vampire_bats", 0, 2, (tickCount) -> {
             if (!player.isOnline() || !batForm.contains(uuid)) {
                 // Cleanup bats
                 List<Bat> toRemove = cosmeticBats.remove(uuid);
@@ -298,7 +300,7 @@ public class VampireArmorSet extends ArmorSet {
 
         // Cancel running tasks
         if (batTasks.contains(uuid)) {
-            api.stopTask(uuid, "vampire_bats");
+            taskService.stopTask(uuid, "vampire_bats");
         }
 
         // Reset player states you set in enterBatForm if needed
@@ -335,7 +337,7 @@ public class VampireArmorSet extends ArmorSet {
         if (finalHealth > 0) return;
 
         // Delay spawning until after entity death is processed
-        api.delay(1, () -> {
+        taskService.delay(1, () -> {
             spawnCosmeticHead(victim.getLocation(), damager);
         });
 
@@ -362,7 +364,7 @@ public class VampireArmorSet extends ArmorSet {
         );
 
         // Optional: remove it later
-        api.delay(100, () -> {
+        taskService.delay(100, () -> {
             if (!stand.isDead() && stand.isValid()) stand.remove();
         });
     }

@@ -1,7 +1,7 @@
 package me.remag501.customarmorsets.manager;
 
-import io.lumine.mythic.bukkit.utils.lib.jooq.impl.QOM;
-import me.remag501.bgscore.api.TaskHelper;
+import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.impl.*;
@@ -11,9 +11,7 @@ import me.remag501.customarmorsets.service.CosmeticService;
 import me.remag501.customarmorsets.service.NamespaceService;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
@@ -36,7 +34,8 @@ public class ArmorManager {
     private static final String BUNKER_PREFIX = "bunker";
 
     public ArmorManager(Plugin plugin,
-                        TaskHelper bgsApi,
+                        TaskService taskService,
+                        EventService eventService,
                         CosmeticService cosmeticService,
                         AttributesService attributesService,
                         CooldownBarManager cooldownManager,
@@ -52,19 +51,19 @@ public class ArmorManager {
         // --- THE WIRING HUB ---
         // Register all sets here. This is where we satisfy those new constructors.
         register(ArmorSetType.SNOWMAN, new SnowmanArmorSet());
-        register(ArmorSetType.INFERNUS, new InfernusArmorSet(bgsApi, cooldownManager));
-        register(ArmorSetType.DEVOID, new DevoidArmorSet(bgsApi, cooldownManager));
-        register(ArmorSetType.LAST_SPARTAN, new LastSpartanArmorSet(bgsApi, cooldownManager, attributesService, damageStatsManager));
-        register(ArmorSetType.VIKING_CAPTAIN, new VikingCaptainArmorSet(bgsApi, damageStatsManager, cooldownManager));
-        register(ArmorSetType.ROYAL_KNIGHT, new RoyalKnightArmorSet(bgsApi, cooldownManager, attributesService));
-        register(ArmorSetType.WORLD_GUARDIAN, new WorldGuardianArmorSet(bgsApi, this, cooldownManager, attributesService));
-        register(ArmorSetType.VAMPIRE, new VampireArmorSet(bgsApi, this, cooldownManager, attributesService, namespaceService));
-        register(ArmorSetType.FISTER, new FisterArmorSet(bgsApi, this, cooldownManager, attributesService, armorService));
-        register(ArmorSetType.ARCHER, new ArcherArmorSet(bgsApi, cooldownManager, attributesService));
-        register(ArmorSetType.NECROMANCER, new NecromancerArmorSet(bgsApi, this, damageStatsManager, attributesService, playerSyncManager, namespaceService));
-        register(ArmorSetType.ICEMAN, new IcemanArmorSet(bgsApi, this, cooldownManager, attributesService));
-        register(ArmorSetType.GOLEM_BUSTER, new GolemBusterArmorSet(bgsApi, this, cooldownManager, attributesService, damageStatsManager, defenseStatsManager));
-        register(ArmorSetType.BANDIT, new BanditArmorSet(bgsApi, this, cooldownManager, attributesService));
+        register(ArmorSetType.INFERNUS, new InfernusArmorSet(eventService, taskService, cooldownManager));
+        register(ArmorSetType.DEVOID, new DevoidArmorSet(taskService, cooldownManager));
+        register(ArmorSetType.LAST_SPARTAN, new LastSpartanArmorSet(eventService, taskService, cooldownManager, attributesService, damageStatsManager));
+        register(ArmorSetType.VIKING_CAPTAIN, new VikingCaptainArmorSet(taskService, damageStatsManager, cooldownManager));
+        register(ArmorSetType.ROYAL_KNIGHT, new RoyalKnightArmorSet(cooldownManager, attributesService));
+        register(ArmorSetType.WORLD_GUARDIAN, new WorldGuardianArmorSet(eventService, taskService, cooldownManager, attributesService));
+        register(ArmorSetType.VAMPIRE, new VampireArmorSet(eventService, taskService, this, cooldownManager, attributesService, namespaceService));
+        register(ArmorSetType.FISTER, new FisterArmorSet(eventService, taskService, this, cooldownManager, attributesService));
+        register(ArmorSetType.ARCHER, new ArcherArmorSet(eventService, cooldownManager, attributesService));
+        register(ArmorSetType.NECROMANCER, new NecromancerArmorSet(eventService, taskService, this, damageStatsManager, attributesService, playerSyncManager, namespaceService));
+        register(ArmorSetType.ICEMAN, new IcemanArmorSet(eventService, taskService, this, cooldownManager, attributesService));
+        register(ArmorSetType.GOLEM_BUSTER, new GolemBusterArmorSet(eventService, taskService, cooldownManager, attributesService, damageStatsManager, defenseStatsManager));
+        register(ArmorSetType.BANDIT, new BanditArmorSet(eventService, taskService, this, cooldownManager, attributesService));
     }
 
     private void register(ArmorSetType type, ArmorSet instance) {

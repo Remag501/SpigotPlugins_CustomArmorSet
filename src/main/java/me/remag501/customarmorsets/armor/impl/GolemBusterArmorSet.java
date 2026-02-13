@@ -3,12 +3,11 @@ package me.remag501.customarmorsets.armor.impl;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
-import me.remag501.bgscore.api.TaskHelper;
-import me.remag501.customarmorsets.CustomArmorSets;
+import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.TargetCategory;
-import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.manager.DefenseStatsManager;
 import me.remag501.customarmorsets.service.AttributesService;
@@ -18,43 +17,34 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
-import java.awt.geom.AffineTransform;
 import java.util.*;
 
-//import static me.remag501.customarmorsets.manager.CooldownBarManager.setLevel;
 
 public class GolemBusterArmorSet extends ArmorSet {
 
     private static final Map<UUID, Integer> playerEnergy = new HashMap<>();
     private static final Map<UUID, Boolean> playerIsGolem = new HashMap<>();
     private final List<UUID> particleTasks = new ArrayList<>();
-//    private static final Map<GolemBusterArmorSet, BukkitTask> energyLoop = new HashMap<>();
     private static final Map<UUID, Long> stunCooldown = new HashMap<>();
 
-    private final TaskHelper api;
-    private final ArmorManager armorManager;
+    private final EventService eventService;
+    private final TaskService taskService;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
     private final DamageStatsManager damageStatsManager;
     private final DefenseStatsManager defenseStatsManager;
 
-    public GolemBusterArmorSet(TaskHelper api, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService, DamageStatsManager damageStatsManager, DefenseStatsManager defenseStatsManager) {
+    public GolemBusterArmorSet(EventService eventService, TaskService taskService, CooldownBarManager cooldownBarManager, AttributesService attributesService, DamageStatsManager damageStatsManager, DefenseStatsManager defenseStatsManager) {
         super(ArmorSetType.GOLEM_BUSTER);
-        this.api = api;
-        this.armorManager = armorManager;
+        this.eventService = eventService;
+        this.taskService = taskService;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
         this.damageStatsManager = damageStatsManager;
@@ -72,7 +62,7 @@ public class GolemBusterArmorSet extends ArmorSet {
         defenseStatsManager.setSourceReduction(player.getUniqueId(), 0.75f, TargetCategory.NON_PLAYER);
 
         // Start energy loop timer
-        api.subscribe(player.getUniqueId(), "golem_energy_loop", 0, 20, (ticks) -> {
+        taskService.subscribe(player.getUniqueId(), "golem_energy_loop", 0, 20, (ticks) -> {
             int energy;
             if (playerIsGolem.get(id)) {
                 energy = consumePlayerEnergy(player, -5);
@@ -89,7 +79,7 @@ public class GolemBusterArmorSet extends ArmorSet {
         });
 
         // Register listener(s)
-        api.subscribe(EntityDeathEvent.class)
+        eventService.subscribe(EntityDeathEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 // Filter: The killer exists and is the owner of this armor set
@@ -105,9 +95,9 @@ public class GolemBusterArmorSet extends ArmorSet {
         damageStatsManager.clearAll(player.getUniqueId());
         defenseStatsManager.clearAll(player.getUniqueId());
 
-        api.unregisterListener(player.getUniqueId(), type.getId());
-        api.stopTask(player.getUniqueId(), "golem_energy_loop");
-        api.stopTask(player.getUniqueId(), "golem_particle");
+        eventService.unregisterListener(player.getUniqueId(), type.getId());
+        taskService.stopTask(player.getUniqueId(), "golem_energy_loop");
+        taskService.stopTask(player.getUniqueId(), "golem_particle");
     }
 
     @Override
@@ -216,7 +206,7 @@ public class GolemBusterArmorSet extends ArmorSet {
     }
 
     public void startTargetEffect(LivingEntity target) {
-        api.subscribe(target.getUniqueId(), (ticks) -> {
+        taskService.subscribe(target.getUniqueId(), (ticks) -> {
             if (ticks >= 60 || target.isDead()) {
                 return true;
             }
@@ -261,7 +251,7 @@ public class GolemBusterArmorSet extends ArmorSet {
         damageStatsManager.setMobMultiplier(player.getUniqueId(), 2, TargetCategory.NON_PLAYER);
         defenseStatsManager.setSourceReduction(player.getUniqueId(), 0.25f, TargetCategory.NON_PLAYER);
 
-        api.delay(2, () -> {
+        taskService.delay(2, () -> {
             player.setHealth(40.0);
         });
 
@@ -289,7 +279,7 @@ public class GolemBusterArmorSet extends ArmorSet {
 
         // Cancel existing task if one exists
         if (particleTasks.contains(uuid)) {
-            api.stopTask(player.getUniqueId(), "golem_particle");
+            taskService.stopTask(player.getUniqueId(), "golem_particle");
         }
 
         // Remove disguise
@@ -303,11 +293,11 @@ public class GolemBusterArmorSet extends ArmorSet {
 
         // Cancel existing task if one exists
         if (particleTasks.contains(uuid)) {
-            api.stopTask(player.getUniqueId(), "golem_particle");
+            taskService.stopTask(player.getUniqueId(), "golem_particle");
         }
 
         // Create a new particle task
-        api.subscribe(player.getUniqueId(), "golem_particle", 0, 10, (ticks) -> {
+        taskService.subscribe(player.getUniqueId(), "golem_particle", 0, 10, (ticks) -> {
             if (!player.isOnline() || !playerIsGolem.getOrDefault(uuid, false)) {
                 particleTasks.remove(uuid);
                 return true;

@@ -1,7 +1,7 @@
 package me.remag501.customarmorsets.armor.impl;
 
-import me.remag501.bgscore.api.TaskHelper;
-import me.remag501.customarmorsets.CustomArmorSets;
+import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
@@ -16,17 +16,13 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.event.player.PlayerToggleSprintEvent;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
@@ -61,14 +57,16 @@ public class IcemanArmorSet extends ArmorSet {
     private static final Map<UUID, Long> mobChargeCooldowns = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> freezeStacks = new ConcurrentHashMap<>();
 
-    private final TaskHelper api;
+    private final EventService eventService;
+    private final TaskService taskService;
     private final ArmorManager armorManager;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
 
-    public IcemanArmorSet(TaskHelper api, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public IcemanArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.ICEMAN);
-        this.api = api;
+        this.eventService = eventService;
+        this.taskService = taskService;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
@@ -92,35 +90,35 @@ public class IcemanArmorSet extends ArmorSet {
         // Register listener(s)
         UUID id = player.getUniqueId();
         // 1. Sprinting Listener (Ice Mode Entry)
-        api.subscribe(PlayerToggleSprintEvent.class)
+        eventService.subscribe(PlayerToggleSprintEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getPlayer().getUniqueId().equals(id))
                 .handler(this::onSpint);
 
         // 2. Flight Listener (Ice Bridge Activation)
-        api.subscribe(PlayerToggleFlightEvent.class)
+        eventService.subscribe(PlayerToggleFlightEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getPlayer().getUniqueId().equals(id))
                 .handler(this::onToggleFlight);
 
         // 3. Move Listener (Bridge Construction)
-        api.subscribe(PlayerMoveEvent.class)
+        eventService.subscribe(PlayerMoveEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getPlayer().getUniqueId().equals(id))
                 .handler(this::onPlayerMove);
 
         // 4. Melee Combat (Freeze Stacks)
-        api.subscribe(EntityDamageByEntityEvent.class)
+        eventService.subscribe(EntityDamageByEntityEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getDamager() instanceof Player && e.getDamager().getUniqueId().equals(id))
                 .handler(this::onEntityDamageByEntity);
 
         // 5. Thaw Reaction (Player Fire Aspect / Direct Fire Hit)
-        api.subscribe(EntityDamageByEntityEvent.class)
+        eventService.subscribe(EntityDamageByEntityEvent.class)
                 .owner(id)
                 .namespace(type.getId() + "_fire")
                 .filter(e -> e.getDamager() instanceof Player && e.getDamager().getUniqueId().equals(id))
@@ -129,7 +127,7 @@ public class IcemanArmorSet extends ArmorSet {
         // 6. Global Thaw Reaction (Environmental Fire/Lava)
         // Note: We don't filter for 'id' here because this logic applies to MOBS
         // that were frozen by the player. The task cleanup relies on the mob's UUID.
-        api.subscribe(EntityDamageEvent.class)
+        eventService.subscribe(EntityDamageEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .handler(this::onEntityFireDamage);
@@ -152,14 +150,14 @@ public class IcemanArmorSet extends ArmorSet {
         playerIceBeam.remove(uuid);
         cooldownBarManager.restorePlayerBar(player);
 
-        api.unregisterListener(player.getUniqueId(), type.getId());
-        api.unregisterListener(player.getUniqueId(), type.getId() + "_fire");
-        api.stopTask(player.getUniqueId(), "iceman_run");
-        api.stopTask(player.getUniqueId(), "iceman_charge");
-        api.stopTask(player.getUniqueId(), "iceman_ability");
-        api.stopTask(player.getUniqueId(), "iceman_ult");
-        api.stopTask(player.getUniqueId(), "iceman_ult_dmg");
-        api.stopTask(player.getUniqueId(), "iceman_globe");
+        eventService.unregisterListener(player.getUniqueId(), type.getId());
+        eventService.unregisterListener(player.getUniqueId(), type.getId() + "_fire");
+        taskService.stopTask(player.getUniqueId(), "iceman_run");
+        taskService.stopTask(player.getUniqueId(), "iceman_charge");
+        taskService.stopTask(player.getUniqueId(), "iceman_ability");
+        taskService.stopTask(player.getUniqueId(), "iceman_ult");
+        taskService.stopTask(player.getUniqueId(), "iceman_ult_dmg");
+        taskService.stopTask(player.getUniqueId(), "iceman_globe");
     }
 
     @Override
@@ -202,7 +200,7 @@ public class IcemanArmorSet extends ArmorSet {
 
         if (!player.isSprinting() && runningTime.contains(uuid)) {
             // checks if player started sprinting and no task is running (for safety)
-            api.subscribe(player.getUniqueId(), "iceman_run", 0, 1, (ticks) -> {
+            taskService.subscribe(player.getUniqueId(), "iceman_run", 0, 1, (ticks) -> {
                 if (freezeCharges.get(uuid) <= 0) {
                     leaveIceMode(player);
                 } else if (iceMode.getOrDefault(uuid, false)) {
@@ -322,11 +320,11 @@ public class IcemanArmorSet extends ArmorSet {
                 mobChargeCooldowns.remove(mobUUID);
                 if (decayTasks.contains(mobUUID)) {
                     decayTasks.remove(mobUUID);
-                    api.stopTask(mobUUID, "decay");
+                    taskService.stopTask(mobUUID, "decay");
                 }
                 if (particleTasks.contains(mobUUID)) {
                     particleTasks.remove(mobUUID);
-                    api.stopTask(mobUUID, "particle");
+                    taskService.stopTask(mobUUID, "particle");
                 }
 
                 // Remove fire from mob
@@ -394,7 +392,7 @@ public class IcemanArmorSet extends ArmorSet {
 //        Optional.of(particleTasks.remove(mobUUID));
 
         // Schedule decay task
-        api.subscribe(mobUUID, "decay", 20, 20, (tick) -> {
+        taskService.subscribe(mobUUID, "decay", 20, 20, (tick) -> {
             int stacks = freezeStacks.getOrDefault(mobUUID, 0);
             if (stacks <= 3 && !mob.isDead()) {
                 mob.setAI(true);
@@ -413,7 +411,7 @@ public class IcemanArmorSet extends ArmorSet {
         decayTasks.add(mobUUID);
 
         // Schedule particle task
-        api.subscribe(mobUUID, "particle", 0, 10, (ticks) -> {
+        taskService.subscribe(mobUUID, "particle", 0, 10, (ticks) -> {
             int stacks = freezeStacks.getOrDefault(mobUUID, 0);
             if (stacks >= FREEZE_CHARGE_MAX) {
                 mob.getWorld().spawnParticle(Particle.BLOCK_CRACK, mob.getLocation().add(0, 1, 0), 200, 0.5, 0.5, 0.5, Material.ICE.createBlockData());
@@ -431,7 +429,7 @@ public class IcemanArmorSet extends ArmorSet {
 
         // Run while set is active
         UUID uuid = player.getUniqueId();
-        api.subscribe(player.getUniqueId(), "iceman_charge", 0, 1, (ticks) -> {
+        taskService.subscribe(player.getUniqueId(), "iceman_charge", 0, 1, (ticks) -> {
             if (ticks % 40 == 0) // Add charge every two seconds
                 domeCharge.put(uuid, Math.min(domeCharge.get(uuid) + 50, 100));
 
@@ -448,7 +446,7 @@ public class IcemanArmorSet extends ArmorSet {
         UUID uuid = player.getUniqueId();
         if (iceMode.containsKey(uuid)) {
             if (runningTime.remove(uuid))
-                api.stopTask(uuid, "iceman_run");
+                taskService.stopTask(uuid, "iceman_run");
             iceMode.remove(uuid);
             if (player.getGameMode().equals(GameMode.SURVIVAL) || player.getGameMode().equals(GameMode.ADVENTURE))
                 player.setAllowFlight(false);
@@ -465,7 +463,7 @@ public class IcemanArmorSet extends ArmorSet {
         playerIceBeam.put(player.getUniqueId(), true);
         int initialCharges = freezeCharges.get(playerUUID);
 
-        api.subscribe(player.getUniqueId(), "iceman_ability", 0, 1, (ticksLived) -> {
+        taskService.subscribe(player.getUniqueId(), "iceman_ability", 0, 1, (ticksLived) -> {
             int currentCharges = freezeCharges.getOrDefault(playerUUID, 0);
             boolean usingIceBeam = playerIceBeam.getOrDefault(playerUUID, false);
 
@@ -586,7 +584,7 @@ public class IcemanArmorSet extends ArmorSet {
         playerInUlt.put(player.getUniqueId(), true);
 
         // Schedule a repeating task to place blocks at a faster rate.
-        api.subscribe(player.getUniqueId(), "iceman_globe", 0, 1, (ticks) -> {
+        taskService.subscribe(player.getUniqueId(), "iceman_globe", 0, 1, (ticks) -> {
             for (int i = 0; i < 35 && !blockStatesToChange.isEmpty(); i++) {
                 BlockState originalState = blockStatesToChange.poll();
                 originalStates.add(originalState);
@@ -618,9 +616,9 @@ public class IcemanArmorSet extends ArmorSet {
                 // Restart decay task for this mob
                 if (decayTasks.contains(mobUUID)) {
                     if (decayTasks.remove(mobUUID))
-                        api.stopTask(mobUUID, "decay");
+                        taskService.stopTask(mobUUID, "decay");
                 }
-                api.subscribe(player.getUniqueId(), "iceman_ult_dmg", 20, 20, (ticks) -> {
+                taskService.subscribe(player.getUniqueId(), "iceman_ult_dmg", 20, 20, (ticks) -> {
                     int stacks = freezeStacks.getOrDefault(mobUUID, 0);
                     if (stacks <= 3 && !mob.isDead()) {
                         mob.setAI(true);
@@ -632,7 +630,7 @@ public class IcemanArmorSet extends ArmorSet {
                         freezeStacks.remove(mobUUID);
                         if (particleTasks.contains(mobUUID)) {
                             if (particleTasks.remove(mobUUID))
-                                api.stopTask(mobUUID, "particle");
+                                taskService.stopTask(mobUUID, "particle");
                         }
                         decayTasks.remove(mobUUID);
                         return true;
@@ -643,7 +641,7 @@ public class IcemanArmorSet extends ArmorSet {
 
                 // Start or restart a particle task for this mob
                 if (!particleTasks.contains(mobUUID)) {
-                    api.subscribe(mobUUID, "particle", 0, 10, (ticks) -> {
+                    taskService.subscribe(mobUUID, "particle", 0, 10, (ticks) -> {
                         int stacks = freezeStacks.getOrDefault(mobUUID, 0);
                         if (stacks >= 5) {
                             mob.getWorld().spawnParticle(Particle.BLOCK_CRACK, mob.getLocation().add(0, 1, 0), 200, 0.5, 0.5, 0.5, Material.ICE.createBlockData());
@@ -660,7 +658,7 @@ public class IcemanArmorSet extends ArmorSet {
         }
 
         // Apply DoT and healing in a separate task
-        api.subscribe(player.getUniqueId(),"iceman_ult", 0, 20, (ticks) -> {
+        taskService.subscribe(player.getUniqueId(),"iceman_ult", 0, 20, (ticks) -> {
             if (!playerInUlt.get(player.getUniqueId())) {
                 return true;
             }
@@ -684,7 +682,7 @@ public class IcemanArmorSet extends ArmorSet {
         });
 
         // --- Step 3: Schedule the Dome's Disappearance ---
-        api.delay((int) durationTicks, () -> {
+        taskService.delay((int) durationTicks, () -> {
             // Remove the dome blocks by restoring their original state.
             for (BlockState originalState : originalStates) {
                 originalState.update(true);
@@ -751,7 +749,7 @@ public class IcemanArmorSet extends ArmorSet {
                         blocksToReset.put(blockToPlaceIceOn, originalState);
                         blockToPlaceIceOn.setType(Material.ICE);
 
-                        api.delay(20 * 3, () -> {
+                        taskService.delay(20 * 3, () -> {
                             BlockState oldState = blocksToReset.get(blockToPlaceIceOn);
                             if (oldState != null) {
                                 oldState.update(true);

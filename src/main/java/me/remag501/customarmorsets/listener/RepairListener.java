@@ -1,15 +1,12 @@
 package me.remag501.customarmorsets.listener;
 
-import me.remag501.bgscore.api.TaskHelper;
-import me.remag501.customarmorsets.manager.ArmorManager;
+import me.remag501.bgscore.api.event.EventService;
 import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.CosmeticService;
 import me.remag501.customarmorsets.service.ItemService;
 import me.remag501.customarmorsets.service.NamespaceService;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
@@ -29,18 +26,12 @@ public class RepairListener {
     private final CosmeticService cosmeticService;
     private final NamespaceService namespaceService;
 
-    public RepairListener(ArmorService armorService, CosmeticService cosmeticService, ItemService itemService, NamespaceService namespaceService, TaskHelper bgsApi) {
+    public RepairListener(ArmorService armorService, CosmeticService cosmeticService, ItemService itemService, NamespaceService namespaceService, EventService eventService) {
         this.armorService = armorService;
         this.cosmeticService = cosmeticService;
         this.namespaceService = namespaceService;
 
-//        bgsApi.subscribe(InventoryClickEvent.class)
-//                .filter(e -> !(e.getWhoClicked() instanceof Player))
-//                .filter(e -> !(itemService.isRepairKit(e.getCursor())))
-//                .filter(e -> e.getCurrentItem() == null || e.getCurrentItem().getType() == Material.AIR)
-//                .filter(e -> e.getCurrentItem().getType().getMaxDurability() <= 0 || e.getCurrentItem().getItemMeta() instanceof Damageable)
-//                .handler(this::onInventoryClick);
-        bgsApi.subscribe(InventoryClickEvent.class)
+        eventService.subscribe(InventoryClickEvent.class)
                 .filter(e -> e.getWhoClicked() instanceof Player) // Must be a player
                 .filter(e -> itemService.isRepairKit(e.getCursor())) // Must be a kit
                 .filter(e -> e.getCurrentItem() != null && e.getCurrentItem().getType() != Material.AIR) // Must click something

@@ -1,16 +1,15 @@
 package me.remag501.customarmorsets.listener;
 
-import me.remag501.bgscore.api.TaskHelper;
+import me.remag501.bgscore.api.event.EventService;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import org.bukkit.Material;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
 
 public class ArmorInteractListener {
 
-    public ArmorInteractListener(ArmorManager armorManager, TaskHelper bgsApi) {
+    public ArmorInteractListener(ArmorManager armorManager, EventService eventService) {
 
-        bgsApi.subscribe(PlayerInteractEvent.class)
+        eventService.subscribe(PlayerInteractEvent.class)
                 // 1. Filter: Must be a right-click action with an item
                 .filter(e -> e.getAction().name().contains("RIGHT"))
                 .filter(PlayerInteractEvent::hasItem)

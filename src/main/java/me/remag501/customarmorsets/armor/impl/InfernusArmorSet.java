@@ -1,6 +1,7 @@
 package me.remag501.customarmorsets.armor.impl;
 
-import me.remag501.bgscore.api.TaskHelper;
+import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
@@ -21,16 +22,18 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class InfernusArmorSet extends ArmorSet {
 
-    private final TaskHelper api;
+    private final EventService eventService;
+    private final TaskService taskService;
     private final CooldownBarManager cooldownBarManager;
 
     // OPTION A: Static memory for per-player cooldowns
     private final Map<UUID, Long> abilityCooldowns = new ConcurrentHashMap<>();
     private final long COOLDOWN = 10 * 1000;
 
-    public InfernusArmorSet(TaskHelper api, CooldownBarManager cooldownBarManager) {
+    public InfernusArmorSet(EventService eventService, TaskService taskService, CooldownBarManager cooldownBarManager) {
         super(ArmorSetType.INFERNUS);
-        this.api = api;
+        this.eventService = eventService;
+        this.taskService = taskService;
         this.cooldownBarManager = cooldownBarManager;
     }
 
@@ -39,7 +42,7 @@ public class InfernusArmorSet extends ArmorSet {
         UUID id = player.getUniqueId();
         player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 0, true, false));
 
-        api.subscribe(PlayerMoveEvent.class)
+        eventService.subscribe(PlayerMoveEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getFrom().getBlockX() != e.getTo().getBlockX() || e.getFrom().getBlockZ() != e.getTo().getBlockZ())
@@ -47,7 +50,7 @@ public class InfernusArmorSet extends ArmorSet {
                     Block feet = e.getTo().getBlock();
                     if (feet.getType() == Material.AIR && feet.getRelative(0, -1, 0).getType().isSolid()) {
                         feet.setType(Material.FIRE);
-                        api.delay(60, () -> {
+                        taskService.delay(60, () -> {
                             if (feet.getType() == Material.FIRE) feet.setType(Material.AIR);
                         });
                     }
@@ -60,8 +63,8 @@ public class InfernusArmorSet extends ArmorSet {
         player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
 
         // Clean up the API side
-        api.unregisterListener(id, type.getId());
-        api.stopTask(id, type.getId());
+        eventService.unregisterListener(id, type.getId());
+        taskService.stopTask(id, type.getId());
 
         // OPTION A CLEANUP: Keep memory clean when they take the armor off
         abilityCooldowns.remove(id);
@@ -84,7 +87,7 @@ public class InfernusArmorSet extends ArmorSet {
         // Show bar during active ability
         cooldownBarManager.startCooldownBar(player, activeDurationSeconds);
 
-        api.subscribe(player.getUniqueId(), type.getId(), 0, 2, (ticks) -> {
+        taskService.subscribe(player.getUniqueId(), type.getId(), 0, 2, (ticks) -> {
 
             if (ticks >= activeDurationSeconds * 20) {
                 // After ability ends, start cooldown bar

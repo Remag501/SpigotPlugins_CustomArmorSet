@@ -1,19 +1,11 @@
 package me.remag501.customarmorsets.armor.impl;
 
-import me.remag501.bgscore.api.TaskHelper;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.plugin.Plugin;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,13 +16,11 @@ public class RoyalKnightArmorSet extends ArmorSet {
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 7 * 1000; // 7 seconds cooldown
 
-    private final TaskHelper api;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
 
-    public RoyalKnightArmorSet(TaskHelper api, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public RoyalKnightArmorSet(CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.ROYAL_KNIGHT);
-        this.api = api;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
     }

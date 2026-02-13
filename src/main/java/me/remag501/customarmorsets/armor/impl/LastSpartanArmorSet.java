@@ -1,25 +1,18 @@
 package me.remag501.customarmorsets.armor.impl;
 
-import me.remag501.bgscore.BGSCore;
-import me.remag501.bgscore.api.TaskHelper;
+import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.WeaponType;
-import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -31,14 +24,16 @@ public class LastSpartanArmorSet extends ArmorSet {
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 3 * 1000;
 
-    private final TaskHelper api;
+    private final EventService eventService;
+    private final TaskService taskService;
     private final CooldownBarManager cooldownBarManager;
     private final AttributesService attributesService;
     private final DamageStatsManager damageStatsManager;
 
-    public LastSpartanArmorSet(TaskHelper api, CooldownBarManager cooldownBarManager, AttributesService attributesService, DamageStatsManager damageStatsManager) {
+    public LastSpartanArmorSet(EventService eventService, TaskService taskService, CooldownBarManager cooldownBarManager, AttributesService attributesService, DamageStatsManager damageStatsManager) {
         super(ArmorSetType.LAST_SPARTAN);
-        this.api = api;
+        this.eventService = eventService;
+        this.taskService = taskService;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
         this.damageStatsManager = damageStatsManager;
@@ -55,8 +50,8 @@ public class LastSpartanArmorSet extends ArmorSet {
         attributesService.removeHealth(player);
         damageStatsManager.clearAll(player.getUniqueId());
 
-        api.unregisterListener(player.getUniqueId(), type.getId());
-        api.stopTask(player.getUniqueId(), type.getId());
+        eventService.unregisterListener(player.getUniqueId(), type.getId());
+        taskService.stopTask(player.getUniqueId(), type.getId());
     }
 
     @Override
@@ -87,7 +82,7 @@ public class LastSpartanArmorSet extends ArmorSet {
 
             // Tp player to entity if they are close to them
             LivingEntity finalNearest = nearest;
-            api.subscribe(player.getUniqueId(), type.getId(), 0, 1, (ticks) -> {
+            taskService.subscribe(player.getUniqueId(), type.getId(), 0, 1, (ticks) -> {
                 double distance = Math.sqrt(Math.pow(player.getLocation().getX() - finalNearest.getLocation().getX(), 2) + Math.pow(player.getLocation().getZ() - finalNearest.getLocation().getZ(), 2));
                 if (distance < 1) {
                     // Activate spartan sequence here

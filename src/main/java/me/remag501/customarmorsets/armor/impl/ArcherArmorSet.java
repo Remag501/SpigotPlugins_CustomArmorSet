@@ -1,24 +1,19 @@
 package me.remag501.customarmorsets.armor.impl;
 
-import me.remag501.bgscore.api.TaskHelper;
+import me.remag501.bgscore.api.event.EventService;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.*;
 import org.bukkit.entity.*;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 public class ArcherArmorSet extends ArmorSet {
@@ -26,13 +21,13 @@ public class ArcherArmorSet extends ArmorSet {
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 5 * 1000; // 5 seconds
 
-    private final TaskHelper api;
+    private final EventService eventService;
     private final CooldownBarManager cooldownBarManager;;
     private final AttributesService attributesService;
 
-    public ArcherArmorSet(TaskHelper api, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public ArcherArmorSet(EventService eventService, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.ARCHER);
-        this.api = api;
+        this.eventService = eventService;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
     }
@@ -43,7 +38,7 @@ public class ArcherArmorSet extends ArmorSet {
         attributesService.applyHealth(player, 0.5);
         UUID id = player.getUniqueId();
 
-        api.subscribe(EntityDamageByEntityEvent.class)
+        eventService.subscribe(EntityDamageByEntityEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> {
@@ -65,7 +60,7 @@ public class ArcherArmorSet extends ArmorSet {
         attributesService.removeSpeed(player);
         attributesService.removeHealth(player);
 
-        api.unregisterListener(player.getUniqueId(), type.getId());
+        eventService.unregisterListener(player.getUniqueId(), type.getId());
     }
 
     @Override

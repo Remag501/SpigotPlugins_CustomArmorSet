@@ -1,10 +1,10 @@
 package me.remag501.customarmorsets.armor.impl;
 
-import me.remag501.bgscore.api.TaskHelper;
+import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
 import net.citizensnpcs.api.CitizensAPI;
@@ -12,7 +12,6 @@ import net.citizensnpcs.api.npc.NPC;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
-//import org.bukkit.entity.;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -22,8 +21,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
@@ -47,16 +44,16 @@ public class FisterArmorSet extends ArmorSet {
     private final CooldownBarManager cooldownBarManager;
     private final ArmorManager armorManager;
     private final AttributesService attributesService;
-    private final ArmorService armorService;
-    private final TaskHelper api;
+    private final EventService eventService;
+    private final TaskService taskService;
 
-    public FisterArmorSet(TaskHelper api, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService, ArmorService armorService) {
+    public FisterArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
         super(ArmorSetType.FISTER);
-        this.api = api;
+        this.eventService = eventService;
+        this.taskService = taskService;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
         this.attributesService = attributesService;
-        this.armorService = armorService;
     }
 
     public void applyPassive(Player player) {
@@ -72,21 +69,21 @@ public class FisterArmorSet extends ArmorSet {
         // Register listener(s)
         UUID id = player.getUniqueId();
         // 1. Flight Listener
-        api.subscribe(PlayerToggleFlightEvent.class)
+        eventService.subscribe(PlayerToggleFlightEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getPlayer().getUniqueId().equals(id))
                 .handler(this::detectFlight);
 
         // 2. Damage Listener
-        api.subscribe(EntityDamageByEntityEvent.class)
+        eventService.subscribe(EntityDamageByEntityEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getDamager() instanceof Player || e.getDamager() instanceof Projectile || e.getEntity() instanceof Player)
                 .handler(this::playerAttack);
 
         // 3. Move Listener
-        api.subscribe(PlayerMoveEvent.class)
+        eventService.subscribe(PlayerMoveEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getPlayer().getUniqueId().equals(id))
@@ -94,14 +91,14 @@ public class FisterArmorSet extends ArmorSet {
                 .handler(this::onMoveWhileMeditating);
 
         // 4. Interact Listener
-        api.subscribe(PlayerInteractAtEntityEvent.class)
+        eventService.subscribe(PlayerInteractAtEntityEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getPlayer().getUniqueId().equals(id) && e.getHand() == EquipmentSlot.HAND)
                 .handler(this::playerInteract);
 
         // 5. Animation (Swing) Listener
-        api.subscribe(PlayerAnimationEvent.class)
+        eventService.subscribe(PlayerAnimationEvent.class)
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getPlayer().getUniqueId().equals(id) && e.getAnimationType() == PlayerAnimationType.ARM_SWING)
@@ -116,9 +113,9 @@ public class FisterArmorSet extends ArmorSet {
         afterImagesOne.remove(player.getUniqueId()).destroy();
         afterImagesTwo.remove(player.getUniqueId()).destroy();;
 
-        api.unregisterListener(player.getUniqueId(), type.getId());
-        api.stopTask(player.getUniqueId(), "fister_meditate");
-        api.stopTask(player.getUniqueId(), "fister_task");
+        eventService.unregisterListener(player.getUniqueId(), type.getId());
+        taskService.stopTask(player.getUniqueId(), "fister_meditate");
+        taskService.stopTask(player.getUniqueId(), "fister_task");
     }
 
     @Override
@@ -154,7 +151,7 @@ public class FisterArmorSet extends ArmorSet {
         World world = player.getWorld();
         AtomicReference<Double> angle = new AtomicReference<>((double) 0);
 
-        api.subscribe(player.getUniqueId(), "fister_meditate", 0, 4, (ticks) -> {
+        taskService.subscribe(player.getUniqueId(), "fister_meditate", 0, 4, (ticks) -> {
             if (!meditating.contains(uuid)) {
                 return true;
             }
@@ -187,7 +184,7 @@ public class FisterArmorSet extends ArmorSet {
             }
         }
 
-        api.delay(60, () -> {
+        taskService.delay(60, () -> {
             endMeditation(player);
         });
 
@@ -215,7 +212,7 @@ public class FisterArmorSet extends ArmorSet {
         meditating.remove(uuid);
 
         // Start timer to remove hp
-        api.delay(100, () -> {
+        taskService.delay(100, () -> {
             attributesService.removeHealth(player);
         });
 
@@ -278,7 +275,7 @@ public class FisterArmorSet extends ArmorSet {
         NPC afterImageOne = afterImagesOne.get(player.getUniqueId());
         NPC afterImageTwo = afterImagesTwo.get(player.getUniqueId());
 
-        api.subscribe(player.getUniqueId(), "fister_task", 0, 5, (tick) -> {
+        taskService.subscribe(player.getUniqueId(), "fister_task", 0, 5, (tick) -> {
 
             if (tick == 5 || tick == 10) {
                 Location offset = target.getLocation().add(randomOffset(player, target, tick == 5 ? 1 : -1));
@@ -383,7 +380,7 @@ public class FisterArmorSet extends ArmorSet {
 
         dodging.put(uuid, clicked);
         // Player is invulnerable for half a second
-        api.delay(10, () -> {
+        taskService.delay(10, () -> {
             dodging.remove(uuid);
         });
 

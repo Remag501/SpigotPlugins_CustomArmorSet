@@ -1,6 +1,6 @@
 package me.remag501.customarmorsets.listener;
 
-import me.remag501.bgscore.api.TaskHelper;
+import me.remag501.bgscore.api.event.EventService;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.CosmeticService;
@@ -10,8 +10,6 @@ import me.remag501.customarmorsets.service.NamespaceService;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -30,12 +28,12 @@ public class DurabilityListener {
     private final CosmeticService cosmeticService;
     private final NamespaceService namespaceService;
 
-    public DurabilityListener(ArmorService armorService, CosmeticService cosmeticService, NamespaceService namespaceService, TaskHelper bgsApi) {
+    public DurabilityListener(ArmorService armorService, CosmeticService cosmeticService, NamespaceService namespaceService, EventService eventService) {
         this.armorService = armorService;
         this.cosmeticService = cosmeticService;
         this.namespaceService = namespaceService;
 
-        bgsApi.subscribe(PlayerItemDamageEvent.class)
+        eventService.subscribe(PlayerItemDamageEvent.class)
                 .filter(e -> e.getItem().hasItemMeta())
                 .handler(this::onPlayerDamage);
     }

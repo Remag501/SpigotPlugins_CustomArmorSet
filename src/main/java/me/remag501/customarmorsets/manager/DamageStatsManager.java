@@ -37,6 +37,7 @@ public class DamageStatsManager {
     public boolean hasWeaponMultiplier(UUID player, WeaponType type) {
         Map<WeaponType, Float> map = weaponMultipliers.get(player);
         return map != null && (map.containsKey(type) || map.containsKey(WeaponType.ALL));
+
     }
 
     public void clearWeaponMultiplier(UUID player, WeaponType... types) {

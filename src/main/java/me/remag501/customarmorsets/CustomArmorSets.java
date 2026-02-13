@@ -1,7 +1,9 @@
 package me.remag501.customarmorsets;
 
-import me.remag501.bgscore.BGSCore;
-import me.remag501.bgscore.api.TaskHelper;
+import me.remag501.bgscore.api.BGSApi;
+import me.remag501.bgscore.api.command.CommandService;
+import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.impl.*;
 import me.remag501.customarmorsets.command.CustomArmorSetCommand;
 import me.remag501.customarmorsets.manager.*;
@@ -10,7 +12,6 @@ import me.remag501.customarmorsets.lib.armorequipevent.ArmorListener;
 import me.remag501.customarmorsets.lib.armorequipevent.DispenserArmorListener;
 import me.remag501.customarmorsets.service.*;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -32,9 +33,10 @@ public final class CustomArmorSets extends JavaPlugin {
         // Plugin startup logic
         getLogger().info("Custom Armor Sets have started up!");
 
-        // 1. Get the API from the Core ONCE
-        BGSCore bgsCore = BGSCore.getInstance();
-        TaskHelper bgsApi = bgsCore.getApi();
+        // 1. Get the API sevices from core
+        TaskService taskService = BGSApi.tasks();
+        EventService eventService = BGSApi.events();
+        CommandService commandService = BGSApi.commands();
 
         // 2. Initialize services and managers
 
@@ -50,47 +52,35 @@ public final class CustomArmorSets extends JavaPlugin {
         DefenseStatsManager defenseStatsManager = new DefenseStatsManager();
         CooldownBarManager cooldownBarManager = new CooldownBarManager(this);
         PlayerSyncManager playerSyncManager = new PlayerSyncManager(attributesService);
-        armorManager = new ArmorManager(this, bgsApi, cosmeticService, attributesService, cooldownBarManager,
+        armorManager = new ArmorManager(this, taskService, eventService, cosmeticService, attributesService, cooldownBarManager,
                 damageStatsManager, defenseStatsManager, armorService, playerSyncManager, namespaceService);
 
         // 3. Register command to plugin
         CustomArmorSetCommand armorSetCommand = new CustomArmorSetCommand(this, itemService);
         getCommand("customarmorsets").setExecutor(armorSetCommand);
-        bgsCore.getCommandRouter().registerSubcommand("armor", armorSetCommand);
+        commandService.registerSubcommand("armor", armorSetCommand);
 
         // 4. Register all listeners to plugin
 
         // Listeners fo equipping and using armor set
         getServer().getPluginManager().registerEvents(new ArmorEquipListener(armorManager, armorService, itemService), this);
-        new ArmorInteractListener(armorManager, bgsApi);
-        new OffHandAbilityListener(armorManager, bgsApi);
-        new DurabilityListener(armorService, cosmeticService, namespaceService, bgsApi);
+        new ArmorInteractListener(armorManager, eventService);
+        new OffHandAbilityListener(armorManager, eventService);
+        new DurabilityListener(armorService, cosmeticService, namespaceService, eventService);
+
         // Listeners for world change and connection
-        new DisconnectReconnectListener(armorManager, armorService, bgsApi);
-        new WorldChangeListener(armorManager, armorService, bgsApi);
+        new DisconnectReconnectListener(armorManager, armorService, eventService);
+        new WorldChangeListener(armorManager, armorService, eventService);
+
         // Listener for broken items
-        new BrokenItemListener(itemService, bgsApi);
-        new RepairListener(armorService, cosmeticService, itemService, namespaceService, bgsApi);
+        new BrokenItemListener(itemService, eventService);
+        new RepairListener(armorService, cosmeticService, itemService, namespaceService, eventService);
+
         // Listener for damage stats
-        new DamageListener(damageStatsManager, defenseStatsManager, bgsApi);
+        new DamageListener(damageStatsManager, defenseStatsManager, eventService);
+
         // Mythic mobs
         getServer().getPluginManager().registerEvents(new MythicMobsListener(this), this);
-
-        // Register listeners for armor sets
-//        getServer().getPluginManager().registerEvents(new SnowmanArmorSet(), this);
-////        getServer().getPluginManager().registerEvents(, this);
-////        new InfernusArmorSet(bgsApi, cooldownBarManager);
-//        getServer().getPluginManager().registerEvents(new LastSpartanArmorSet(this, cooldownBarManager, attributesService, damageStatsManager), this);
-//        getServer().getPluginManager().registerEvents(new VikingCaptainArmorSet(damageStatsManager, cooldownBarManager), this);
-//        getServer().getPluginManager().registerEvents(new RoyalKnightArmorSet(armorManager, cooldownBarManager, attributesService), this);
-//        getServer().getPluginManager().registerEvents(new WorldGuardianArmorSet(this, armorManager, cooldownBarManager, attributesService), this);
-//        getServer().getPluginManager().registerEvents(new VampireArmorSet(this, armorManager, cooldownBarManager, attributesService), this);
-//        getServer().getPluginManager().registerEvents(new FisterArmorSet(this, armorManager, cooldownBarManager, attributesService, armorService), this);
-//        getServer().getPluginManager().registerEvents(new ArcherArmorSet(armorManager, cooldownBarManager, attributesService), this);
-//        getServer().getPluginManager().registerEvents(new NecromancerArmorSet(this, armorManager, damageStatsManager, attributesService, playerSyncManager), this);
-//        getServer().getPluginManager().registerEvents(new IcemanArmorSet(this, armorManager, cooldownBarManager, attributesService), this);
-//        getServer().getPluginManager().registerEvents(new GolemBusterArmorSet(this, armorManager, cooldownBarManager, attributesService, damageStatsManager, defenseStatsManager), this);
-//        getServer().getPluginManager().registerEvents(new BanditArmorSet(this, armorManager, cooldownBarManager, attributesService), this);
 
         // Libraries
         getServer().getPluginManager().registerEvents(new ArmorListener(getConfig().getStringList("blocked")), this);
