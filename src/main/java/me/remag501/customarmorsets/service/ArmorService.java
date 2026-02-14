@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.service;
 
+import me.remag501.bgscore.api.namespace.NamespaceService;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorType;
 import org.bukkit.*;
@@ -8,7 +9,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.java.JavaPlugin;
 
 public class ArmorService {
 
@@ -70,7 +70,7 @@ public class ArmorService {
         if (item == null || item.getType() == Material.AIR) return null;
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return null;
-        NamespacedKey key = namespaceService.armorSet;
+        NamespacedKey key = namespaceService.getArmorSetKey();
         PersistentDataContainer container = meta.getPersistentDataContainer();
         return container.has(key, PersistentDataType.STRING) ? container.get(key, PersistentDataType.STRING) : null;
     }
@@ -81,7 +81,7 @@ public class ArmorService {
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer container = meta.getPersistentDataContainer();
 
-        NamespacedKey armorSetKey = namespaceService.armorSet;
+        NamespacedKey armorSetKey = namespaceService.getArmorSetKey();
 
         return container.has(armorSetKey, PersistentDataType.STRING);
     }

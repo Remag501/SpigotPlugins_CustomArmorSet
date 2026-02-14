@@ -1,12 +1,12 @@
 package me.remag501.customarmorsets.listener;
 
 import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.namespace.NamespaceService;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.CosmeticService;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorEquipEvent;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorType;
-import me.remag501.customarmorsets.service.NamespaceService;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -62,8 +62,8 @@ public class DurabilityListener {
         ItemMeta meta = damagedItem.getItemMeta();
         PersistentDataContainer container = meta.getPersistentDataContainer();
 
-        NamespacedKey durabilityKey = namespaceService.internalDurability;
-        NamespacedKey maxDurabilityKey = namespaceService.maxDurability;
+        NamespacedKey durabilityKey = namespaceService.getDurabilityKey();
+        NamespacedKey maxDurabilityKey = namespaceService.getMaxDurabilityKey();
 
         int currentDurability = container.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 100);
         int maxDurability = container.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 100);

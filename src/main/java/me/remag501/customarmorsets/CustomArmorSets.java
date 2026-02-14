@@ -3,6 +3,7 @@ package me.remag501.customarmorsets;
 import me.remag501.bgscore.api.BGSApi;
 import me.remag501.bgscore.api.command.CommandService;
 import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.namespace.NamespaceService;
 import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.impl.*;
 import me.remag501.customarmorsets.command.CustomArmorSetCommand;
@@ -37,12 +38,12 @@ public final class CustomArmorSets extends JavaPlugin {
         TaskService taskService = BGSApi.tasks();
         EventService eventService = BGSApi.events();
         CommandService commandService = BGSApi.commands();
+        NamespaceService namespaceService = BGSApi.namespaces();
 
         // 2. Initialize services and managers
 
         // Setup services
         CosmeticService cosmeticService = new CosmeticService();
-        NamespaceService namespaceService = new NamespaceService(this);
         ArmorService armorService = new ArmorService(namespaceService);
         AttributesService attributesService = new AttributesService(this);
         ItemService itemService = new ItemService(namespaceService, armorService);

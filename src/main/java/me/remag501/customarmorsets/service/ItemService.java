@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.service;
 
+import me.remag501.bgscore.api.namespace.NamespaceService;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -8,7 +9,6 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.Plugin;
 
 import java.util.Arrays;
 
@@ -42,8 +42,8 @@ public class ItemService {
        ));
 
        PersistentDataContainer container = meta.getPersistentDataContainer();
-       container.set(namespaceService.repairKit, PersistentDataType.BYTE, (byte) 1); // identifies as repair kit
-       container.set(namespaceService.repairKitTier, PersistentDataType.INTEGER, tier); // stores tier
+       container.set(namespaceService.getRepairKitKey(), PersistentDataType.BYTE, (byte) 1); // identifies as repair kit
+       container.set(namespaceService.getRepairKitTierKey(), PersistentDataType.INTEGER, tier); // stores tier
 
        kit.setItemMeta(meta);
        return kit;
@@ -53,7 +53,7 @@ public class ItemService {
         if (item == null || !item.hasItemMeta()) return false;
 
         PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer();
-        return container.has(namespaceService.repairKit, PersistentDataType.BYTE);
+        return container.has(namespaceService.getRarityKey(), PersistentDataType.BYTE);
     }
 
     public boolean isBroken(ItemStack item) {
@@ -64,7 +64,7 @@ public class ItemService {
         // Custom durability system
         if (armorService.isCustomArmorPiece(item)) {
             PersistentDataContainer container = meta.getPersistentDataContainer();
-            NamespacedKey durabilityKey = namespaceService.internalDurability;
+            NamespacedKey durabilityKey = namespaceService.getDurabilityKey();
 
             int currentDurability = container.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 100);
             return currentDurability <= 0;

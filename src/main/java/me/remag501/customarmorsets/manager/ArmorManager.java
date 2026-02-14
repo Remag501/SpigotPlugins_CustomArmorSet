@@ -1,6 +1,7 @@
 package me.remag501.customarmorsets.manager;
 
 import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.namespace.NamespaceService;
 import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
@@ -8,7 +9,6 @@ import me.remag501.customarmorsets.armor.impl.*;
 import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.service.CosmeticService;
-import me.remag501.customarmorsets.service.NamespaceService;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.entity.Player;

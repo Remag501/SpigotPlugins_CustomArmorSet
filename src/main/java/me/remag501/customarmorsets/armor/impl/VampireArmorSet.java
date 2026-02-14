@@ -4,13 +4,13 @@ import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
 import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.namespace.NamespaceService;
 import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
-import me.remag501.customarmorsets.service.NamespaceService;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
@@ -98,7 +98,7 @@ public class VampireArmorSet extends ArmorSet {
         // Check for vampire orb in 5 block radius
         for (Entity entity : player.getNearbyEntities(RADIUS, RADIUS, RADIUS)) {
             if (entity instanceof ArmorStand stand) {
-                NamespacedKey key = namespaceService.vampireKillMark;
+                NamespacedKey key = namespaceService.getVampireKillMarkKey();
                 if (stand.getPersistentDataContainer().has(key, PersistentDataType.BYTE)
                         && stand.getLocation().distanceSquared(player.getLocation()) <= RADIUS * RADIUS) {
                     stand.remove(); // destroy the orb
@@ -198,7 +198,7 @@ public class VampireArmorSet extends ArmorSet {
         DisguiseAPI.disguiseToAll(player, disguise);
 
         player.setFlySpeed((float) 0.2);
-        bat.getPersistentDataContainer().set(namespaceService.batFormOwner, PersistentDataType.STRING, player.getUniqueId().toString());
+        bat.getPersistentDataContainer().set(namespaceService.getBatFormOwnerKey(), PersistentDataType.STRING, player.getUniqueId().toString());
 
     }
 
@@ -218,7 +218,7 @@ public class VampireArmorSet extends ArmorSet {
         // Remove bat
         Bukkit.getWorlds().forEach(world ->
                 world.getEntitiesByClass(Bat.class).forEach(bat -> {
-                    String ownerId = bat.getPersistentDataContainer().get(namespaceService.batFormOwner, PersistentDataType.STRING);
+                    String ownerId = bat.getPersistentDataContainer().get(namespaceService.getBatFormOwnerKey(), PersistentDataType.STRING);
                     if (ownerId != null && ownerId.equals(uuid.toString())) {
                         bat.remove();
                     }
@@ -358,7 +358,7 @@ public class VampireArmorSet extends ArmorSet {
 
         // Mark with PDC so it can be tracked/removed
         stand.getPersistentDataContainer().set(
-                namespaceService.vampireKillMark,
+                namespaceService.getVampireKillMarkKey(),
                 PersistentDataType.BYTE,
                 (byte) 1
         );

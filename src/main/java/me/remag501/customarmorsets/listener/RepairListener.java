@@ -1,10 +1,10 @@
 package me.remag501.customarmorsets.listener;
 
 import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.namespace.NamespaceService;
 import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.CosmeticService;
 import me.remag501.customarmorsets.service.ItemService;
-import me.remag501.customarmorsets.service.NamespaceService;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -54,7 +54,7 @@ public class RepairListener {
         // Get tier and corresponding repair amount
         ItemMeta meta = cursor.getItemMeta();
         PersistentDataContainer container = meta.getPersistentDataContainer();
-        int tier = container.getOrDefault(namespaceService.repairKitTier, PersistentDataType.INTEGER, 0);
+        int tier = container.getOrDefault(namespaceService.getRepairKitTierKey(), PersistentDataType.INTEGER, 0);
 
         int repairAmount = switch (tier) {
             case 0 -> 10; // Weak
@@ -104,8 +104,8 @@ public class RepairListener {
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer container = meta.getPersistentDataContainer();
 
-        NamespacedKey durabilityKey = namespaceService.internalDurability;
-        NamespacedKey maxDurabilityKey = namespaceService.maxDurability;
+        NamespacedKey durabilityKey = namespaceService.getDurabilityKey();
+        NamespacedKey maxDurabilityKey = namespaceService.getMaxDurabilityKey();
 
         int currentDurability = container.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 100);
         int maxDurability = container.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 100);
