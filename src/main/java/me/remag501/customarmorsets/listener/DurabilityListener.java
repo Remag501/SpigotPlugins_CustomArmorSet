@@ -2,6 +2,7 @@ package me.remag501.customarmorsets.listener;
 
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.namespace.NamespaceService;
+import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.CosmeticService;
@@ -177,9 +178,9 @@ public class DurabilityListener {
 
 
         if (itemStack.getItemMeta().hasDisplayName())
-            player.sendMessage(ChatColor.RED + "Your " + itemStack.getItemMeta().getDisplayName() + " broke!");
+            player.sendMessage(BGSColor.NEGATIVE + "Your " + itemStack.getItemMeta().getDisplayName() + " broke!");
         else
-            player.sendMessage(ChatColor.RED + "Your " + formatMaterialName(type) + " broke!");
+            player.sendMessage(BGSColor.NEGATIVE + "Your " + formatMaterialName(type) + " broke!");
     }
 
     private String formatMaterialName(Material material) {

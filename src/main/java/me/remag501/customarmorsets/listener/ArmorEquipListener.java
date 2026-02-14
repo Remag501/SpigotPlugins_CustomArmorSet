@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.listener;
 
+import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.service.ArmorService;
@@ -33,7 +34,7 @@ public class ArmorEquipListener implements Listener {
         ItemStack newArmor = event.getNewArmorPiece();
         if (itemService.isBroken(newArmor)) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage(ChatColor.RED + "This armor is broken and can't be equipped!");
+            event.getPlayer().sendMessage(BGSColor.NEGATIVE + "This armor is broken and can't be equipped!");
             return;
         }
 
@@ -46,8 +47,6 @@ public class ArmorEquipListener implements Listener {
         if (wasWearing != null && isWearing == null) {
             armorManager.unequipArmor(player);
         }
-
-        player.sendMessage(" " + (wasWearing == null) + " " + (isWearing == null));
 
         ArmorSetType type = (wasWearing != null) ? wasWearing : isWearing;
 

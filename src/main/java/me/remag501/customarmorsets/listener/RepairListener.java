@@ -2,6 +2,7 @@ package me.remag501.customarmorsets.listener;
 
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.namespace.NamespaceService;
+import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.CosmeticService;
 import me.remag501.customarmorsets.service.ItemService;
@@ -78,14 +79,14 @@ public class RepairListener {
 
         if (!(item.getItemMeta() instanceof Damageable damageable)) return false;
         if (damageable.getDamage() <= 0) {
-            player.sendMessage(ChatColor.GRAY + "This piece is already at full durability!");
+            player.sendMessage(BGSColor.NEGATIVE + "This piece is already at full durability!");
             return true;
         }
 
         // Logic to repair gear
         damageable.setDamage(Math.max(0, damageable.getDamage() - repairAmount)); // Heal 10 durability
         item.setItemMeta(damageable);
-        player.sendMessage(ChatColor.GREEN + "Durability restored by " + repairAmount + "!");
+        player.sendMessage(BGSColor.POSITIVE + "Durability restored by " + repairAmount + "!");
 
         // Reduce repair kit by one
         ItemStack cursor = player.getItemOnCursor();
@@ -97,7 +98,7 @@ public class RepairListener {
 
     private boolean customRepair(Player player, ItemStack item, int repairAmount) {
         if (!armorService.isCustomArmorPiece(item)) {
-            player.sendMessage(ChatColor.RED + "This is not a custom armor piece.");
+            player.sendMessage(BGSColor.NEGATIVE + "This is not a custom armor piece.");
             return false;
         }
 
@@ -111,7 +112,7 @@ public class RepairListener {
         int maxDurability = container.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 100);
 
         if (currentDurability >= maxDurability) {
-            player.sendMessage(ChatColor.YELLOW + "This armor piece is already fully repaired.");
+            player.sendMessage(BGSColor.NEGATIVE + "This armor piece is already fully repaired.");
             return false;
         }
 
@@ -142,7 +143,7 @@ public class RepairListener {
             player.setItemOnCursor(null);
         }
 
-        player.sendMessage(ChatColor.GREEN + "Repaired armor durability by " + repairAmount + "!");
+        player.sendMessage(BGSColor.POSITIVE + "Repaired armor durability by " + repairAmount + "!");
         return true;
     }
 

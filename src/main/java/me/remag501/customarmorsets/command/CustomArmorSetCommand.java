@@ -1,6 +1,7 @@
 package me.remag501.customarmorsets.command;
 
 import me.remag501.bgscore.api.namespace.NamespaceService;
+import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.ItemService;
@@ -99,7 +100,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
         else if (args.length == 1 && args[0].equalsIgnoreCase("getrepairkit") && sender instanceof Player player) {
             ItemStack repairKit = itemService.createRepairKit(1, 0);
             player.getInventory().addItem(repairKit);
-            player.sendMessage("§b§lARMOR §8» §7You received an Armor Repair Kit!");
+            player.sendMessage(BGSColor.PREFIX_ARMOR + "You received an Armor Repair Kit!");
             return true;
         }
 
@@ -129,7 +130,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
 
                 ItemStack repairKit = itemService.createRepairKit(amount, tier);
                 player.getInventory().addItem(repairKit);
-                player.sendMessage("§b§lARMOR §8» §7You received " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ")!");
+                player.sendMessage(BGSColor.PREFIX_ARMOR + "You received " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ")!");
             } catch (NumberFormatException e) {
                 sender.sendMessage("§b§lARMOR §8» §cUsage: /customarmorsets getrepairkit <amount> <tier> [player]");
             }
@@ -156,7 +157,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
                 ItemStack repairKit = itemService.createRepairKit(amount, tier);
                 target.getInventory().addItem(repairKit);
                 sender.sendMessage("§b§lARMOR §8» §aGave " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ") to " + target.getName() + "!");
-                target.sendMessage("§b§lARMOR §8» §7You received " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ")!");
+                target.sendMessage(BGSColor.PREFIX_ARMOR + "You received " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ")!");
             } catch (NumberFormatException e) {
                 sender.sendMessage("§b§lARMOR §8» §cUsage: /customarmorsets getrepairkit <amount> <tier> [player]");
             }
@@ -179,7 +180,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
                     player.getInventory().addItem(item);
                 }
             }
-            player.sendMessage("§b§lARMOR §8» §7You received the " + type.getDisplayName() + " Armor Set!");
+            player.sendMessage(BGSColor.PREFIX_ARMOR + "You received the " + type.getDisplayName() + " Armor Set!");
         });
     }
 
@@ -244,7 +245,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
             if (pieceToGive != null) {
                 enchants.forEach(pieceToGive::addUnsafeEnchantment);
                 player.getInventory().addItem(pieceToGive);
-                player.sendMessage("§b§lARMOR §8» §7You received the " + slot.name() + " of " + type.getDisplayName() + "!");
+                player.sendMessage(BGSColor.PREFIX_ARMOR + "You received the " + slot.name() + " of " + type.getDisplayName() + "!");
             }
         }, () -> {
             player.sendMessage("§b§lARMOR §8» §cUnknown armor set.");

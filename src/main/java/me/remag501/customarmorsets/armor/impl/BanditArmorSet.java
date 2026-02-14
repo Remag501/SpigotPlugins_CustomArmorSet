@@ -2,6 +2,7 @@ package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.task.TaskService;
+import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
@@ -160,14 +161,14 @@ public class BanditArmorSet extends ArmorSet {
             player.setVelocity(velocity);
 
             player.playSound(player.getLocation(), Sound.ENTITY_HORSE_JUMP, 1.0f, 2.0f);
-            player.sendMessage("§a§l(!) §aYou dodged! Dodges left: " + currentDodges);
+            player.sendMessage(BGSColor.POSITIVE + "You dodged! Dodges left: " + currentDodges);
 
             // Start the regen task if it's not already running.
             if (!regenTasks.containsKey(player.getUniqueId()) || regenTasks.get(player.getUniqueId()).isCancelled()) {
                 startDodgeRegenTask(player);
             }
         } else {
-            player.sendMessage("§c§l(!) §cYou have no dodges left!");
+            player.sendMessage(BGSColor.NEGATIVE + "You have no dodges left!");
         }
     }
 
@@ -178,7 +179,7 @@ public class BanditArmorSet extends ArmorSet {
                  currentDodges++;
                  cooldownBarManager.setLevel(player, currentDodges);
                  playerDodges.put(player.getUniqueId(), currentDodges);
-                 player.sendMessage("§a§l(!) §aYou regenerated a dodge! Dodges left: " + currentDodges);
+                 player.sendMessage(BGSColor.POSITIVE + "You regenerated a dodge! Dodges left: " + currentDodges);
              }
 
              // Cancel the task once the player has max dodges again.

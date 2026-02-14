@@ -6,6 +6,7 @@ import me.libraryaddict.disguise.disguisetypes.MobDisguise;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.namespace.NamespaceService;
 import me.remag501.bgscore.api.task.TaskService;
+import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
@@ -102,7 +103,7 @@ public class VampireArmorSet extends ArmorSet {
                 if (stand.getPersistentDataContainer().has(key, PersistentDataType.BYTE)
                         && stand.getLocation().distanceSquared(player.getLocation()) <= RADIUS * RADIUS) {
                     stand.remove(); // destroy the orb
-                    player.sendMessage(ChatColor.DARK_RED + "You absorb the vampire orb!");
+                    player.sendMessage(BGSColor.POSITIVE + "You absorb the vampire orb!");
 
                     // Logic for morphing or healing
                     if (player.isSneaking()) {
@@ -130,7 +131,7 @@ public class VampireArmorSet extends ArmorSet {
         // Now we check cooldown before performing main ability
         if (cooldowns.containsKey(uuid) && now < cooldowns.get(uuid)) {
             long remaining = (cooldowns.get(uuid) - now) / 1000;
-            player.sendMessage(ChatColor.RED + "Vampire ability on cooldown (" + remaining + "s left)");
+            player.sendMessage(BGSColor.NEGATIVE + "Vampire ability on cooldown (" + remaining + "s left)");
             return;
         }
 
@@ -227,7 +228,7 @@ public class VampireArmorSet extends ArmorSet {
 
         cleanupBatForm(player);
 
-        player.sendMessage(ChatColor.GRAY + "You return to your human form.");
+        player.sendMessage(BGSColor.POSITIVE + "You return to your human form.");
     }
 
     private void spawnBatStorm(Player player) {

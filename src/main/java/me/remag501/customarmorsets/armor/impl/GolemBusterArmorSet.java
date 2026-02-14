@@ -5,6 +5,7 @@ import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.task.TaskService;
+import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.TargetCategory;
@@ -116,7 +117,7 @@ public class GolemBusterArmorSet extends ArmorSet {
                 long lastUsed = stunCooldown.getOrDefault(uuid, 0L);
 
                 if (now - lastUsed < 1000) {
-                    player.sendMessage("§c§l(!) §cAbility on cooldown!");
+                    player.sendMessage(BGSColor.NEGATIVE + "Ability on cooldown!");
                     return;
                 }
 
@@ -158,7 +159,7 @@ public class GolemBusterArmorSet extends ArmorSet {
                 }
 
                 // Optional confirmation
-                player.sendMessage("§a§l(!) §aYou slam the ground, stunning enemies ahead!");
+                player.sendMessage(BGSColor.POSITIVE + "You slam the ground, stunning enemies ahead!");
                 return;
             }
         }
@@ -166,7 +167,7 @@ public class GolemBusterArmorSet extends ArmorSet {
         if (player.isSneaking()) {
 //            battery = consumePlayerEnergy(player, -50);
             if (battery >= 50) {
-                player.sendMessage("§a§l(!) §aGolem Smash");
+                player.sendMessage(BGSColor.POSITIVE + "Golem Smash");
                 cooldownBarManager.setLevel(player, battery);
                 golemTransform(player);
                 return;
@@ -175,7 +176,7 @@ public class GolemBusterArmorSet extends ArmorSet {
         // Check if player has enough battery
         battery = consumePlayerEnergy(player, -5);
         if (battery < 0) {
-            player.sendMessage("§c§l(!) §cNot enough battery");
+            player.sendMessage(BGSColor.NEGATIVE + "Not enough battery");
             return;
         }
 
@@ -202,7 +203,7 @@ public class GolemBusterArmorSet extends ArmorSet {
         }
 
         world.playSound(player.getLocation(), Sound.ENTITY_SHULKER_SHOOT, 1f, 2f);
-        player.sendMessage("§a§l(!) §aBattery gun discharged!");
+        player.sendMessage(BGSColor.POSITIVE + "Battery gun discharged!");
     }
 
     public void startTargetEffect(LivingEntity target) {
@@ -285,7 +286,7 @@ public class GolemBusterArmorSet extends ArmorSet {
         // Remove disguise
         DisguiseAPI.undisguiseToAll(player);
 
-        player.sendMessage("§c§l(!) §cGolem tired.");
+        player.sendMessage(BGSColor.NEGATIVE + "Golem tired.");
     }
 
     private void startParticleTrail(Player player) {
@@ -339,7 +340,7 @@ public class GolemBusterArmorSet extends ArmorSet {
 
         // Add battery energy
         int energy = (int) calculatedEnergy;
-        player.sendMessage("§a§l(!) §aBattery +" + energy + " from kill!");
+        player.sendMessage(BGSColor.POSITIVE + "Battery +" + energy + " from kill!");
         consumePlayerEnergy(player, energy);
     }
 

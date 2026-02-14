@@ -1,6 +1,7 @@
 package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.bgscore.api.task.TaskService;
+import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.WeaponType;
@@ -54,20 +55,20 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
 
         if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
             long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
-            player.sendMessage("§cAbility is on cooldown for " + timeLeft + " more seconds!");
+            player.sendMessage(BGSColor.NEGATIVE + "Ability is on cooldown for " + timeLeft + " more seconds!");
             return;
         }
 
         ItemStack mainHand = player.getInventory().getItemInMainHand();
         if (!mainHand.getType().name().endsWith("_AXE")) {
-            player.sendMessage("§cYou must hold an axe to use this ability!");
+            player.sendMessage(BGSColor.NEGATIVE + "You must hold an axe to use this ability!");
             return;
         }
 
         // Clone the axe and remove it from player’s hand
         ItemStack thrownAxeStack = mainHand.clone();
         player.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
-        player.sendMessage("§eYou threw your axe!");
+        player.sendMessage(BGSColor.POSITIVE + "You threw your axe!");
         player.getWorld().playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1.0f, 1.0f); // Play warning sound effect
 
         Item thrownAxe = player.getWorld().dropItem(player.getEyeLocation(), thrownAxeStack);
@@ -84,7 +85,7 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
             for (Entity entity : thrownAxe.getNearbyEntities(1.2, 1.2, 1.2)) {
                 if (entity instanceof LivingEntity && entity != player) {
                     ((LivingEntity) entity).damage(calculateAxeDamage(thrownAxeStack) * 1.25, player);
-                    player.sendMessage("§cYou hit " + entity.getName() + " with your axe!");
+                    player.sendMessage(BGSColor.POSITIVE + "You hit " + entity.getName() + " with your axe!");
                     thrownAxe.remove();
                     returnAxe(player, thrownAxeStack);
                     return true;
@@ -112,7 +113,7 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
         } else {
             player.getInventory().addItem(axe);
         }
-        player.sendMessage("§aYour axe has returned.");
+        player.sendMessage(BGSColor.POSITIVE + "Your axe has returned.");
     }
 
     /**

@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.service.AttributesService;
@@ -46,13 +47,13 @@ public class RoyalKnightArmorSet extends ArmorSet {
 
         if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
             long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
-            player.sendMessage("§c§l(!) §cAbility is on cooldown for " + timeLeft + " more seconds!");
+            player.sendMessage(BGSColor.NEGATIVE + "Ability is on cooldown for " + timeLeft + " more seconds!");
             return;
         }
 
         // Heal 3 hearts (6 health)
         player.setHealth(Math.min(player.getAttribute(Attribute.MAX_HEALTH).getValue(), player.getHealth() + 6));
-        player.sendMessage("§a§l(!) §aYou used Royal Knight's Healing!");
+        player.sendMessage(BGSColor.POSITIVE + "You used Royal Knight's Healing!");
 
         cooldownBarManager.startCooldownBar(player, (int)(COOLDOWN / 1000));
         abilityCooldowns.put(uuid, now);

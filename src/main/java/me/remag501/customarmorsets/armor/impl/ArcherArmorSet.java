@@ -1,6 +1,8 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.BGSCore;
 import me.remag501.bgscore.api.event.EventService;
+import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.service.AttributesService;
@@ -69,7 +71,7 @@ public class ArcherArmorSet extends ArmorSet {
         long now = System.currentTimeMillis();
         if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
             long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
-            player.sendMessage("§c§l(!) §cAbility on cooldown for " + timeLeft + " seconds!");
+            player.sendMessage(BGSColor.NEGATIVE + "Ability on cooldown for " + timeLeft + " seconds!");
             return;
         }
 
@@ -124,7 +126,7 @@ public class ArcherArmorSet extends ArmorSet {
             if (event.getDamager() instanceof Arrow arrow && event.getEntity() instanceof LivingEntity target) {
                 if (isHeadshot(arrow, target)) {
                     event.setDamage(event.getDamage() * 1.5);
-                    player.sendMessage("§a§l(!) §aHeadshot!");
+                    player.sendMessage(BGSColor.POSITIVE + "Headshot!");
                 }
             }
             // 2. Global Bow Bonus

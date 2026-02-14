@@ -2,6 +2,7 @@ package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.task.TaskService;
+import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
@@ -134,7 +135,7 @@ public class FisterArmorSet extends ArmorSet {
         // Check if player is on cooldown
         if (abilityCooldowns.containsKey(uuid) && now < abilityCooldowns.get(uuid)) {
             long remaining = (abilityCooldowns.get(uuid) - now) / 1000;
-            player.sendMessage("§a§l(!) §aYour meditate ability is on cooldown for another " + remaining + " seconds.");
+            player.sendMessage(BGSColor.NEGATIVE + "Your meditate ability is on cooldown for another " + remaining + " seconds.");
             return;
         }
 
@@ -406,7 +407,7 @@ public class FisterArmorSet extends ArmorSet {
             loc.getWorld().playSound(loc, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.2f);
 
             loc.getWorld().spawnParticle(Particle.ITEM, loc, 10, 0.1, 0.1, 0.1, new ItemStack(Material.ARROW));
-            player.sendMessage("§a§l(!) §aArrow shattered!");
+            player.sendMessage(BGSColor.POSITIVE + "Arrow shattered!");
         }
     }
 

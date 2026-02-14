@@ -2,6 +2,7 @@ package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.task.TaskService;
+import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.WeaponType;
@@ -61,7 +62,7 @@ public class LastSpartanArmorSet extends ArmorSet {
 
         if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
             long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
-            player.sendMessage("§c§l(!) §cAbility is on cooldown for " + timeLeft + " more seconds!");
+            player.sendMessage(BGSColor.NEGATIVE + "Ability is on cooldown for " + timeLeft + " more seconds!");
             return;
         }
 
@@ -116,7 +117,7 @@ public class LastSpartanArmorSet extends ArmorSet {
 
                     return true;
                 } else if (player.isOnGround() && ticks > 10) { // Enemy got away from spartan jump
-                    player.sendMessage("§c§l(!) §cYou missed!");
+                    player.sendMessage(BGSColor.NEGATIVE + "You missed!");
                     return true;
                 } else if (ticks >= 100) {
                     // Reduce lag, likely if occurs if player's client is bugged/spoof or player is air
@@ -132,7 +133,7 @@ public class LastSpartanArmorSet extends ArmorSet {
             cooldownBarManager.startCooldownBar(player, (int) (COOLDOWN / 1000));
 
         } else {
-            player.sendMessage("§c§l(!) §cNo enemies nearby to leap toward!");
+            player.sendMessage(BGSColor.NEGATIVE + "No enemies nearby to leap toward!");
         }
 
     }

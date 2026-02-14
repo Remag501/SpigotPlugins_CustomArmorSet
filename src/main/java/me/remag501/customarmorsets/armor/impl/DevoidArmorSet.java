@@ -1,6 +1,7 @@
 package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.bgscore.api.task.TaskService;
+import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
@@ -59,7 +60,7 @@ public class DevoidArmorSet extends ArmorSet {
 
         if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
             long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
-            player.sendMessage("§c§l(!) §cAbility is on cooldown for " + timeLeft + " more seconds!");
+            player.sendMessage(BGSColor.NEGATIVE + "Ability is on cooldown for " + timeLeft + " more seconds!");
             return;
         }
 
@@ -147,7 +148,7 @@ public class DevoidArmorSet extends ArmorSet {
             return false;
         });
 
-        player.sendMessage(isSneaking ? "§a§l(!) §aYou pulled enemies!" : "§a§l(!) §aYou pushed enemies!");
+        player.sendMessage(isSneaking ? BGSColor.POSITIVE + "You pulled enemies!" : BGSColor.POSITIVE + "You pushed enemies!");
     }
 
 }

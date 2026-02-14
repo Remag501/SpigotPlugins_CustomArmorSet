@@ -2,6 +2,7 @@ package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.task.TaskService;
+import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
@@ -170,7 +171,7 @@ public class IcemanArmorSet extends ArmorSet {
             domeCharge.put(uuid, 0);
             return;
         } else if (player.isSneaking()) {
-            player.sendMessage("§c§l(!) §cNot enough snow charge");
+            player.sendMessage(BGSColor.NEGATIVE + "Not enough snow charge");
             return;
         }
         // First check if player is using ice beam
@@ -186,7 +187,7 @@ public class IcemanArmorSet extends ArmorSet {
             cooldowns.put(uuid, System.currentTimeMillis());
             domeCharge.put(uuid, Math.min(domeCharge.get(uuid) + 3 * charges, 100));
         } else {
-            player.sendMessage("§c§l(!) §cYou don't have enough freeze charges!");
+            player.sendMessage(BGSColor.NEGATIVE + "You don't have enough freeze charges!");
         }
     }
 
@@ -363,7 +364,7 @@ public class IcemanArmorSet extends ArmorSet {
                 // Set freeze stack to 1
                 freezeStacks.put(mobUUID, 1);
 
-                player.sendMessage("§a§l(!) §aYou thawed you're opponent");
+                player.sendMessage(BGSColor.POSITIVE + "You thawed you're opponent");
             }
         }
     }
