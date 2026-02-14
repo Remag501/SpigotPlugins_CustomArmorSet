@@ -57,7 +57,7 @@ public final class CustomArmorSets extends JavaPlugin {
                 damageStatsManager, defenseStatsManager, armorService, playerSyncManager, namespaceService);
 
         // 3. Register command to plugin
-        CustomArmorSetCommand armorSetCommand = new CustomArmorSetCommand(this, itemService);
+        CustomArmorSetCommand armorSetCommand = new CustomArmorSetCommand(itemService, namespaceService);
         getCommand("customarmorsets").setExecutor(armorSetCommand);
         commandService.registerSubcommand("armor", armorSetCommand);
 

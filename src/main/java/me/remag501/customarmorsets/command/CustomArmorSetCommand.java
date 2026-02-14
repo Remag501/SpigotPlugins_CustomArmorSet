@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.command;
 
+import me.remag501.bgscore.api.namespace.NamespaceService;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.ItemService;
@@ -15,18 +16,19 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import javax.xml.stream.events.Namespace;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class CustomArmorSetCommand implements CommandExecutor {
 
-    private final JavaPlugin plugin;
     private final ItemService itemService;
+    private final NamespaceService namespaceService;
 
-    public CustomArmorSetCommand(JavaPlugin plugin, ItemService itemService) {
-        this.plugin = plugin;
+    public CustomArmorSetCommand(ItemService itemService, NamespaceService namespaceService) {
         this.itemService = itemService;
+        this.namespaceService = namespaceService;
     }
 
     @Override
@@ -170,7 +172,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
 
     private void giveArmorSet(Player player, String setId, Map<Enchantment, Integer> enchants) {
         ArmorSetType.fromId(setId).ifPresent(type -> {
-            ItemStack[] armor = ArmorUtil.createLeatherArmorSet(plugin, type.getDisplayName(), type.getLore(), type.getLeatherColor(), type.getRarity(), type.getCustomModelData(), type.getId(), type.getArmorPoints(), type.getDurability(), type.getArmorToughness());
+            ItemStack[] armor = ArmorUtil.createLeatherArmorSet(namespaceService, type.getDisplayName(), type.getLore(), type.getLeatherColor(), type.getRarity(), type.getCustomModelData(), type.getId(), type.getArmorPoints(), type.getDurability(), type.getArmorToughness());
             for (ItemStack item : armor) {
                 if (item != null) {
                     enchants.forEach(item::addUnsafeEnchantment);
@@ -229,7 +231,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
 
     private void giveArmorPiece(Player player, String setId, EquipmentSlot slot, Map<Enchantment, Integer> enchants) {
         ArmorSetType.fromId(setId).ifPresentOrElse(type -> {
-            ItemStack[] armor = ArmorUtil.createLeatherArmorSet(plugin, type.getDisplayName(), type.getLore(), type.getLeatherColor(), type.getRarity(), type.getCustomModelData(), type.getId(), type.getArmorPoints(), type.getDurability(), type.getArmorToughness());
+            ItemStack[] armor = ArmorUtil.createLeatherArmorSet(namespaceService, type.getDisplayName(), type.getLore(), type.getLeatherColor(), type.getRarity(), type.getCustomModelData(), type.getId(), type.getArmorPoints(), type.getDurability(), type.getArmorToughness());
 
             ItemStack pieceToGive = switch (slot) {
                 case HEAD -> armor[0];

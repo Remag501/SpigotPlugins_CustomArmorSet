@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.util;
 
+import me.remag501.bgscore.api.namespace.NamespaceService;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -21,7 +22,7 @@ import java.util.UUID;
 
 public class ArmorUtil {
 
-    public static ItemStack createLeatherArmorPiece(JavaPlugin plugin, Material material, String displayName, List<String> lore,
+    public static ItemStack createLeatherArmorPiece(NamespaceService namespaceService, Material material, String displayName, List<String> lore,
                                                     int color, int rarity, int customModelData, String armorSetId, int armorPoints, int durability, int armorToughness) {
         if (!material.name().startsWith("LEATHER_")) {
             throw new IllegalArgumentException("Material must be a leather armor piece!");
@@ -55,11 +56,37 @@ public class ArmorUtil {
         meta.addItemFlags(ItemFlag.HIDE_DYE);
 
         // Adjust set armor points, durability, and toughness
-        AttributeModifier modifier = new AttributeModifier(UUID.randomUUID(), "generic.armor", armorPoints, AttributeModifier.Operation.ADD_NUMBER, slot);
-        meta.addAttributeModifier(Attribute.ARMOR, modifier);
-        modifier = new AttributeModifier(UUID.randomUUID(), "generic.armor.toughness", armorToughness, AttributeModifier.Operation.ADD_NUMBER, slot);
-        meta.addAttributeModifier(Attribute.ARMOR_TOUGHNESS, modifier);
-//        meta.setUnbreakable(true); // Make default unbreakable so we use internal durability
+//        AttributeModifier modifier = new AttributeModifier(UUID.randomUUID(), "generic.armor", armorPoints, AttributeModifier.Operation.ADD_NUMBER, slot);
+//        meta.addAttributeModifier(Attribute.ARMOR, modifier);
+//        modifier = new AttributeModifier(UUID.randomUUID(), "generic.armor.toughness", armorToughness, AttributeModifier.Operation.ADD_NUMBER, slot);
+//        meta.addAttributeModifier(Attribute.ARMOR_TOUGHNESS, modifier);
+////        meta.setUnbreakable(true); // Make default unbreakable so we use internal durability
+        // 1. Define the unique keys for these modifiers (best practice)
+        NamespacedKey armorKey = namespaceService.key("armor_modifier");
+        NamespacedKey toughnessKey = namespaceService.key("toughness_modifier");
+
+        // 2. Create the modifiers using the new API
+        // AttributeModifier(Key, Amount, Operation, SlotGroup)
+        AttributeModifier armorMod = new AttributeModifier(
+                armorKey,
+                (double) armorPoints,
+                AttributeModifier.Operation.ADD_NUMBER,
+                slot.getGroup() // Converts EquipmentSlot to EquipmentSlotGroup (HEAD, CHEST, etc.)
+        );
+
+        AttributeModifier toughnessMod = new AttributeModifier(
+                toughnessKey,
+                (double) armorToughness,
+                AttributeModifier.Operation.ADD_NUMBER,
+                slot.getGroup()
+        );
+
+        // 3. Apply them to the meta
+        meta.addAttributeModifier(Attribute.ARMOR, armorMod);
+        meta.addAttributeModifier(Attribute.ARMOR_TOUGHNESS, toughnessMod);
+
+
+
         lore = new ArrayList<>(lore); // Make lore mutable
         lore.add("§7Durability: " + durability + "/" + durability);
 
@@ -99,17 +126,17 @@ public class ArmorUtil {
 
         // Tag with armor family ID
         PersistentDataContainer container = meta.getPersistentDataContainer();
-        NamespacedKey durabilityKey = new NamespacedKey(plugin, "internal_durability");
-        NamespacedKey maxDurabilityKey = new NamespacedKey(plugin, "internal_max_durability");
-        NamespacedKey key = new NamespacedKey(plugin, "armor_set");
+        NamespacedKey durabilityKey = namespaceService.getDurabilityKey();
+        NamespacedKey maxDurabilityKey = namespaceService.getMaxDurabilityKey();
+        NamespacedKey key = namespaceService.getArmorSetKey();
         container.set(key, PersistentDataType.STRING, armorSetId);
         container.set(durabilityKey, PersistentDataType.INTEGER, durability);
         container.set(maxDurabilityKey, PersistentDataType.INTEGER, durability);
-
         item.setItemMeta(meta);
 
         // Now adjust durability with datapack, add custom NBT (requires NMS or a helper lib like PersistentDataContainer)
-        key = new NamespacedKey(plugin, "cDamageMax");
+//        key = new NamespacedKey(plugin, "cDamageMax");
+        key = namespaceService.key("cDamageMax");
         ItemMeta armorMeta = item.getItemMeta();
         if (armorMeta != null) {
             armorMeta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, durability); // Simulating diamond durability
@@ -119,13 +146,13 @@ public class ArmorUtil {
         return item;
     }
 
-    public static ItemStack[] createLeatherArmorSet(JavaPlugin plugin, String displayName, List<String> lore, int color, int rarity, int customModelData,
+    public static ItemStack[] createLeatherArmorSet(NamespaceService namespaceService, String displayName, List<String> lore, int color, int rarity, int customModelData,
                                                     String armorSetId, int[] armorPoints, int[] durability, int[] armorToughness) {
         return new ItemStack[]{
-                createLeatherArmorPiece(plugin, Material.LEATHER_HELMET, displayName + " Helmet", lore, color, rarity, customModelData, armorSetId, armorPoints[0], durability[0], armorToughness[0]),
-                createLeatherArmorPiece(plugin, Material.LEATHER_CHESTPLATE, displayName + " Chestplate", lore, color, rarity, customModelData, armorSetId, armorPoints[1], durability[1], armorToughness[1]),
-                createLeatherArmorPiece(plugin, Material.LEATHER_LEGGINGS, displayName + " Leggings", lore, color, rarity, customModelData, armorSetId, armorPoints[2], durability[2], armorToughness[2]),
-                createLeatherArmorPiece(plugin, Material.LEATHER_BOOTS, displayName + " Boots", lore, color, rarity, customModelData, armorSetId, armorPoints[3], durability[3], armorToughness[3])
+                createLeatherArmorPiece(namespaceService, Material.LEATHER_HELMET, displayName + " Helmet", lore, color, rarity, customModelData, armorSetId, armorPoints[0], durability[0], armorToughness[0]),
+                createLeatherArmorPiece(namespaceService, Material.LEATHER_CHESTPLATE, displayName + " Chestplate", lore, color, rarity, customModelData, armorSetId, armorPoints[1], durability[1], armorToughness[1]),
+                createLeatherArmorPiece(namespaceService, Material.LEATHER_LEGGINGS, displayName + " Leggings", lore, color, rarity, customModelData, armorSetId, armorPoints[2], durability[2], armorToughness[2]),
+                createLeatherArmorPiece(namespaceService, Material.LEATHER_BOOTS, displayName + " Boots", lore, color, rarity, customModelData, armorSetId, armorPoints[3], durability[3], armorToughness[3])
         };
     }
 

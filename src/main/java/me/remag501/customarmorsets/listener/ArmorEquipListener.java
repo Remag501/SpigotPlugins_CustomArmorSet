@@ -27,7 +27,6 @@ public class ArmorEquipListener implements Listener {
 
     @EventHandler
     public void onEquip(ArmorEquipEvent event) {
-
         // Does not detect hot swapping armor
 
         // Handle logic for broken armor
@@ -47,6 +46,8 @@ public class ArmorEquipListener implements Listener {
         if (wasWearing != null && isWearing == null) {
             armorManager.unequipArmor(player);
         }
+
+        player.sendMessage(" " + (wasWearing == null) + " " + (isWearing == null));
 
         ArmorSetType type = (wasWearing != null) ? wasWearing : isWearing;
 
