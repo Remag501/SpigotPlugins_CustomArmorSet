@@ -1,15 +1,13 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.entity.EntityDamageEvent;
 
 import java.util.HashMap;
@@ -25,20 +23,20 @@ public class WorldGuardianArmorSet extends ArmorSet {
     private final EventService eventService;
     private final TaskService taskService;
     private final CooldownBarManager cooldownBarManager;
-    private final AttributesService attributesService;
+    private final AttributeService attributeService;
 
-    public WorldGuardianArmorSet(EventService eventService, TaskService taskService, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public WorldGuardianArmorSet(EventService eventService, TaskService taskService, CooldownBarManager cooldownBarManager, AttributeService attributeService) {
         super(ArmorSetType.WORLD_GUARDIAN);
         this.eventService = eventService;
         this.taskService = taskService;
         this.cooldownBarManager = cooldownBarManager;
-        this.attributesService = attributesService;
+        this.attributeService = attributeService;
     }
 
     @Override
     public void applyPassive(Player player) {
-        attributesService.applyHealth(player, 1.5);
-        attributesService.applySpeed(player, 0.8);
+        attributeService.applyMaxHealth(player, type.getId(), 1.5);
+        attributeService.applySpeed(player, type.getId(), 0.8);
 
         // Register listener(s)
         UUID id = player.getUniqueId();
@@ -52,8 +50,7 @@ public class WorldGuardianArmorSet extends ArmorSet {
 
     @Override
     public void removePassive(Player player) {
-        attributesService.removeHealth(player);
-        attributesService.removeSpeed(player);
+        attributeService.resetSource(player, type.getId());
 
         eventService.unregisterListener(player.getUniqueId(), type.getId());
     }

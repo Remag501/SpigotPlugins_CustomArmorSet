@@ -1,6 +1,8 @@
 package me.remag501.customarmorsets;
 
 import me.remag501.bgscore.api.BGSApi;
+import me.remag501.bgscore.api.ability.AbilityService;
+import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.command.CommandService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.namespace.NamespaceService;
@@ -39,21 +41,23 @@ public final class CustomArmorSets extends JavaPlugin {
         EventService eventService = BGSApi.events();
         CommandService commandService = BGSApi.commands();
         NamespaceService namespaceService = BGSApi.namespaces();
+//        AbilityService abilityService = BGSApi.ability();
+        AttributeService attributeService = BGSApi.attribute();
 
         // 2. Initialize services and managers
 
         // Setup services
         CosmeticService cosmeticService = new CosmeticService();
         ArmorService armorService = new ArmorService(namespaceService);
-        AttributesService attributesService = new AttributesService(this);
+//        AttributesService attributesService = new AttributesService(this);
         ItemService itemService = new ItemService(namespaceService, armorService);
 
         // Setup managers
         DamageStatsManager damageStatsManager = new DamageStatsManager();
         DefenseStatsManager defenseStatsManager = new DefenseStatsManager();
         CooldownBarManager cooldownBarManager = new CooldownBarManager(this);
-        PlayerSyncManager playerSyncManager = new PlayerSyncManager(attributesService);
-        armorManager = new ArmorManager(this, taskService, eventService, cosmeticService, attributesService, cooldownBarManager,
+        PlayerSyncManager playerSyncManager = new PlayerSyncManager(attributeService);
+        armorManager = new ArmorManager(this, taskService, eventService, cosmeticService, attributeService, cooldownBarManager,
                 damageStatsManager, defenseStatsManager, armorService, playerSyncManager, namespaceService);
 
         // 3. Register command to plugin

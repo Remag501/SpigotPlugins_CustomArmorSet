@@ -1,12 +1,12 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -43,17 +43,18 @@ public class BanditArmorSet extends ArmorSet {
 
     private final ArmorManager armorManager;
     private final CooldownBarManager cooldownBarManager;
-    private final AttributesService attributesService;
+    private final AttributeService attributeService;
     private final EventService eventService;
     private final TaskService taskService;
 
-    public BanditArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public BanditArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager,
+                          CooldownBarManager cooldownBarManager, AttributeService attributeService) {
         super(ArmorSetType.BANDIT);
         this.eventService = eventService;
         this.taskService = taskService;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
-        this.attributesService = attributesService;
+        this.attributeService = attributeService;
     }
 
     @Override
@@ -99,9 +100,9 @@ public class BanditArmorSet extends ArmorSet {
 
         // This is much cleaner now!
         if (player.getInventory().getItemInMainHand().getType() == Material.AIR) {
-            attributesService.applySpeed(player, 1.25); // Apply a 25% speed increase
+            attributeService.applySpeed(player, type.getId(), 1.25); // Apply a 25% speed increase
         } else {
-            attributesService.removeSpeed(player); // Remove the speed increase
+            attributeService.resetSource(player, type.getId()); // Remove the speed increase
         }
     }
 

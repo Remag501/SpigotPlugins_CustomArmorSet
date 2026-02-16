@@ -1,13 +1,12 @@
 package me.remag501.customarmorsets.manager;
 
-import me.remag501.customarmorsets.service.AttributesService;
+import me.remag501.bgscore.api.combat.AttributeService;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
-import org.w3c.dom.Attr;
 
 import java.util.*;
 
@@ -22,10 +21,10 @@ public class PlayerSyncManager {
     // Stores original health (double)
     private final Map<UUID, Double> originalHealth = new HashMap<>();
 
-    private final AttributesService attributesService;
+    private final AttributeService attributeService;
 
-    public PlayerSyncManager(AttributesService attributesService) {
-        this.attributesService = attributesService;
+    public PlayerSyncManager(AttributeService attributeService) {
+        this.attributeService = attributeService;
     }
 
 
@@ -82,7 +81,7 @@ public class PlayerSyncManager {
         originalHealth.put(player.getUniqueId(), player.getHealth());
 
         // Scale max health first
-        attributesService.applyHealth(player, mob.getMaxHealth() / 20.0);
+        attributeService.applyMaxHealth(player, "sync_manager", mob.getMaxHealth() / 20.0);
 
         // Set current health proportionally
         double scaledHealth = (mob.getHealth() / mob.getMaxHealth()) *
@@ -120,7 +119,7 @@ public class PlayerSyncManager {
     public void restoreHealth(Player player) {
         Double health = originalHealth.remove(player.getUniqueId());
         if (health != null) {
-            attributesService.removeHealth(player);
+            attributeService.resetSource(player, "sync_manager");
             player.setHealth(Math.min(health, player.getAttribute(Attribute.MAX_HEALTH).getValue()));
         }
     }

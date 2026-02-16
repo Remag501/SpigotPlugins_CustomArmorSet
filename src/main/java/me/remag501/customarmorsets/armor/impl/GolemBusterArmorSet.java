@@ -3,6 +3,7 @@ package me.remag501.customarmorsets.armor.impl;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
+import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.bgscore.api.util.BGSColor;
@@ -11,7 +12,6 @@ import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.TargetCategory;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.manager.DefenseStatsManager;
-import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -38,16 +38,16 @@ public class GolemBusterArmorSet extends ArmorSet {
     private final EventService eventService;
     private final TaskService taskService;
     private final CooldownBarManager cooldownBarManager;
-    private final AttributesService attributesService;
+    private final AttributeService attributeService;
     private final DamageStatsManager damageStatsManager;
     private final DefenseStatsManager defenseStatsManager;
 
-    public GolemBusterArmorSet(EventService eventService, TaskService taskService, CooldownBarManager cooldownBarManager, AttributesService attributesService, DamageStatsManager damageStatsManager, DefenseStatsManager defenseStatsManager) {
+    public GolemBusterArmorSet(EventService eventService, TaskService taskService, CooldownBarManager cooldownBarManager, AttributeService attributeService, DamageStatsManager damageStatsManager, DefenseStatsManager defenseStatsManager) {
         super(ArmorSetType.GOLEM_BUSTER);
         this.eventService = eventService;
         this.taskService = taskService;
         this.cooldownBarManager = cooldownBarManager;
-        this.attributesService = attributesService;
+        this.attributeService = attributeService;
         this.damageStatsManager = damageStatsManager;
         this.defenseStatsManager = defenseStatsManager;
     }
@@ -92,7 +92,7 @@ public class GolemBusterArmorSet extends ArmorSet {
     public void removePassive(Player player) {
         transformBack(player);
         cooldownBarManager.restorePlayerBar(player);
-        attributesService.restoreDefaults(player); // Just in case
+        attributeService.resetSource(player, type.getId());
         damageStatsManager.clearAll(player.getUniqueId());
         defenseStatsManager.clearAll(player.getUniqueId());
 
@@ -247,8 +247,8 @@ public class GolemBusterArmorSet extends ArmorSet {
         startParticleTrail(player);
 
         // Give attributes and damage stats
-        attributesService.applyHealth(player, 2.0);
-        attributesService.applySpeed(player, 0.5);
+        attributeService.applyMaxHealth(player, type.getId(), 2.0);
+        attributeService.applySpeed(player, type.getId(), 0.5);
         damageStatsManager.setMobMultiplier(player.getUniqueId(), 2, TargetCategory.NON_PLAYER);
         defenseStatsManager.setSourceReduction(player.getUniqueId(), 0.25f, TargetCategory.NON_PLAYER);
 
@@ -260,8 +260,7 @@ public class GolemBusterArmorSet extends ArmorSet {
 
     private void transformBack(Player player)  {
         // Remove attributes and damage stats
-        attributesService.removeHealth(player);
-        attributesService.removeSpeed(player);
+        attributeService.resetSource(player, type.getId());
         damageStatsManager.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.NON_PLAYER);
         defenseStatsManager.setSourceReduction(player.getUniqueId(), 0.75f, TargetCategory.NON_PLAYER);
 

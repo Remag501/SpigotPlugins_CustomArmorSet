@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.bgscore.api.util.BGSColor;
@@ -7,7 +8,6 @@ import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.armor.WeaponType;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
-import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -28,27 +28,28 @@ public class LastSpartanArmorSet extends ArmorSet {
     private final EventService eventService;
     private final TaskService taskService;
     private final CooldownBarManager cooldownBarManager;
-    private final AttributesService attributesService;
+    private final AttributeService attributeService;
     private final DamageStatsManager damageStatsManager;
 
-    public LastSpartanArmorSet(EventService eventService, TaskService taskService, CooldownBarManager cooldownBarManager, AttributesService attributesService, DamageStatsManager damageStatsManager) {
+    public LastSpartanArmorSet(EventService eventService, TaskService taskService, CooldownBarManager cooldownBarManager,
+                               AttributeService attributeService, DamageStatsManager damageStatsManager) {
         super(ArmorSetType.LAST_SPARTAN);
         this.eventService = eventService;
         this.taskService = taskService;
         this.cooldownBarManager = cooldownBarManager;
-        this.attributesService = attributesService;
+        this.attributeService = attributeService;
         this.damageStatsManager = damageStatsManager;
     }
 
     @Override
     public void applyPassive(Player player) {
-        attributesService.applyHealth(player, 0.7);
+        attributeService.applyMaxHealth(player, type.getId(), -0.3);
         damageStatsManager.setWeaponMultiplier(player.getUniqueId(), 1.25F, WeaponType.SWORD);
     }
 
     @Override
     public void removePassive(Player player) {
-        attributesService.removeHealth(player);
+        attributeService.resetSource(player, type.getId());
         damageStatsManager.clearAll(player.getUniqueId());
 
         eventService.unregisterListener(player.getUniqueId(), type.getId());

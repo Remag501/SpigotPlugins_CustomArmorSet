@@ -1,18 +1,19 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -44,21 +45,22 @@ public class FisterArmorSet extends ArmorSet {
 
     private final CooldownBarManager cooldownBarManager;
     private final ArmorManager armorManager;
-    private final AttributesService attributesService;
+    private final AttributeService attributeService;
     private final EventService eventService;
     private final TaskService taskService;
 
-    public FisterArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public FisterArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager,
+                          CooldownBarManager cooldownBarManager,AttributeService attributeService) {
         super(ArmorSetType.FISTER);
         this.eventService = eventService;
         this.taskService = taskService;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
-        this.attributesService = attributesService;
+        this.attributeService = attributeService;
     }
 
     public void applyPassive(Player player) {
-        attributesService.applyAttackSpeed(player, 3.0);
+        attributeService.applyAttackSpeed(player, type.getId(), 3.0);
 
         // Create npc after images
         NPC afterImageOne = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, player.getName());
@@ -109,7 +111,7 @@ public class FisterArmorSet extends ArmorSet {
     @Override
     public void removePassive(Player player) {
         // Remove player attack speed
-        attributesService.removeAttackSpeed(player);
+        attributeService.resetSource(player, type.getId());
 
         afterImagesOne.remove(player.getUniqueId()).destroy();
         afterImagesTwo.remove(player.getUniqueId()).destroy();;
@@ -146,7 +148,7 @@ public class FisterArmorSet extends ArmorSet {
         player.setFlying(true);
         player.setFlySpeed(0);
         player.setInvulnerable(true);
-        attributesService.applyHealth(player, 1.5);
+        attributeService.applyMaxHealth(player, type.getId(), 1.5);
 
         // Ring particles + aura
         World world = player.getWorld();
@@ -214,7 +216,7 @@ public class FisterArmorSet extends ArmorSet {
 
         // Start timer to remove hp
         taskService.delay(100, () -> {
-            attributesService.removeHealth(player);
+            attributeService.removeModifier(player, Attribute.MAX_HEALTH,type.getId());
         });
 
         // Start the cooldown

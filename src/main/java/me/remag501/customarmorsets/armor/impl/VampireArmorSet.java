@@ -3,6 +3,7 @@ package me.remag501.customarmorsets.armor.impl;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
+import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.namespace.NamespaceService;
 import me.remag501.bgscore.api.task.TaskService;
@@ -10,7 +11,6 @@ import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -49,22 +49,23 @@ public class VampireArmorSet extends ArmorSet {
     private final TaskService taskService;
     private final ArmorManager armorManager;
     private final CooldownBarManager cooldownBarManager;
-    private final AttributesService attributesService;
+    private final AttributeService attributeService;
     private final NamespaceService namespaceService;
 
-    public VampireArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, CooldownBarManager cooldownBarManager, AttributesService attributesService, NamespaceService namespaceService) {
+    public VampireArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, CooldownBarManager cooldownBarManager,
+                           AttributeService attributeService, NamespaceService namespaceService) {
         super(ArmorSetType.VAMPIRE);
         this.eventService = eventService;
         this.taskService = taskService;
         this.armorManager = armorManager;
         this.cooldownBarManager = cooldownBarManager;
-        this.attributesService = attributesService;
+        this.attributeService = attributeService;
         this.namespaceService = namespaceService;
     }
 
     @Override
     public void applyPassive(Player player) {
-        attributesService.applyHealth(player, 0.5);
+        attributeService.applyMaxHealth(player, type.getId(), 0.5);
 
         // Register listener(s)
         UUID id = player.getUniqueId();
@@ -77,7 +78,7 @@ public class VampireArmorSet extends ArmorSet {
 
     @Override
     public void removePassive(Player player) {
-        attributesService.removeHealth(player);
+        attributeService.resetSource(player, type.getId());
         batForm.remove(player.getUniqueId());
 
         eventService.unregisterListener(player.getUniqueId(), type.getId());

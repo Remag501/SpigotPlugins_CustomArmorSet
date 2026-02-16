@@ -1,11 +1,10 @@
 package me.remag501.customarmorsets.armor.impl;
 
-import me.remag501.bgscore.BGSCore;
+import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.*;
 import org.bukkit.entity.*;
@@ -25,9 +24,9 @@ public class ArcherArmorSet extends ArmorSet {
 
     private final EventService eventService;
     private final CooldownBarManager cooldownBarManager;;
-    private final AttributesService attributesService;
+    private final AttributeService attributesService;
 
-    public ArcherArmorSet(EventService eventService, CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public ArcherArmorSet(EventService eventService, CooldownBarManager cooldownBarManager, AttributeService attributesService) {
         super(ArmorSetType.ARCHER);
         this.eventService = eventService;
         this.cooldownBarManager = cooldownBarManager;
@@ -36,8 +35,8 @@ public class ArcherArmorSet extends ArmorSet {
 
     @Override
     public void applyPassive(Player player) {
-        attributesService.applySpeed(player, 1.5);
-        attributesService.applyHealth(player, 0.5);
+        attributesService.applySpeed(player, type.getId(), 1.5);
+        attributesService.applyMaxHealth(player, type.getId(),0.5);
         UUID id = player.getUniqueId();
 
         eventService.subscribe(EntityDamageByEntityEvent.class)
@@ -59,8 +58,7 @@ public class ArcherArmorSet extends ArmorSet {
 
     @Override
     public void removePassive(Player player) {
-        attributesService.removeSpeed(player);
-        attributesService.removeHealth(player);
+        attributesService.resetSource(player, type.getId());
 
         eventService.unregisterListener(player.getUniqueId(), type.getId());
     }

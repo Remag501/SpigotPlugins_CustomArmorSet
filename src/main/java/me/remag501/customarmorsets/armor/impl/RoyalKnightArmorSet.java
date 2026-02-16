@@ -1,9 +1,9 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.service.AttributesService;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
@@ -18,25 +18,24 @@ public class RoyalKnightArmorSet extends ArmorSet {
     private static final long COOLDOWN = 7 * 1000; // 7 seconds cooldown
 
     private final CooldownBarManager cooldownBarManager;
-    private final AttributesService attributesService;
+    private final AttributeService attributeService;
 
-    public RoyalKnightArmorSet(CooldownBarManager cooldownBarManager, AttributesService attributesService) {
+    public RoyalKnightArmorSet(CooldownBarManager cooldownBarManager, AttributeService attributeService) {
         super(ArmorSetType.ROYAL_KNIGHT);
         this.cooldownBarManager = cooldownBarManager;
-        this.attributesService = attributesService;
+        this.attributeService = attributeService;
     }
 
     @Override
     public void applyPassive(Player player) {
-        attributesService.applyHealth(player, 1.25);
-        attributesService.applyDamage(player, 0.85);
+        attributeService.applyMaxHealth(player, type.getId(), 1.25);
+        attributeService.applyDamage(player, type.getId(), 0.85);
 
     }
 
     @Override
     public void removePassive(Player player) {
-        attributesService.removeHealth(player);
-        attributesService.removeDamage(player);
+        attributeService.resetSource(player, type.getId());
 
     }
 

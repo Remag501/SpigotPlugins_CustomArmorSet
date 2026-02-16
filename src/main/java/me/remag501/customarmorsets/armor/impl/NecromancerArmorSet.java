@@ -12,6 +12,7 @@ import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.*;
 import me.libraryaddict.disguise.disguisetypes.watchers.AreaEffectCloudWatcher;
 import me.libraryaddict.disguise.disguisetypes.watchers.PlayerWatcher;
+import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.namespace.NamespaceService;
 import me.remag501.bgscore.api.task.TaskService;
@@ -23,7 +24,6 @@ import me.remag501.customarmorsets.listener.MythicMobsListener;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.manager.PlayerSyncManager;
-import me.remag501.customarmorsets.service.AttributesService;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -71,17 +71,18 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     private final TaskService taskService;
     private final ArmorManager armorManager;
     private final DamageStatsManager damageStatsManager;
-    private final AttributesService attributesService;
+    private final AttributeService attributeService;
     private final PlayerSyncManager playerSyncManager;
     private final NamespaceService namespaceService;
 
-    public NecromancerArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, DamageStatsManager damageStatsManager, AttributesService attributesService, PlayerSyncManager playerSyncManager, NamespaceService namespaceService) {
+    public NecromancerArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, DamageStatsManager damageStatsManager,
+                               AttributeService attributeService, PlayerSyncManager playerSyncManager, NamespaceService namespaceService) {
         super(ArmorSetType.NECROMANCER);
         this.eventService = eventService;
         this.taskService = taskService;
         this.armorManager = armorManager;
         this.damageStatsManager = damageStatsManager;
-        this.attributesService = attributesService;
+        this.attributeService = attributeService;
         this.playerSyncManager = playerSyncManager;
         this.namespaceService = namespaceService;
     }
@@ -428,9 +429,9 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             player.setFlySpeed(flySpeed);
         }
         // Apply attributes
-        attributesService.applyHealthDirect(player, controlledMob.getEntity().getMaxHealth() / 20.0);
-        attributesService.applySpeedDirect(player, speed); // get speed here
-        attributesService.applyDamageDirect(player, controlledMob.getType().getDamage(controlledMob) / 1.0);
+        attributeService.applyMaxHealth(player, type.getId(), controlledMob.getEntity().getMaxHealth() / 20.0);
+        attributeService.applySpeed(player, type.getId(), speed); // get speed here
+        attributeService.applyDamage(player, type.getId(), controlledMob.getType().getDamage(controlledMob) / 1.0);
         // Util functions for major syncs
         if (mobEntity instanceof LivingEntity livingEntity) {
             playerSyncManager.syncPotionEffects(player, livingEntity);
@@ -495,7 +496,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
         }
 
         // Reset attributes and remove decoy
-        attributesService.restoreDefaults(player);
+        attributeService.resetSource(player, type.getId());
 
         // Remove flight if not in creative or coming back from dead
         if (player.getGameMode() != GameMode.CREATIVE || resurrectionCooldowns.getOrDefault(player.getUniqueId(), 0L) == -1)
