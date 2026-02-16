@@ -3,6 +3,7 @@ package me.remag501.customarmorsets;
 import me.remag501.bgscore.api.BGSApi;
 import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.combat.AttributeService;
+import me.remag501.bgscore.api.combat.CombatStatsService;
 import me.remag501.bgscore.api.command.CommandService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.namespace.NamespaceService;
@@ -41,8 +42,9 @@ public final class CustomArmorSets extends JavaPlugin {
         EventService eventService = BGSApi.events();
         CommandService commandService = BGSApi.commands();
         NamespaceService namespaceService = BGSApi.namespaces();
-//        AbilityService abilityService = BGSApi.ability();
         AttributeService attributeService = BGSApi.attribute();
+        CombatStatsService combatStatsService = BGSApi.combat();
+        AbilityService abilityService = BGSApi.ability();
 
         // 2. Initialize services and managers
 
@@ -53,12 +55,12 @@ public final class CustomArmorSets extends JavaPlugin {
         ItemService itemService = new ItemService(namespaceService, armorService);
 
         // Setup managers
-        DamageStatsManager damageStatsManager = new DamageStatsManager();
-        DefenseStatsManager defenseStatsManager = new DefenseStatsManager();
+//        DamageStatsManager damageStatsManager = new DamageStatsManager();
+//        DefenseStatsManager defenseStatsManager = new DefenseStatsManager();
         CooldownBarManager cooldownBarManager = new CooldownBarManager(this);
         PlayerSyncManager playerSyncManager = new PlayerSyncManager(attributeService);
         armorManager = new ArmorManager(this, taskService, eventService, cosmeticService, attributeService, cooldownBarManager,
-                damageStatsManager, defenseStatsManager, armorService, playerSyncManager, namespaceService);
+                combatStatsService, armorService, playerSyncManager, namespaceService);
 
         // 3. Register command to plugin
         CustomArmorSetCommand armorSetCommand = new CustomArmorSetCommand(itemService, namespaceService);
@@ -82,7 +84,7 @@ public final class CustomArmorSets extends JavaPlugin {
         new RepairListener(armorService, cosmeticService, itemService, namespaceService, eventService);
 
         // Listener for damage stats
-        new DamageListener(damageStatsManager, defenseStatsManager, eventService);
+//        new DamageListener(damageStatsManager, defenseStatsManager, eventService);
 
         // Mythic mobs
         getServer().getPluginManager().registerEvents(new MythicMobsListener(this), this);

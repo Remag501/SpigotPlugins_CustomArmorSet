@@ -13,16 +13,16 @@ import me.libraryaddict.disguise.disguisetypes.*;
 import me.libraryaddict.disguise.disguisetypes.watchers.AreaEffectCloudWatcher;
 import me.libraryaddict.disguise.disguisetypes.watchers.PlayerWatcher;
 import me.remag501.bgscore.api.combat.AttributeService;
+import me.remag501.bgscore.api.combat.CombatStatsService;
+import me.remag501.bgscore.api.combat.TargetCategory;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.namespace.NamespaceService;
 import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.armor.TargetCategory;
 import me.remag501.customarmorsets.listener.MythicMobsListener;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.manager.PlayerSyncManager;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -70,18 +70,18 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     private final EventService eventService;
     private final TaskService taskService;
     private final ArmorManager armorManager;
-    private final DamageStatsManager damageStatsManager;
+    private final CombatStatsService combatStatsService;
     private final AttributeService attributeService;
     private final PlayerSyncManager playerSyncManager;
     private final NamespaceService namespaceService;
 
-    public NecromancerArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, DamageStatsManager damageStatsManager,
+    public NecromancerArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, CombatStatsService combatStatsService,
                                AttributeService attributeService, PlayerSyncManager playerSyncManager, NamespaceService namespaceService) {
         super(ArmorSetType.NECROMANCER);
         this.eventService = eventService;
         this.taskService = taskService;
         this.armorManager = armorManager;
-        this.damageStatsManager = damageStatsManager;
+        this.combatStatsService = combatStatsService;
         this.attributeService = attributeService;
         this.playerSyncManager = playerSyncManager;
         this.namespaceService = namespaceService;
@@ -90,7 +90,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     @Override
     public void applyPassive(Player player) {
 //        player.sendMessage("You equipped the Necromancer set");
-        damageStatsManager.setMobMultiplier(player.getUniqueId(), 1.5f, TargetCategory.UNDEAD);
+        combatStatsService.setTargetDamageMod(player.getUniqueId(), type.getId(), 1.5f, TargetCategory.UNDEAD);
         UUID uuid = player.getUniqueId();
         summonedMobs.put(uuid, new ArrayList<>());
 
@@ -251,7 +251,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
 
     @Override
     public void removePassive(Player player) {
-        damageStatsManager.clearAll(player.getUniqueId());
+        combatStatsService.removeAllMods(player.getUniqueId(), type.getId());
         List<ActiveMob> mobs = summonedMobs.get(player.getUniqueId());
         while (!mobs.isEmpty()) {
             despawnMob(mobs.get(0));

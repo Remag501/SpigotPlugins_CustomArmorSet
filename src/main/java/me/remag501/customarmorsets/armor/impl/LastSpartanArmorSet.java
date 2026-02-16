@@ -1,13 +1,13 @@
 package me.remag501.customarmorsets.armor.impl;
 
 import me.remag501.bgscore.api.combat.AttributeService;
+import me.remag501.bgscore.api.combat.CombatStatsService;
+import me.remag501.bgscore.api.combat.WeaponType;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.armor.WeaponType;
-import me.remag501.customarmorsets.manager.DamageStatsManager;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -29,28 +29,28 @@ public class LastSpartanArmorSet extends ArmorSet {
     private final TaskService taskService;
     private final CooldownBarManager cooldownBarManager;
     private final AttributeService attributeService;
-    private final DamageStatsManager damageStatsManager;
+    private final CombatStatsService combatStatsService;
 
     public LastSpartanArmorSet(EventService eventService, TaskService taskService, CooldownBarManager cooldownBarManager,
-                               AttributeService attributeService, DamageStatsManager damageStatsManager) {
+                               AttributeService attributeService, CombatStatsService combatStatsService) {
         super(ArmorSetType.LAST_SPARTAN);
         this.eventService = eventService;
         this.taskService = taskService;
         this.cooldownBarManager = cooldownBarManager;
         this.attributeService = attributeService;
-        this.damageStatsManager = damageStatsManager;
+        this.combatStatsService = combatStatsService;
     }
 
     @Override
     public void applyPassive(Player player) {
         attributeService.applyMaxHealth(player, type.getId(), -0.3);
-        damageStatsManager.setWeaponMultiplier(player.getUniqueId(), 1.25F, WeaponType.SWORD);
+        combatStatsService.setWeaponDamageMod(player.getUniqueId(), type.getId(), 1.25F, WeaponType.SWORD);
     }
 
     @Override
     public void removePassive(Player player) {
         attributeService.resetSource(player, type.getId());
-        damageStatsManager.clearAll(player.getUniqueId());
+        combatStatsService.removeAllMods(player.getUniqueId(), type.getId());
 
         eventService.unregisterListener(player.getUniqueId(), type.getId());
         taskService.stopTask(player.getUniqueId(), type.getId());

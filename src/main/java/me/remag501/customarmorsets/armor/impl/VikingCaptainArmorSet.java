@@ -1,12 +1,12 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.combat.CombatStatsService;
+import me.remag501.bgscore.api.combat.WeaponType;
 import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.armor.WeaponType;
 import me.remag501.customarmorsets.manager.CooldownBarManager;
-import me.remag501.customarmorsets.manager.DamageStatsManager;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
@@ -26,26 +26,26 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
     private static final long COOLDOWN = 7 * 1000; // 7 seconds cooldown
 
     private final TaskService taskService;
-    private final DamageStatsManager damageStatsManager;
+    private final CombatStatsService combatStatsService;
     private final CooldownBarManager cooldownBarManager;
 
-    public VikingCaptainArmorSet(TaskService taskService, DamageStatsManager damageStatsManager, CooldownBarManager cooldownBarManager) {
+    public VikingCaptainArmorSet(TaskService taskService, CombatStatsService combatStatsService, CooldownBarManager cooldownBarManager) {
         super(ArmorSetType.VIKING_CAPTAIN);
         this.taskService = taskService;
-        this.damageStatsManager = damageStatsManager;
+        this.combatStatsService = combatStatsService;
         this.cooldownBarManager = cooldownBarManager;
 
     }
 
     @Override
     public void applyPassive(Player player) {
-        damageStatsManager.setWeaponMultiplier(player.getUniqueId(), (float) 0.75, WeaponType.SWORD);
-        damageStatsManager.setWeaponMultiplier(player.getUniqueId(), (float) 1.25, WeaponType.AXE);
+        combatStatsService.setWeaponDamageMod(player.getUniqueId(), type.getId(), (float) 0.75, WeaponType.SWORD);
+        combatStatsService.setWeaponDamageMod(player.getUniqueId(), type.getId(), (float) 1.25, WeaponType.AXE);
     }
 
     @Override
     public void removePassive(Player player) {
-        damageStatsManager.clearAll(player.getUniqueId());
+        combatStatsService.removeAllMods(player.getUniqueId(), type.getId());
     }
 
     @Override
