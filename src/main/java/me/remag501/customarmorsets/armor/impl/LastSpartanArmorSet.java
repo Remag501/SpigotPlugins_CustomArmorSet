@@ -1,5 +1,7 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.ability.AbilityDisplay;
+import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.combat.CombatStatsService;
 import me.remag501.bgscore.api.combat.WeaponType;
@@ -8,7 +10,6 @@ import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -16,27 +17,28 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.time.Duration;
 import java.util.*;
 
 import static me.remag501.customarmorsets.util.LookEntitiesUtil.getNearestEntityInSight;
 
 public class LastSpartanArmorSet extends ArmorSet {
 
-    private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
-    private static final long COOLDOWN = 3 * 1000;
+//    private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
+    private static final long COOLDOWN = 3;
 
     private final EventService eventService;
     private final TaskService taskService;
-    private final CooldownBarManager cooldownBarManager;
+    private final AbilityService abilityService;
     private final AttributeService attributeService;
     private final CombatStatsService combatStatsService;
 
-    public LastSpartanArmorSet(EventService eventService, TaskService taskService, CooldownBarManager cooldownBarManager,
+    public LastSpartanArmorSet(EventService eventService, TaskService taskService, AbilityService abilityService,
                                AttributeService attributeService, CombatStatsService combatStatsService) {
         super(ArmorSetType.LAST_SPARTAN);
         this.eventService = eventService;
         this.taskService = taskService;
-        this.cooldownBarManager = cooldownBarManager;
+        this.abilityService = abilityService;
         this.attributeService = attributeService;
         this.combatStatsService = combatStatsService;
     }
@@ -59,10 +61,9 @@ public class LastSpartanArmorSet extends ArmorSet {
     @Override
     public void triggerAbility(Player player) {
         UUID uuid = player.getUniqueId();
-        long now = System.currentTimeMillis();
 
-        if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
-            long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
+        if (abilityService.isReady(uuid, getType().getId())) {
+            long timeLeft = abilityService.getRemainingMillis(uuid, getType().getId()) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Ability is on cooldown for " + timeLeft + " more seconds!");
             return;
         }
@@ -130,8 +131,7 @@ public class LastSpartanArmorSet extends ArmorSet {
             });
 
             // Add cooldown and visualize
-            abilityCooldowns.put(uuid, now);
-            cooldownBarManager.startCooldownBar(player, (int) (COOLDOWN / 1000));
+            abilityService.startCooldown(uuid, getType().getId(), Duration.ofSeconds(COOLDOWN), AbilityDisplay.XP_BAR);
 
         } else {
             player.sendMessage(BGSColor.NEGATIVE + "No enemies nearby to leap toward!");

@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.task.TaskService;
@@ -7,7 +8,6 @@ import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.manager.CooldownBarManager;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.md_5.bungee.api.ChatMessageType;
@@ -43,19 +43,19 @@ public class FisterArmorSet extends ArmorSet {
     private static final int DODGING_COOLDOWN_TICKS = 2 * 20;
     private static final int ABILITY_COOLDOWN_TICKS = 15 * 20;
 
-    private final CooldownBarManager cooldownBarManager;
+    private final AbilityService abilityService;
     private final ArmorManager armorManager;
     private final AttributeService attributeService;
     private final EventService eventService;
     private final TaskService taskService;
 
     public FisterArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager,
-                          CooldownBarManager cooldownBarManager,AttributeService attributeService) {
+                          AbilityService abilityService, AttributeService attributeService) {
         super(ArmorSetType.FISTER);
         this.eventService = eventService;
         this.taskService = taskService;
         this.armorManager = armorManager;
-        this.cooldownBarManager = cooldownBarManager;
+        this.abilityService = abilityService;
         this.attributeService = attributeService;
     }
 

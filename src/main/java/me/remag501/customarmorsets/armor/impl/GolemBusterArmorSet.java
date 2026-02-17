@@ -3,6 +3,7 @@ package me.remag501.customarmorsets.armor.impl;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
+import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.combat.CombatStatsService;
 import me.remag501.bgscore.api.combat.TargetCategory;
@@ -11,7 +12,6 @@ import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -29,23 +29,22 @@ import java.util.*;
 
 public class GolemBusterArmorSet extends ArmorSet {
 
-    private static final Map<UUID, Integer> playerEnergy = new HashMap<>();
     private static final Map<UUID, Boolean> playerIsGolem = new HashMap<>();
     private final List<UUID> particleTasks = new ArrayList<>();
     private static final Map<UUID, Long> stunCooldown = new HashMap<>();
 
     private final EventService eventService;
     private final TaskService taskService;
-    private final CooldownBarManager cooldownBarManager;
+    private final AbilityService abilityService;
     private final AttributeService attributeService;
     private final CombatStatsService combatStatsService;
 
-    public GolemBusterArmorSet(EventService eventService, TaskService taskService, CooldownBarManager cooldownBarManager,
+    public GolemBusterArmorSet(EventService eventService, TaskService taskService, AbilityService abilityService,
                                AttributeService attributeService, CombatStatsService combatStatsService) {
         super(ArmorSetType.GOLEM_BUSTER);
         this.eventService = eventService;
         this.taskService = taskService;
-        this.cooldownBarManager = cooldownBarManager;
+        this.abilityService = abilityService;
         this.attributeService = attributeService;
         this.combatStatsService = combatStatsService;
     }
@@ -53,7 +52,6 @@ public class GolemBusterArmorSet extends ArmorSet {
     @Override
     public void applyPassive(Player player) {
         UUID id = player.getUniqueId();
-        playerEnergy.put(id, 0);
         playerIsGolem.put(id, false);
 
         // Apply Damage Stats

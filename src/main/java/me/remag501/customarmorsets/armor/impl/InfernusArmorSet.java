@@ -1,11 +1,12 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.ability.AbilityDisplay;
+import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
@@ -17,6 +18,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,17 +27,16 @@ public class InfernusArmorSet extends ArmorSet {
 
     private final EventService eventService;
     private final TaskService taskService;
-    private final CooldownBarManager cooldownBarManager;
+    private final AbilityService abilityService;
 
-    // OPTION A: Static memory for per-player cooldowns
-    private final Map<UUID, Long> abilityCooldowns = new ConcurrentHashMap<>();
-    private final long COOLDOWN = 10 * 1000;
+    private final long COOLDOWN = 10;
+    private final long CHANNELING_TIME = 2;
 
-    public InfernusArmorSet(EventService eventService, TaskService taskService, CooldownBarManager cooldownBarManager) {
+    public InfernusArmorSet(EventService eventService, TaskService taskService, AbilityService abilityService) {
         super(ArmorSetType.INFERNUS);
         this.eventService = eventService;
         this.taskService = taskService;
-        this.cooldownBarManager = cooldownBarManager;
+        this.abilityService = abilityService;
     }
 
     @Override
@@ -66,35 +67,25 @@ public class InfernusArmorSet extends ArmorSet {
         // Clean up the API side
         eventService.unregisterListener(id, type.getId());
         taskService.stopTask(id, type.getId());
-
-        // OPTION A CLEANUP: Keep memory clean when they take the armor off
-        abilityCooldowns.remove(id);
+        abilityService.reset(id, getType().getId());
     }
 
     @Override
     public void triggerAbility(Player player) {
         UUID uuid = player.getUniqueId();
-        long now = System.currentTimeMillis();
 
-        if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
-            long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
+        if (abilityService.isReady(uuid, getType().getId())) {
+            long timeLeft = abilityService.getRemainingMillis(uuid, getType().getId()) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Ability is on cooldown for " + timeLeft + " more seconds!");
             return;
         }
 
-        // Set up the 2 second active ability phase
-        int activeDurationSeconds = 2;
-
-        // Show bar during active ability
-        cooldownBarManager.startCooldownBar(player, activeDurationSeconds);
+        abilityService.start(uuid, getType().getId(), Duration.ofSeconds(CHANNELING_TIME), Duration.ofSeconds(COOLDOWN), AbilityDisplay.XP_BAR);
 
         taskService.subscribe(player.getUniqueId(), type.getId(), 0, 2, (ticks) -> {
 
-            if (ticks >= activeDurationSeconds * 20) {
+            if (ticks >= CHANNELING_TIME * 20) {
                 // After ability ends, start cooldown bar
-                int cooldownSeconds = (int) (COOLDOWN / 1000);
-                abilityCooldowns.put(uuid, System.currentTimeMillis());
-                cooldownBarManager.startCooldownBar(player, cooldownSeconds);
                 return true;
             }
 

@@ -1,12 +1,13 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.ability.AbilityDisplay;
+import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.combat.CombatStatsService;
 import me.remag501.bgscore.api.combat.WeaponType;
 import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
@@ -16,24 +17,25 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
+
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class VikingCaptainArmorSet extends ArmorSet implements Listener {
 
-    private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 7 * 1000; // 7 seconds cooldown
 
     private final TaskService taskService;
     private final CombatStatsService combatStatsService;
-    private final CooldownBarManager cooldownBarManager;
+    private final AbilityService abilityService;
 
-    public VikingCaptainArmorSet(TaskService taskService, CombatStatsService combatStatsService, CooldownBarManager cooldownBarManager) {
+    public VikingCaptainArmorSet(TaskService taskService, CombatStatsService combatStatsService, AbilityService abilityService) {
         super(ArmorSetType.VIKING_CAPTAIN);
         this.taskService = taskService;
         this.combatStatsService = combatStatsService;
-        this.cooldownBarManager = cooldownBarManager;
+        this.abilityService = abilityService;
 
     }
 
@@ -51,10 +53,9 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
     @Override
     public void triggerAbility(Player player) {
         UUID uuid = player.getUniqueId();
-        long now = System.currentTimeMillis();
 
-        if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
-            long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
+        if (abilityService.isReady(uuid, getType().getId())) {
+            long timeLeft = (abilityService.getRemainingMillis(uuid, getType().getId())) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Ability is on cooldown for " + timeLeft + " more seconds!");
             return;
         }
@@ -102,8 +103,7 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
         });
 
         // Start cooldown and cooldown bar
-        cooldownBarManager.startCooldownBar(player, (int) (COOLDOWN / 1000));
-        abilityCooldowns.put(uuid, now);
+        abilityService.startCooldown(uuid, getType().getId(), Duration.ofSeconds(COOLDOWN), AbilityDisplay.XP_BAR);
     }
 
     // Returns the axe to the player

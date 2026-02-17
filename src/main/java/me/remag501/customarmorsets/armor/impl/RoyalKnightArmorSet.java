@@ -1,28 +1,29 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.ability.AbilityDisplay;
+import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class RoyalKnightArmorSet extends ArmorSet {
 
-    private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 7 * 1000; // 7 seconds cooldown
 
-    private final CooldownBarManager cooldownBarManager;
+    private final AbilityService abilityService;
     private final AttributeService attributeService;
 
-    public RoyalKnightArmorSet(CooldownBarManager cooldownBarManager, AttributeService attributeService) {
+    public RoyalKnightArmorSet(AbilityService abilityService, AttributeService attributeService) {
         super(ArmorSetType.ROYAL_KNIGHT);
-        this.cooldownBarManager = cooldownBarManager;
+        this.abilityService = abilityService;
         this.attributeService = attributeService;
     }
 
@@ -44,8 +45,8 @@ public class RoyalKnightArmorSet extends ArmorSet {
         UUID uuid = player.getUniqueId();
         long now = System.currentTimeMillis();
 
-        if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
-            long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
+        if (abilityService.isReady(uuid, getType().getId())) {
+            long timeLeft = (abilityService.getRemainingMillis(uuid, getType().getId())) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Ability is on cooldown for " + timeLeft + " more seconds!");
             return;
         }
@@ -54,8 +55,7 @@ public class RoyalKnightArmorSet extends ArmorSet {
         player.setHealth(Math.min(player.getAttribute(Attribute.MAX_HEALTH).getValue(), player.getHealth() + 6));
         player.sendMessage(BGSColor.POSITIVE + "You used Royal Knight's Healing!");
 
-        cooldownBarManager.startCooldownBar(player, (int)(COOLDOWN / 1000));
-        abilityCooldowns.put(uuid, now);
+        abilityService.startCooldown(uuid, getType().getId(), Duration.ofSeconds(COOLDOWN), AbilityDisplay.XP_BAR);
     }
 
 }

@@ -1,5 +1,7 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.ability.AbilityDisplay;
+import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.task.TaskService;
@@ -7,7 +9,6 @@ import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -19,18 +20,13 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
 public class BanditArmorSet extends ArmorSet {
-
-    // A map to store the number of available dodges for each player.
-    private final Map<UUID, Integer> playerDodges = new HashMap<>();
-
-    // A map to store the regeneration task for each player.
-    private final Map<UUID, BukkitTask> regenTasks = new HashMap<>();
 
     // A random number generator for the item drop chance.
     private final Random random = new Random();
@@ -42,18 +38,18 @@ public class BanditArmorSet extends ArmorSet {
     private final int DODGE_COOLDOWN = 5;
 
     private final ArmorManager armorManager;
-    private final CooldownBarManager cooldownBarManager;
+    private final AbilityService abilityService;
     private final AttributeService attributeService;
     private final EventService eventService;
     private final TaskService taskService;
 
     public BanditArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager,
-                          CooldownBarManager cooldownBarManager, AttributeService attributeService) {
+                          AbilityService abilityService, AttributeService attributeService) {
         super(ArmorSetType.BANDIT);
         this.eventService = eventService;
         this.taskService = taskService;
         this.armorManager = armorManager;
-        this.cooldownBarManager = cooldownBarManager;
+        this.abilityService = abilityService;
         this.attributeService = attributeService;
     }
 
@@ -73,20 +69,16 @@ public class BanditArmorSet extends ArmorSet {
                 .filter(e -> e.getDamager().getUniqueId().equals(id) && e.getEntity() instanceof Player)
                 .handler(this::onEntityDamageByEntity);
 
+        abilityService.setupStocks(id, getType().getId(), MAX_DODGES, Duration.ofSeconds(DODGE_COOLDOWN), AbilityDisplay.XP_BAR);
     }
 
     @Override
     public void removePassive(Player player) {
         // Cancel the regeneration task when the set is removed.
-        BukkitTask task = regenTasks.remove(player.getUniqueId());
-        if (task != null) {
-            task.cancel();
-        }
-
-        cooldownBarManager.restorePlayerBar(player);
-
-        eventService.unregisterListener(player.getUniqueId(), type.getId());
-        taskService.stopTask(player.getUniqueId(), "bandit_task");
+        UUID uuid = player.getUniqueId();
+        eventService.unregisterListener(uuid, type.getId());
+        taskService.stopTask(uuid, "bandit_task");
+        abilityService.reset(uuid, type.getId());
     }
 
     // --- Passive 1: Run Faster With Fists Out ---
@@ -136,16 +128,10 @@ public class BanditArmorSet extends ArmorSet {
 
     @Override
     public void triggerAbility(Player player) {
-        int currentDodges = playerDodges.getOrDefault(player.getUniqueId(), MAX_DODGES);
+        UUID uuid = player.getUniqueId();
+        int currentDodges = abilityService.getAvailableStacks(player.getUniqueId(), getType().getId());
 
-        if (currentDodges > 0) {
-            currentDodges--;
-            playerDodges.put(player.getUniqueId(), currentDodges);
-
-            // Check if player is out of dodges for ui
-            cooldownBarManager.setLevel(player, currentDodges);
-            cooldownBarManager.startMiniCooldownBar(player, DODGE_COOLDOWN);
-
+        if (abilityService.isReady(uuid, getType().getId())) {
             // Get the normalized direction
             Vector direction = player.getLocation().getDirection().normalize();
 
@@ -164,31 +150,10 @@ public class BanditArmorSet extends ArmorSet {
             player.playSound(player.getLocation(), Sound.ENTITY_HORSE_JUMP, 1.0f, 2.0f);
             player.sendMessage(BGSColor.POSITIVE + "You dodged! Dodges left: " + currentDodges);
 
-            // Start the regen task if it's not already running.
-            if (!regenTasks.containsKey(player.getUniqueId()) || regenTasks.get(player.getUniqueId()).isCancelled()) {
-                startDodgeRegenTask(player);
-            }
+            abilityService.consumeStack(uuid, getType().getId());
+
         } else {
             player.sendMessage(BGSColor.NEGATIVE + "You have no dodges left!");
         }
-    }
-
-    private void startDodgeRegenTask(Player player) {
-        taskService.subscribe(player.getUniqueId(), "bandit_task", 20 * DODGE_COOLDOWN, 20 * DODGE_COOLDOWN, (ticks) -> {
-             int currentDodges = playerDodges.getOrDefault(player.getUniqueId(), 0);
-             if (currentDodges < MAX_DODGES) {
-                 currentDodges++;
-                 cooldownBarManager.setLevel(player, currentDodges);
-                 playerDodges.put(player.getUniqueId(), currentDodges);
-                 player.sendMessage(BGSColor.POSITIVE + "You regenerated a dodge! Dodges left: " + currentDodges);
-             }
-
-             // Cancel the task once the player has max dodges again.
-             if (currentDodges >= MAX_DODGES) {
-                 return true;
-             }
-
-             return false;
-         } );
     }
 }

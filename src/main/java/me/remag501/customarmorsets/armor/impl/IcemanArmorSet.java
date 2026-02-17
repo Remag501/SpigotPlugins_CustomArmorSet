@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.task.TaskService;
@@ -7,7 +8,6 @@ import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.manager.CooldownBarManager;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -61,16 +61,16 @@ public class IcemanArmorSet extends ArmorSet {
     private final EventService eventService;
     private final TaskService taskService;
     private final ArmorManager armorManager;
-    private final CooldownBarManager cooldownBarManager;
+    private final AbilityService abilityService;
     private final AttributeService attributesService;
 
     public IcemanArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager,
-                          CooldownBarManager cooldownBarManager, AttributeService attributesService) {
+                          AbilityService abilityService, AttributeService attributesService) {
         super(ArmorSetType.ICEMAN);
         this.eventService = eventService;
         this.taskService = taskService;
         this.armorManager = armorManager;
-        this.cooldownBarManager = cooldownBarManager;
+        this.abilityService = abilityService;
         this.attributesService = attributesService;
     }
 

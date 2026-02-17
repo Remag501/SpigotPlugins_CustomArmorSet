@@ -3,6 +3,8 @@ package me.remag501.customarmorsets.armor.impl;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
+import me.remag501.bgscore.api.ability.AbilityDisplay;
+import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.namespace.NamespaceService;
@@ -11,7 +13,6 @@ import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
-import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
@@ -28,6 +29,7 @@ import org.bukkit.util.Vector;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -40,7 +42,6 @@ public class VampireArmorSet extends ArmorSet {
     private static final int COOLDOWN_TICKS = 15 * 20; // 15 seconds
     private static final double LIFESTEAL_AMOUNT = 0.3;
 
-    private static final Map<UUID, Long> cooldowns = new HashMap<>();
     private static final Set<UUID> batForm = new HashSet<>();
     private final Map<UUID, List<Bat>> cosmeticBats = new HashMap<>();
     private final List<UUID> batTasks = new ArrayList<>();
@@ -48,17 +49,17 @@ public class VampireArmorSet extends ArmorSet {
     private final EventService eventService;
     private final TaskService taskService;
     private final ArmorManager armorManager;
-    private final CooldownBarManager cooldownBarManager;
+    private final AbilityService abilityService;
     private final AttributeService attributeService;
     private final NamespaceService namespaceService;
 
-    public VampireArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, CooldownBarManager cooldownBarManager,
+    public VampireArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, AbilityService abilityService,
                            AttributeService attributeService, NamespaceService namespaceService) {
         super(ArmorSetType.VAMPIRE);
         this.eventService = eventService;
         this.taskService = taskService;
         this.armorManager = armorManager;
-        this.cooldownBarManager = cooldownBarManager;
+        this.abilityService = abilityService;
         this.attributeService = attributeService;
         this.namespaceService = namespaceService;
     }
@@ -130,13 +131,15 @@ public class VampireArmorSet extends ArmorSet {
         }
 
         // Now we check cooldown before performing main ability
-        if (cooldowns.containsKey(uuid) && now < cooldowns.get(uuid)) {
-            long remaining = (cooldowns.get(uuid) - now) / 1000;
+        if (abilityService.isReady(uuid, getType().getId())) {
+            long remaining = (abilityService.getRemainingMillis(uuid, getType().getId())) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Vampire ability on cooldown (" + remaining + "s left)");
             return;
         }
 
-        cooldownBarManager.startCooldownBar(player, DURATION_TICKS / 20);
+        // Start cooldown
+        abilityService.start(uuid, getType().getId(), Duration.ofSeconds(COOLDOWN_TICKS / 20), Duration.ofSeconds(DURATION_TICKS / 20), AbilityDisplay.XP_BAR);
+
 
         // Default: drain enemies and heal
         List<LivingEntity> targets = player.getNearbyEntities(RADIUS, RADIUS, RADIUS).stream()
@@ -159,9 +162,6 @@ public class VampireArmorSet extends ArmorSet {
             return false;
         });
 
-        // Store cooldown
-        cooldowns.put(uuid, now + COOLDOWN_TICKS * 50);
-        cooldownBarManager.startCooldownBar(player, COOLDOWN_TICKS / 20);
 
     }
 

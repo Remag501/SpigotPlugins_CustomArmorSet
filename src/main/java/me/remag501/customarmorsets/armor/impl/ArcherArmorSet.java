@@ -1,11 +1,11 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -19,17 +19,16 @@ import java.util.UUID;
 
 public class ArcherArmorSet extends ArmorSet {
 
-    private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 5 * 1000; // 5 seconds
 
     private final EventService eventService;
-    private final CooldownBarManager cooldownBarManager;;
+    private final AbilityService abilityService;
     private final AttributeService attributesService;
 
-    public ArcherArmorSet(EventService eventService, CooldownBarManager cooldownBarManager, AttributeService attributesService) {
+    public ArcherArmorSet(EventService eventService, AbilityService abilityService, AttributeService attributesService) {
         super(ArmorSetType.ARCHER);
         this.eventService = eventService;
-        this.cooldownBarManager = cooldownBarManager;
+        this.abilityService = abilityService;
         this.attributesService = attributesService;
     }
 
@@ -67,8 +66,8 @@ public class ArcherArmorSet extends ArmorSet {
     public void triggerAbility(Player player) {
         UUID uuid = player.getUniqueId();
         long now = System.currentTimeMillis();
-        if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
-            long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
+        if (abilityService.isActive(uuid, getType().getId())) {
+            long timeLeft = (abilityService.getRemainingMillis(uuid, getType().getId())) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Ability on cooldown for " + timeLeft + " seconds!");
             return;
         }
@@ -106,8 +105,7 @@ public class ArcherArmorSet extends ArmorSet {
             world.spawnParticle(Particle.SWEEP_ATTACK, particleLoc, 1, 0, 0, 0, 0);
         }
 
-        abilityCooldowns.put(uuid, now);
-        cooldownBarManager.startCooldownBar(player, (int) COOLDOWN / 1000);
+        abilityService.isActive(uuid, getType().getId());
     }
 
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {

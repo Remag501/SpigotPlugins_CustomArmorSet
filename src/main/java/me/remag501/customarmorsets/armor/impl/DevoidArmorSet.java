@@ -1,10 +1,11 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.ability.AbilityDisplay;
+import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.manager.CooldownBarManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -12,6 +13,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.time.Duration;
 import java.util.*;
 
 import static me.remag501.customarmorsets.util.LookEntitiesUtil.getNearestEntityInSight;
@@ -21,13 +23,13 @@ public class DevoidArmorSet extends ArmorSet {
     private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 10 * 1000;
 
-    private final CooldownBarManager cooldownBarManager;
+    private final AbilityService abilityService;
     private final TaskService taskService;
 
-    public DevoidArmorSet(TaskService taskService, CooldownBarManager cooldownBarManager) {
+    public DevoidArmorSet(TaskService taskService, AbilityService abilityService) {
         super(ArmorSetType.DEVOID);
         this.taskService = taskService;
-        this.cooldownBarManager = cooldownBarManager;
+        this.abilityService = abilityService;
     }
 
     @Override
@@ -58,15 +60,16 @@ public class DevoidArmorSet extends ArmorSet {
         UUID uuid = player.getUniqueId();
         long now = System.currentTimeMillis();
 
-        if (abilityCooldowns.containsKey(uuid) && now - abilityCooldowns.get(uuid) < COOLDOWN) {
-            long timeLeft = (COOLDOWN - (now - abilityCooldowns.get(uuid))) / 1000;
+        if (abilityService.isReady(uuid, getType().getId())) {
+            long timeLeft = (abilityService.getRemainingMillis(uuid, getType().getId())) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Ability is on cooldown for " + timeLeft + " more seconds!");
             return;
         }
 
-        boolean isSneaking = player.isSneaking();
+        // Start the cooldown
+        abilityService.start(uuid, getType().getId(), Duration.ofSeconds(COOLDOWN), Duration.ofSeconds(1), AbilityDisplay.XP_BAR);
 
-        cooldownBarManager.startCooldownBar(player, 1);
+        boolean isSneaking = player.isSneaking();
 
         // Create task that controls movement of entities
         Set<LivingEntity> targets = new HashSet<>();
@@ -80,7 +83,6 @@ public class DevoidArmorSet extends ArmorSet {
                     velocityMap.put(target.getUniqueId(), new KineticData(ticks, target.getVelocity()));
                 }
             } else if (ticks >= 20) {
-                cooldownBarManager.startCooldownBar(player, (int) (COOLDOWN / 1000));
                 abilityCooldowns.put(uuid, now);
                 return true;
             }
