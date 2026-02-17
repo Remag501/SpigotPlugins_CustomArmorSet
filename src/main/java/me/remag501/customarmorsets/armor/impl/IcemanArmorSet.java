@@ -47,7 +47,7 @@ public class IcemanArmorSet extends ArmorSet {
     private static final Map<UUID, Boolean> iceMode = new ConcurrentHashMap<>();
     private static final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> freezeCharges = new ConcurrentHashMap<>();
-    private static final Map<UUID, Integer> domeCharge = new ConcurrentHashMap<>();
+//    private static final Map<UUID, Integer> domeCharge = new ConcurrentHashMap<>();
     private static final Map<UUID, Map<Block, BlockState>> playerBlocksToReset = new ConcurrentHashMap<>();
     private static final Map<UUID, Boolean> playerIceBeam = new ConcurrentHashMap<>();
     private static final Map<UUID, Boolean> playerInUlt = new ConcurrentHashMap<>();
@@ -80,11 +80,13 @@ public class IcemanArmorSet extends ArmorSet {
 
         UUID uuid = player.getUniqueId();
         cooldowns.put(uuid, System.currentTimeMillis());
-        domeCharge.put(uuid, 0);
         freezeCharges.put(uuid, 0);
         playerBlocksToReset.put(uuid, new HashMap<>());
         playerIceBeam.put(uuid, false);
         playerInUlt.put(uuid, false);
+
+        // Setup dome charge
+        abilityService.setCharge(uuid, getType().getId(), 100);
 
         // Start task for ult
         startTask(player);
@@ -145,13 +147,12 @@ public class IcemanArmorSet extends ArmorSet {
 //        if (runningTask != null)
 //            runningTask.cancel();
         cooldowns.remove(uuid);
-        domeCharge.remove(uuid);
         freezeCharges.remove(uuid);
         playerBlocksToReset.remove(uuid);
         playerIceBeam.remove(uuid);
         playerIceBeam.remove(uuid);
-        cooldownBarManager.restorePlayerBar(player);
 
+        abilityService.reset(uuid, getType().getId());
         eventService.unregisterListener(player.getUniqueId(), type.getId());
         eventService.unregisterListener(player.getUniqueId(), type.getId() + "_fire");
         taskService.stopTask(player.getUniqueId(), "iceman_run");
@@ -165,11 +166,11 @@ public class IcemanArmorSet extends ArmorSet {
     @Override
     public void triggerAbility(Player player) {
         UUID uuid = player.getUniqueId();
-        if (player.isSneaking() && domeCharge.get(uuid) >= 100) {
+        if (player.isSneaking() && abilityService.getCurrentCharge(uuid, getType().getId()) >= 100) {
             resetIceBridgeBlocks(player); // Clean up blocks that interfere globe
             leaveIceMode(player);
             spawnGlobe(player);
-            domeCharge.put(uuid, 0);
+            abilityService.setCharge(uuid, getType().getId(), 0);
             return;
         } else if (player.isSneaking()) {
             player.sendMessage(BGSColor.NEGATIVE + "Not enough snow charge");
@@ -186,7 +187,7 @@ public class IcemanArmorSet extends ArmorSet {
         if (charges > 0) {
             triggerIceBeam(player);
             cooldowns.put(uuid, System.currentTimeMillis());
-            domeCharge.put(uuid, Math.min(domeCharge.get(uuid) + 3 * charges, 100));
+            abilityService.setCharge(uuid, getType().getId(),Math.min(abilityService.getCurrentCharge(uuid, getType().getId()) + 3 * charges, 100));
         } else {
             player.sendMessage(BGSColor.NEGATIVE + "You don't have enough freeze charges!");
         }
@@ -287,7 +288,7 @@ public class IcemanArmorSet extends ArmorSet {
                 mobChargeCooldowns.put(target.getUniqueId(), currentTime);
                 // Freeze the enemy and give players snow charge + freeze charge
                 freezeCharges.put(playerUUID, Math.min(freezeCharges.getOrDefault(playerUUID, 0) + 1, 5));
-                domeCharge.put(playerUUID, Math.min(domeCharge.get(playerUUID) + 3, 100)); // Add snow dome charge
+                abilityService.setCharge(playerUUID, getType().getId(), Math.min(abilityService.getCurrentCharge(playerUUID, getType().getId()) + 3, 100)); // Add snow dome charge
                 manageMobFreezeTask(target, 1);
             }
         }
@@ -356,7 +357,7 @@ public class IcemanArmorSet extends ArmorSet {
 
                 // Give player dome charge
                 UUID playerUUID = player.getUniqueId();
-                domeCharge.put(playerUUID, Math.min(domeCharge.getOrDefault(playerUUID, 0) + 10, SNOW_CHARGE_MAX));
+                abilityService.addCharge(playerUUID, getType().getId(), 10);
 
                 // Your existing visual and sound effects
                 mob.getWorld().spawnParticle(Particle.LAVA, mob.getLocation().add(0, 1, 0), 20, 0.5, 0.5, 0.5, 0.1);
@@ -433,9 +434,8 @@ public class IcemanArmorSet extends ArmorSet {
         UUID uuid = player.getUniqueId();
         taskService.subscribe(player.getUniqueId(), "iceman_charge", 0, 1, (ticks) -> {
             if (ticks % 40 == 0) // Add charge every two seconds
-                domeCharge.put(uuid, Math.min(domeCharge.get(uuid) + 50, 100));
+                abilityService.addCharge(uuid, getType().getId(), 50);
 
-            cooldownBarManager.setLevel(player, domeCharge.get(uuid));
             int charges = freezeCharges.getOrDefault(uuid, 0);
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§bFreeze Charge ❄ " + charges + " / 5"));
             return false;

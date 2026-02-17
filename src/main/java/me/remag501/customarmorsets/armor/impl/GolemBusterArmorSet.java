@@ -58,20 +58,22 @@ public class GolemBusterArmorSet extends ArmorSet {
         combatStatsService.setTargetDamageMod(player.getUniqueId(), type.getId(), 1.5f, TargetCategory.NON_PLAYER);
         combatStatsService.setSourceDefenseMod(player.getUniqueId(), type.getId(), 0.75f, TargetCategory.NON_PLAYER);
 
+        abilityService.setCharge(id, getType().getId(), 100);
+
         // Start energy loop timer
         taskService.subscribe(player.getUniqueId(), "golem_energy_loop", 0, 20, (ticks) -> {
             int energy;
             if (playerIsGolem.get(id)) {
-                energy = consumePlayerEnergy(player, -5);
+                abilityService.addCharge(id, getType().getId(), -5);
+                energy = (int) abilityService.getCurrentCharge(id, getType().getId());
                 if (energy <= 0) {
                     transformBack(player);
                     return false;
                 }
             }
             else
-                energy = consumePlayerEnergy(player, 1);
+                abilityService.addCharge(id, getType().getId(), 1);
 
-            cooldownBarManager.setLevel(player, energy);
             return false;
         });
 
@@ -87,7 +89,6 @@ public class GolemBusterArmorSet extends ArmorSet {
     @Override
     public void removePassive(Player player) {
         transformBack(player);
-        cooldownBarManager.restorePlayerBar(player);
         attributeService.resetSource(player, type.getId());
         combatStatsService.removeAllMods(player.getUniqueId(), getType().getId());
 
@@ -99,12 +100,12 @@ public class GolemBusterArmorSet extends ArmorSet {
     @Override
     public void triggerAbility(Player player) {
         UUID uuid = player.getUniqueId();
-        int battery = playerEnergy.get(uuid);
+        int battery = (int) abilityService.getCurrentCharge(uuid, getType().getId());
         // If player is golem transform them back
         if (playerIsGolem.get(uuid)) {
             if (player.isSneaking()) {
                 // Set battery to max of 50 to prevent spam
-                playerEnergy.put(uuid, Math.min(battery, 50));
+                abilityService.setCharge(uuid, getType().getId(), Math.min(battery, 50));
                 transformBack(player);
                 return;
             } else { // Separate ability
@@ -163,19 +164,16 @@ public class GolemBusterArmorSet extends ArmorSet {
 //            battery = consumePlayerEnergy(player, -50);
             if (battery >= 50) {
                 player.sendMessage(BGSColor.POSITIVE + "Golem Smash");
-                cooldownBarManager.setLevel(player, battery);
                 golemTransform(player);
                 return;
             }
         }
         // Check if player has enough battery
-        battery = consumePlayerEnergy(player, -5);
+        abilityService.addCharge(uuid, getType().getId(), -5);
         if (battery < 0) {
             player.sendMessage(BGSColor.NEGATIVE + "Not enough battery");
             return;
         }
-
-        cooldownBarManager.setLevel(player, battery);
 
         World world = player.getWorld();
         Location start = player.getEyeLocation();
@@ -335,24 +333,24 @@ public class GolemBusterArmorSet extends ArmorSet {
         // Add battery energy
         int energy = (int) calculatedEnergy;
         player.sendMessage(BGSColor.POSITIVE + "Battery +" + energy + " from kill!");
-        consumePlayerEnergy(player, energy);
+        abilityService.addCharge(player.getUniqueId(), getType().getId(), energy);
     }
 
-    private int consumePlayerEnergy(Player player, int amount) {
-        UUID uuid = player.getUniqueId();
-        int currentEnergy = playerEnergy.get(uuid);
-        int newEnergy = currentEnergy + amount;
-
-        if (newEnergy < 0) {
-            return -1;
-        }
-        if (newEnergy > 100) {
-            newEnergy = 100;
-        }
-
-        playerEnergy.put(uuid, newEnergy);
-        return newEnergy;
-    }
+//    private int consumePlayerEnergy(Player player, int amount) {
+//        UUID uuid = player.getUniqueId();
+//        int currentEnergy = playerEnergy.get(uuid);
+//        int newEnergy = currentEnergy + amount;
+//
+//        if (newEnergy < 0) {
+//            return -1;
+//        }
+//        if (newEnergy > 100) {
+//            newEnergy = 100;
+//        }
+//
+//        playerEnergy.put(uuid, newEnergy);
+//        return newEnergy;
+//    }
 
     public void spawnSpiralBeam(Player player) {
         Location eye = player.getEyeLocation();

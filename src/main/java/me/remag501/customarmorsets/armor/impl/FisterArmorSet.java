@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.ability.AbilityDisplay;
 import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
@@ -26,6 +27,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -35,13 +37,14 @@ public class FisterArmorSet extends ArmorSet {
     private static Map<UUID, NPC> afterImagesTwo = new HashMap<>();
 
     private static Map<UUID, Long> dodgeCooldowns = new HashMap<>();
-    private static Map<UUID, Long> abilityCooldowns = new HashMap<>();
+//    private static Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static Map<UUID, Entity> dodging = new HashMap<>();
-
-    private static final List<UUID> meditating = new ArrayList<UUID>();
+//
+//    private static final List<UUID> meditating = new ArrayList<UUID>();
 
     private static final int DODGING_COOLDOWN_TICKS = 2 * 20;
-    private static final int ABILITY_COOLDOWN_TICKS = 15 * 20;
+    private static final int ABILITY_COOLDOWN = 15;
+    private static final int MEDIATION_TIME = 3;
 
     private final AbilityService abilityService;
     private final ArmorManager armorManager;
@@ -90,7 +93,7 @@ public class FisterArmorSet extends ArmorSet {
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getPlayer().getUniqueId().equals(id))
-                .filter(e -> meditating.contains(e.getPlayer().getUniqueId()))
+                .filter(e -> abilityService.isActive(id, getType().getId()))
                 .handler(this::onMoveWhileMeditating);
 
         // 4. Interact Listener
@@ -127,7 +130,7 @@ public class FisterArmorSet extends ArmorSet {
         long now = System.currentTimeMillis();
 
         // Cancel meditative state if already active
-        if (meditating.contains(uuid)) {
+        if (abilityService.isActive(uuid, getType().getId())) {
             Vector launch = player.getLocation().getDirection().multiply(1.2).setY(0.4);
             player.setVelocity(launch);
             endMeditation(player);
@@ -135,11 +138,14 @@ public class FisterArmorSet extends ArmorSet {
         }
 
         // Check if player is on cooldown
-        if (abilityCooldowns.containsKey(uuid) && now < abilityCooldowns.get(uuid)) {
-            long remaining = (abilityCooldowns.get(uuid) - now) / 1000;
+        if (abilityService.isReady(uuid, getType().getId())) {
+            long remaining = (abilityService.getRemainingMillis(uuid, getType().getId())) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Your meditate ability is on cooldown for another " + remaining + " seconds.");
             return;
         }
+
+        // Start cooldown
+        abilityService.start(uuid, getType().getId(), Duration.ofSeconds(ABILITY_COOLDOWN), Duration.ofSeconds(MEDIATION_TIME), AbilityDisplay.XP_BAR);
 
         // Begin meditative state
         Location floatLocation = player.getLocation().clone().add(0, 3, 0);
@@ -154,8 +160,8 @@ public class FisterArmorSet extends ArmorSet {
         World world = player.getWorld();
         AtomicReference<Double> angle = new AtomicReference<>((double) 0);
 
-        taskService.subscribe(player.getUniqueId(), "fister_meditate", 0, 4, (ticks) -> {
-            if (!meditating.contains(uuid)) {
+        taskService.subscribe(uuid, "fister_meditate", 0, 4, (ticks) -> {
+            if (!abilityService.isActive(uuid, getType().getId())) {
                 return true;
             }
             angle.updateAndGet(v -> (double) (v + Math.PI / 8));
@@ -190,9 +196,6 @@ public class FisterArmorSet extends ArmorSet {
         taskService.delay(60, () -> {
             endMeditation(player);
         });
-
-
-        meditating.add(uuid);
     }
 
     private void endMeditation(Player player) {
@@ -212,22 +215,18 @@ public class FisterArmorSet extends ArmorSet {
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1f, 1.2f);
         player.getWorld().spawnParticle(Particle.EXPLOSION, player.getLocation(), 10);
 
-        meditating.remove(uuid);
+        abilityService.stopChanneling(uuid, getType().getId());
 
         // Start timer to remove hp
         taskService.delay(100, () -> {
             attributeService.removeModifier(player, Attribute.MAX_HEALTH,type.getId());
         });
-
-        // Start the cooldown
-        abilityCooldowns.put(uuid, System.currentTimeMillis() + ABILITY_COOLDOWN_TICKS * 50);
-        cooldownBarManager.startCooldownBar(player, ABILITY_COOLDOWN_TICKS / 20);
     }
 
     @EventHandler
     public void detectFlight(PlayerToggleFlightEvent event) {
         // We already know it's the right player because of .owner(id)
-        if (meditating.contains(event.getPlayer().getUniqueId())) {
+        if (abilityService.isActive(event.getPlayer().getUniqueId(), getType().getId())) {
             endMeditation(event.getPlayer());
         }
     }
