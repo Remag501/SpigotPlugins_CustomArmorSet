@@ -8,7 +8,7 @@ import me.remag501.bgscore.api.command.CommandService;
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.bgscore.api.namespace.NamespaceService;
 import me.remag501.bgscore.api.task.TaskService;
-import me.remag501.customarmorsets.armor.impl.*;
+import me.remag501.customarmorsets.armor.ArmorRegistry;
 import me.remag501.customarmorsets.command.CustomArmorSetCommand;
 import me.remag501.customarmorsets.manager.*;
 import me.remag501.customarmorsets.listener.*;
@@ -25,7 +25,7 @@ public final class CustomArmorSets extends JavaPlugin {
 
     private static volatile boolean isServerShuttingDown = false;
 
-    private ArmorManager armorManager;
+    private ArmorStateService armorStateService;
 
     // Getter for the shutdown status
     public static boolean isServerShuttingDown() {
@@ -51,24 +51,26 @@ public final class CustomArmorSets extends JavaPlugin {
         // Setup services
         CosmeticService cosmeticService = new CosmeticService();
         ArmorService armorService = new ArmorService(namespaceService);
-        ItemService itemService = new ItemService(namespaceService, armorService);
+        RepairKitService repairKitService = new RepairKitService(namespaceService, armorService);
+        ArmorStateService armorStateService = new ArmorStateService();
 
         // Setup managers
         PlayerSyncManager playerSyncManager = new PlayerSyncManager(attributeService);
-        armorManager = new ArmorManager(this, taskService, eventService, cosmeticService, attributeService, abilityService,
-                combatStatsService, armorService, playerSyncManager, namespaceService);
+        ArmorRegistry armorRegistry = new ArmorRegistry(taskService, eventService, attributeService, abilityService,
+                combatStatsService, playerSyncManager, namespaceService, armorStateService);
+        ArmorManager armorManager = new ArmorManager(this, armorRegistry, armorStateService, cosmeticService);
 
         // 3. Register command to plugin
-        CustomArmorSetCommand armorSetCommand = new CustomArmorSetCommand(itemService, namespaceService);
+        CustomArmorSetCommand armorSetCommand = new CustomArmorSetCommand(repairKitService, namespaceService);
         getCommand("customarmorsets").setExecutor(armorSetCommand);
         commandService.registerSubcommand("armor", armorSetCommand);
 
         // 4. Register all listeners to plugin
 
         // Listeners fo equipping and using armor set
-        getServer().getPluginManager().registerEvents(new ArmorEquipListener(armorManager, armorService, itemService), this);
-        new ArmorInteractListener(armorManager, eventService);
-        new OffHandAbilityListener(armorManager, eventService);
+        getServer().getPluginManager().registerEvents(new ArmorEquipListener(armorManager, armorService, repairKitService), this);
+        new ArmorInteractListener(armorService, eventService);
+        new OffHandAbilityListener(armorStateService, eventService);
         new DurabilityListener(armorService, cosmeticService, namespaceService, eventService);
 
         // Listeners for world change and connection
@@ -76,8 +78,8 @@ public final class CustomArmorSets extends JavaPlugin {
         new WorldChangeListener(armorManager, armorService, eventService);
 
         // Listener for broken items
-        new BrokenItemListener(itemService, eventService);
-        new RepairListener(armorService, cosmeticService, itemService, namespaceService, eventService);
+        new BrokenItemListener(repairKitService, eventService);
+        new RepairListener(armorService, cosmeticService, repairKitService, namespaceService, eventService);
 
         // Mythic mobs
         getServer().getPluginManager().registerEvents(new MythicMobsListener(this), this);
@@ -93,10 +95,10 @@ public final class CustomArmorSets extends JavaPlugin {
         // Plugin shutdown logic
         isServerShuttingDown = true;
         // Disable any kits that a player has equipped
-        for (UUID uuid: armorManager.getEquippedArmor().keySet()) {
+        for (UUID uuid: armorStateService.getEquippedArmorMap().keySet()) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null)
-                armorManager.unequipArmor(player); // Won't work since events can't get registered
+                armorStateService.getActiveSet(player.getUniqueId()).removePassive(player); // Won't work since events can't get registered
         }
         getLogger().info("Custom Armor Sets have shut down!");
     }

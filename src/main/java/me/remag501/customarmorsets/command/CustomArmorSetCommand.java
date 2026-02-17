@@ -3,8 +3,7 @@ package me.remag501.customarmorsets.command;
 import me.remag501.bgscore.api.namespace.NamespaceService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSetType;
-import me.remag501.customarmorsets.service.ArmorService;
-import me.remag501.customarmorsets.service.ItemService;
+import me.remag501.customarmorsets.service.RepairKitService;
 import me.remag501.customarmorsets.util.ArmorUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
@@ -15,20 +14,18 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
 
-import javax.xml.stream.events.Namespace;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class CustomArmorSetCommand implements CommandExecutor {
 
-    private final ItemService itemService;
+    private final RepairKitService repairKitService;
     private final NamespaceService namespaceService;
 
-    public CustomArmorSetCommand(ItemService itemService, NamespaceService namespaceService) {
-        this.itemService = itemService;
+    public CustomArmorSetCommand(RepairKitService repairKitService, NamespaceService namespaceService) {
+        this.repairKitService = repairKitService;
         this.namespaceService = namespaceService;
     }
 
@@ -98,7 +95,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
         }
 
         else if (args.length == 1 && args[0].equalsIgnoreCase("getrepairkit") && sender instanceof Player player) {
-            ItemStack repairKit = itemService.createRepairKit(1, 0);
+            ItemStack repairKit = repairKitService.createRepairKit(1, 0);
             player.getInventory().addItem(repairKit);
             player.sendMessage(BGSColor.PREFIX_ARMOR + "You received an Armor Repair Kit!");
             return true;
@@ -111,7 +108,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
                 return true;
             }
 
-            target.getInventory().addItem(itemService.createRepairKit(1, 0));
+            target.getInventory().addItem(repairKitService.createRepairKit(1, 0));
             sender.sendMessage("§b§lARMOR §8» §aRepair kit given to " + target.getName() + "!");
             target.sendMessage("§b§lARMOR §8» §7You received an Armor Repair Kit!");
             return true;
@@ -128,7 +125,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
                     return true;
                 }
 
-                ItemStack repairKit = itemService.createRepairKit(amount, tier);
+                ItemStack repairKit = repairKitService.createRepairKit(amount, tier);
                 player.getInventory().addItem(repairKit);
                 player.sendMessage(BGSColor.PREFIX_ARMOR + "You received " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ")!");
             } catch (NumberFormatException e) {
@@ -154,7 +151,7 @@ public class CustomArmorSetCommand implements CommandExecutor {
                     return true;
                 }
 
-                ItemStack repairKit = itemService.createRepairKit(amount, tier);
+                ItemStack repairKit = repairKitService.createRepairKit(amount, tier);
                 target.getInventory().addItem(repairKit);
                 sender.sendMessage("§b§lARMOR §8» §aGave " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ") to " + target.getName() + "!");
                 target.sendMessage(BGSColor.PREFIX_ARMOR + "You received " + amount + " Armor Repair Kit" + (amount > 1 ? "s" : "") + " (Tier " + tier + ")!");

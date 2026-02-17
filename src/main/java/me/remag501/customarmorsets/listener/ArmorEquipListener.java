@@ -4,26 +4,24 @@ import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.service.ArmorService;
-import me.remag501.customarmorsets.service.ItemService;
+import me.remag501.customarmorsets.service.RepairKitService;
 import me.remag501.customarmorsets.lib.armorequipevent.ArmorEquipEvent;
-import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
 public class ArmorEquipListener implements Listener {
 
     private final ArmorManager armorManager;
     private final ArmorService armorService;
-    private final ItemService itemService;
+    private final RepairKitService repairKitService;
 
 
-    public ArmorEquipListener(ArmorManager armorManager, ArmorService armorService, ItemService itemService) {
+    public ArmorEquipListener(ArmorManager armorManager, ArmorService armorService, RepairKitService repairKitService) {
         this.armorManager = armorManager;
         this.armorService = armorService;
-        this.itemService = itemService;
+        this.repairKitService = repairKitService;
     }
 
     @EventHandler
@@ -32,7 +30,7 @@ public class ArmorEquipListener implements Listener {
 
         // Handle logic for broken armor
         ItemStack newArmor = event.getNewArmorPiece();
-        if (itemService.isBroken(newArmor)) {
+        if (repairKitService.isBroken(newArmor)) {
             event.setCancelled(true);
             event.getPlayer().sendMessage(BGSColor.NEGATIVE + "This armor is broken and can't be equipped!");
             return;

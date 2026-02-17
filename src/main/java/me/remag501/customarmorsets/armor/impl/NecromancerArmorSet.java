@@ -24,6 +24,8 @@ import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.listener.MythicMobsListener;
 import me.remag501.customarmorsets.manager.ArmorManager;
 import me.remag501.customarmorsets.manager.PlayerSyncManager;
+import me.remag501.customarmorsets.service.ArmorService;
+import me.remag501.customarmorsets.service.ArmorStateService;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -69,18 +71,18 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
 
     private final EventService eventService;
     private final TaskService taskService;
-    private final ArmorManager armorManager;
+    private final ArmorStateService armorStateService;
     private final CombatStatsService combatStatsService;
     private final AttributeService attributeService;
     private final PlayerSyncManager playerSyncManager;
     private final NamespaceService namespaceService;
 
-    public NecromancerArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, CombatStatsService combatStatsService,
+    public NecromancerArmorSet(EventService eventService, TaskService taskService, ArmorStateService armorStateService, CombatStatsService combatStatsService,
                                AttributeService attributeService, PlayerSyncManager playerSyncManager, NamespaceService namespaceService) {
         super(ArmorSetType.NECROMANCER);
         this.eventService = eventService;
         this.taskService = taskService;
-        this.armorManager = armorManager;
+        this.armorStateService = armorStateService;
         this.combatStatsService = combatStatsService;
         this.attributeService = attributeService;
         this.playerSyncManager = playerSyncManager;
@@ -597,7 +599,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
     public void onPlayerKillMob(EntityDeathEvent event) {
         // Basic checks
         Player player = event.getEntity().getKiller();
-        if (player == null || !(armorManager.getArmorSet(player) instanceof NecromancerArmorSet)) return; // Not killed by a player or player not wearing the set
+        if (player == null || !(armorStateService.isWearing(player.getUniqueId(), ArmorSetType.NECROMANCER))) return; // Not killed by a player or player not wearing the set
         Optional<ActiveMob> optActiveMob = MythicBukkit.inst().getMobManager().getActiveMob(event.getEntity().getUniqueId());
         if (optActiveMob.isEmpty()) return; // Not a mythic mob
         // Logic for mythic mob
@@ -625,7 +627,7 @@ public class NecromancerArmorSet extends ArmorSet implements Listener {
             if (controlled != null && event.getFinalDamage() >= player.getHealth()) {
                 event.setCancelled(true);
                 despawnMob(controlled);
-            } else if (armorManager.getArmorSet(player) instanceof NecromancerArmorSet && event.getFinalDamage() >= player.getHealth()) { // Ressurection Passive: final hit to player
+            } else if (armorStateService.isWearing(player.getUniqueId(), ArmorSetType.NECROMANCER) && event.getFinalDamage() >= player.getHealth()) { // Ressurection Passive: final hit to player
                     event.setCancelled(resurrectionPassive(player));
             }
         }

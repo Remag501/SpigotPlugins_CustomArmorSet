@@ -9,6 +9,8 @@ import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
+import me.remag501.customarmorsets.service.ArmorService;
+import me.remag501.customarmorsets.service.ArmorStateService;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -61,16 +63,16 @@ public class IcemanArmorSet extends ArmorSet {
 
     private final EventService eventService;
     private final TaskService taskService;
-    private final ArmorManager armorManager;
+    private final ArmorStateService armorStateService;
     private final AbilityService abilityService;
     private final AttributeService attributesService;
 
-    public IcemanArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager,
+    public IcemanArmorSet(EventService eventService, TaskService taskService, ArmorStateService armorStateService,
                           AbilityService abilityService, AttributeService attributesService) {
         super(ArmorSetType.ICEMAN);
         this.eventService = eventService;
         this.taskService = taskService;
-        this.armorManager = armorManager;
+        this.armorStateService = armorStateService;
         this.abilityService = abilityService;
         this.attributesService = attributesService;
     }
@@ -195,7 +197,7 @@ public class IcemanArmorSet extends ArmorSet {
         // Handle ice bridge passive
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
-        if (!(armorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
+        if (!(armorStateService.isWearing(player.getUniqueId(), ArmorSetType.ICEMAN))) return;
         // Now we start
 
         if (!player.isSprinting() && runningTime.contains(uuid)) {
@@ -227,7 +229,7 @@ public class IcemanArmorSet extends ArmorSet {
     @EventHandler
     public void onToggleFlight(PlayerToggleFlightEvent event) {
         Player player = event.getPlayer();
-        if (!(armorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
+        if (!(armorStateService.isWearing(player.getUniqueId(), ArmorSetType.ICEMAN))) return;
         // Now we start
 
         Boolean canEnterIceMode = iceMode.get(player.getUniqueId());
@@ -249,7 +251,7 @@ public class IcemanArmorSet extends ArmorSet {
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        if (!(armorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
+        if (!(armorStateService.isWearing(player.getUniqueId(), ArmorSetType.ICEMAN))) return;
         // Now we start
 
         if (!iceMode.getOrDefault(player.getUniqueId(), false)) {
@@ -337,7 +339,7 @@ public class IcemanArmorSet extends ArmorSet {
     public void onPlayerFireDamageMob(EntityDamageByEntityEvent event) {
         // Check if the damager is a player
         if (!(event.getDamager() instanceof Player player)) return;
-        if (!(armorManager.getArmorSet(player) instanceof IcemanArmorSet)) return;
+        if (!(armorStateService.isWearing(player.getUniqueId(), ArmorSetType.ICEMAN))) return;
         // Check if the damaged entity is a mob and if the cause is an entity attack
         if (!(event.getEntity() instanceof LivingEntity mob) || event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK) return;
 

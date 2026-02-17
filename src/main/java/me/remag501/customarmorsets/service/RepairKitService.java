@@ -12,12 +12,12 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Arrays;
 
-public class ItemService {
+public class RepairKitService {
 
     private final NamespaceService namespaceService;
     private final ArmorService armorService;
 
-    public ItemService(NamespaceService namespaceService, ArmorService armorService) {
+    public RepairKitService(NamespaceService namespaceService, ArmorService armorService) {
         this.namespaceService = namespaceService;
         this.armorService = armorService;
     }

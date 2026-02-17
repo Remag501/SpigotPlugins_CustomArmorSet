@@ -13,6 +13,8 @@ import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
+import me.remag501.customarmorsets.service.ArmorService;
+import me.remag501.customarmorsets.service.ArmorStateService;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
@@ -48,17 +50,17 @@ public class VampireArmorSet extends ArmorSet {
 
     private final EventService eventService;
     private final TaskService taskService;
-    private final ArmorManager armorManager;
+    private final ArmorStateService armorStateService;
     private final AbilityService abilityService;
     private final AttributeService attributeService;
     private final NamespaceService namespaceService;
 
-    public VampireArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager, AbilityService abilityService,
+    public VampireArmorSet(EventService eventService, TaskService taskService, ArmorStateService armorStateService, AbilityService abilityService,
                            AttributeService attributeService, NamespaceService namespaceService) {
         super(ArmorSetType.VAMPIRE);
         this.eventService = eventService;
         this.taskService = taskService;
-        this.armorManager = armorManager;
+        this.armorStateService = armorStateService;
         this.abilityService = abilityService;
         this.attributeService = attributeService;
         this.namespaceService = namespaceService;
@@ -335,7 +337,7 @@ public class VampireArmorSet extends ArmorSet {
         }
 
         // Confirm player is wearing Vampire set
-        if (!(armorManager.getArmorSet(damager) instanceof VampireArmorSet)) return;
+        if (!(armorStateService.isWearing(damager.getUniqueId(), ArmorSetType.VAMPIRE))) return;
 
         // Heal the player by a portion of the damage dealt
         double newHealth = Math.min(

@@ -9,6 +9,7 @@ import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
+import me.remag501.customarmorsets.service.ArmorStateService;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -37,18 +38,18 @@ public class BanditArmorSet extends ArmorSet {
     // Regeneration time for doge
     private final int DODGE_COOLDOWN = 5;
 
-    private final ArmorManager armorManager;
+    private final ArmorStateService armorStateService;
     private final AbilityService abilityService;
     private final AttributeService attributeService;
     private final EventService eventService;
     private final TaskService taskService;
 
-    public BanditArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager,
+    public BanditArmorSet(EventService eventService, TaskService taskService, ArmorStateService armorStateService,
                           AbilityService abilityService, AttributeService attributeService) {
         super(ArmorSetType.BANDIT);
         this.eventService = eventService;
         this.taskService = taskService;
-        this.armorManager = armorManager;
+        this.armorStateService = armorStateService;
         this.abilityService = abilityService;
         this.attributeService = attributeService;
     }
@@ -87,7 +88,7 @@ public class BanditArmorSet extends ArmorSet {
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        if (!(armorManager.getArmorSet(player) instanceof BanditArmorSet)) {
+        if (!(armorStateService.isWearing(player.getUniqueId(), ArmorSetType.BANDIT))) {
             return;
         }
 
@@ -105,7 +106,7 @@ public class BanditArmorSet extends ArmorSet {
         if (!(event.getDamager() instanceof Player attacker)) {
             return;
         }
-        if (!(armorManager.getArmorSet(attacker) instanceof BanditArmorSet)) {
+        if (!(armorStateService.isWearing(attacker.getUniqueId(), ArmorSetType.BANDIT))) {
             return;
         }
         if (!(event.getEntity() instanceof Player target)) {

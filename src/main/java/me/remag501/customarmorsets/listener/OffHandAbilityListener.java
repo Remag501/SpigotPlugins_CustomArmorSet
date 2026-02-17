@@ -2,16 +2,17 @@ package me.remag501.customarmorsets.listener;
 
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.customarmorsets.manager.ArmorManager;
+import me.remag501.customarmorsets.service.ArmorStateService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 
 public class OffHandAbilityListener {
 
-    public OffHandAbilityListener(ArmorManager armorManager, EventService eventService) {
+    public OffHandAbilityListener(ArmorStateService armorStateService, EventService eventService) {
 
         eventService.subscribe(PlayerSwapHandItemsEvent.class)
                 // 1. Only care if they are actually wearing a custom set
-                .filter(e -> armorManager.getArmorSet(e.getPlayer()) != null)
+                .filter(e -> armorStateService.getActiveSet(e.getPlayer().getUniqueId()) != null)
                 .handler(e -> {
                     Player player = e.getPlayer();
 
@@ -19,7 +20,7 @@ public class OffHandAbilityListener {
                     e.setCancelled(true);
 
                     // 3. Fire the custom ability
-                    armorManager.getArmorSet(player).triggerAbility(player);
+                    armorStateService.getActiveSet(e.getPlayer().getUniqueId()).triggerAbility(player);
                 });
     }
 }

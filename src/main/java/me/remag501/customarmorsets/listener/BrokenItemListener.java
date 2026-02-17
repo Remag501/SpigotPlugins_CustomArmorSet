@@ -1,23 +1,23 @@
 package me.remag501.customarmorsets.listener;
 
 import me.remag501.bgscore.api.event.EventService;
-import me.remag501.customarmorsets.service.ItemService;
+import me.remag501.customarmorsets.service.RepairKitService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 public class BrokenItemListener {
 
-    public BrokenItemListener(ItemService itemService, EventService eventService) {
+    public BrokenItemListener(RepairKitService repairKitService, EventService eventService) {
 
         eventService.subscribe(EntityDamageByEntityEvent.class)
                 .filter(e -> e.getDamager() instanceof Player)
-                .filter(e -> itemService.isBroken(((Player) e.getDamager()).getInventory().getItemInMainHand()))
+                .filter(e -> repairKitService.isBroken(((Player) e.getDamager()).getInventory().getItemInMainHand()))
                 .handler(this::onEntityDamage);
 
         eventService.subscribe(PlayerInteractEvent.class)
                 .filter(e -> e.getItem() != null) // Avoid air clicks
-                .filter(e -> itemService.isBroken(e.getItem()))
+                .filter(e -> repairKitService.isBroken(e.getItem()))
                 .handler(this::onInteract);
 
     }

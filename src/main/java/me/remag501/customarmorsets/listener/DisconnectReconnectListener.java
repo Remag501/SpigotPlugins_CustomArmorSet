@@ -24,7 +24,7 @@ public class DisconnectReconnectListener {
         eventService.subscribe(PlayerQuitEvent.class)
                 .handler(e -> {
                     // We check if the manager actually has them tracked to avoid unnecessary logic
-                    if (armorManager.getArmorSet(e.getPlayer()) != null) {
+                    if (armorService.isFullArmorSet(e.getPlayer()) != null) {
                         armorManager.unequipArmor(e.getPlayer());
                     }
                 });

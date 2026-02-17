@@ -2,12 +2,13 @@ package me.remag501.customarmorsets.listener;
 
 import me.remag501.bgscore.api.event.EventService;
 import me.remag501.customarmorsets.manager.ArmorManager;
+import me.remag501.customarmorsets.service.ArmorService;
 import org.bukkit.Material;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 public class ArmorInteractListener {
 
-    public ArmorInteractListener(ArmorManager armorManager, EventService eventService) {
+    public ArmorInteractListener(ArmorService armorService, EventService eventService) {
 
         eventService.subscribe(PlayerInteractEvent.class)
                 // 1. Filter: Must be a right-click action with an item
@@ -16,7 +17,7 @@ public class ArmorInteractListener {
                 // 2. Filter: Is it armor?
                 .filter(e -> isArmor(e.getItem().getType()))
                 // 3. Filter: Are they already wearing a custom set?
-                .filter(e -> armorManager.getArmorSet(e.getPlayer()) != null)
+                .filter(e -> armorService.isFullArmorSet(e.getPlayer()) != null)
                 .handler(e -> {
                     // Cancel the hotswap
                     e.setCancelled(true);

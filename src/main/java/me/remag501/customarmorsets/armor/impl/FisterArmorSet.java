@@ -9,6 +9,8 @@ import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
 import me.remag501.customarmorsets.manager.ArmorManager;
+import me.remag501.customarmorsets.service.ArmorService;
+import me.remag501.customarmorsets.service.ArmorStateService;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.md_5.bungee.api.ChatMessageType;
@@ -47,17 +49,17 @@ public class FisterArmorSet extends ArmorSet {
     private static final int MEDIATION_TIME = 3;
 
     private final AbilityService abilityService;
-    private final ArmorManager armorManager;
+    private final ArmorStateService armorStateService;
     private final AttributeService attributeService;
     private final EventService eventService;
     private final TaskService taskService;
 
-    public FisterArmorSet(EventService eventService, TaskService taskService, ArmorManager armorManager,
+    public FisterArmorSet(EventService eventService, TaskService taskService, ArmorStateService armorStateService,
                           AbilityService abilityService, AttributeService attributeService) {
         super(ArmorSetType.FISTER);
         this.eventService = eventService;
         this.taskService = taskService;
-        this.armorManager = armorManager;
+        this.armorStateService = armorStateService;
         this.abilityService = abilityService;
         this.attributeService = attributeService;
     }
@@ -258,7 +260,7 @@ public class FisterArmorSet extends ArmorSet {
         Entity damager = event.getDamager();
         if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player p) {
 
-            if (armorManager.getArmorSet(p) instanceof FisterArmorSet) {
+            if (armorStateService.isWearing(damager.getUniqueId(), ArmorSetType.FISTER)) {
                 event.setCancelled(true);
                 return; // Only reduce for arrow/trident, not snowball/egg/etc., actually it reduces for all in this case
             }
@@ -266,7 +268,7 @@ public class FisterArmorSet extends ArmorSet {
 
         // Check if player is wearing armor and apply after image passive
         if (!(event.getDamager() instanceof Player player)) return;
-        if (!(armorManager.getArmorSet(player) instanceof FisterArmorSet)) return;
+        if (!(armorStateService.isWearing(damager.getUniqueId(), ArmorSetType.FISTER))) return;
 
         if (player.getInventory().getItemInMainHand().getType() != Material.AIR) {
             event.setCancelled(true);
