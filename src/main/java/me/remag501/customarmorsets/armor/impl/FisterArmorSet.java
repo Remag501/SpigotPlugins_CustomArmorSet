@@ -154,7 +154,7 @@ public class FisterArmorSet extends ArmorSet {
         player.setFlying(true);
         player.setFlySpeed(0);
         player.setInvulnerable(true);
-        attributeService.applyMaxHealth(player, type.getId(), 1.5);
+        attributeService.applyMaxHealth(player, type.getId(), 0.5);
 
         // Ring particles + aura
         World world = player.getWorld();

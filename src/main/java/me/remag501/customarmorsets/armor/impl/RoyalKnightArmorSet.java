@@ -29,8 +29,8 @@ public class RoyalKnightArmorSet extends ArmorSet {
 
     @Override
     public void applyPassive(Player player) {
-        attributeService.applyMaxHealth(player, type.getId(), 1.25);
-        attributeService.applyDamage(player, type.getId(), 0.85);
+        attributeService.applyMaxHealth(player, type.getId(), 0.25);
+        attributeService.applyDamage(player, type.getId(), -0.15);
 
     }
 

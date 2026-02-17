@@ -253,8 +253,8 @@ public class GolemBusterArmorSet extends ArmorSet {
         startParticleTrail(player);
 
         // Give attributes and damage stats
-        attributeService.applyMaxHealth(player, type.getId(), 2.0);
-        attributeService.applySpeed(player, type.getId(), 0.5);
+        attributeService.applyMaxHealth(player, type.getId(), 1.0);
+        attributeService.applySpeed(player, type.getId(), -0.5);
         combatStatsService.setTargetDamageMod(player.getUniqueId(), getType().getId(),2, TargetCategory.NON_PLAYER);
         combatStatsService.setSourceDefenseMod(player.getUniqueId(), getType().getId(),0.25f, TargetCategory.NON_PLAYER);
 

@@ -36,8 +36,8 @@ public class ArcherArmorSet extends ArmorSet {
 
     @Override
     public void applyPassive(Player player) {
-        attributesService.applySpeed(player, type.getId(), 1.5);
-        attributesService.applyMaxHealth(player, type.getId(),0.5);
+        attributesService.applySpeed(player, type.getId(), 0.5);
+        attributesService.applyMaxHealth(player, type.getId(),-0.5);
         UUID id = player.getUniqueId();
 
         eventService.subscribe(EntityDamageByEntityEvent.class)

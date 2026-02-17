@@ -93,7 +93,7 @@ public class BanditArmorSet extends ArmorSet {
 
         // This is much cleaner now!
         if (player.getInventory().getItemInMainHand().getType() == Material.AIR) {
-            attributeService.applySpeed(player, type.getId(), 1.25); // Apply a 25% speed increase
+            attributeService.applySpeed(player, type.getId(), 0.25); // Apply a 25% speed increase
         } else {
             attributeService.resetSource(player, type.getId()); // Remove the speed increase
         }

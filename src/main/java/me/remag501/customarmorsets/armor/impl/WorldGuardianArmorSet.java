@@ -31,8 +31,8 @@ public class WorldGuardianArmorSet extends ArmorSet {
 
     @Override
     public void applyPassive(Player player) {
-        attributeService.applyMaxHealth(player, type.getId(), 1.5);
-        attributeService.applySpeed(player, type.getId(), 0.8);
+        attributeService.applyMaxHealth(player, type.getId(), 0.5);
+        attributeService.applySpeed(player, type.getId(), -0.2);
 
         // Register listener(s)
         UUID id = player.getUniqueId();

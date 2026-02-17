@@ -77,7 +77,7 @@ public class IcemanArmorSet extends ArmorSet {
 
     @Override
     public void applyPassive(Player player) {
-        attributesService.applySpeed(player, type.getId(), 1.25);
+        attributesService.applySpeed(player, type.getId(), 0.25);
 
         UUID uuid = player.getUniqueId();
         cooldowns.put(uuid, System.currentTimeMillis());
