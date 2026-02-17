@@ -142,10 +142,6 @@ public class IcemanArmorSet extends ArmorSet {
         attributesService.resetSource(player, type.getId());
         UUID uuid = player.getUniqueId();
         resetIceBridgeBlocks(player);
-//        ultTask.remove(uuid).cancel();
-//        BukkitTask runningTask = runningTime.remove(uuid);
-//        if (runningTask != null)
-//            runningTask.cancel();
         cooldowns.remove(uuid);
         freezeCharges.remove(uuid);
         playerBlocksToReset.remove(uuid);

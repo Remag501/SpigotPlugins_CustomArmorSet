@@ -53,8 +53,8 @@ public class WorldGuardianArmorSet extends ArmorSet {
     @Override
     public void removePassive(Player player) {
         attributeService.resetSource(player, type.getId());
-
         eventService.unregisterListener(player.getUniqueId(), type.getId());
+        abilityService.reset(player.getUniqueId(), getType().getId());
     }
 
     @Override

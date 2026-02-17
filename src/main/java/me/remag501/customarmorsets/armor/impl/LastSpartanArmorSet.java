@@ -47,6 +47,7 @@ public class LastSpartanArmorSet extends ArmorSet {
     public void applyPassive(Player player) {
         attributeService.applyMaxHealth(player, type.getId(), -0.3);
         combatStatsService.setWeaponDamageMod(player.getUniqueId(), type.getId(), 1.25F, WeaponType.SWORD);
+        abilityService.reset(player.getUniqueId(), getType().getId());
     }
 
     @Override

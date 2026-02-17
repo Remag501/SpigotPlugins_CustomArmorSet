@@ -95,6 +95,7 @@ public class GolemBusterArmorSet extends ArmorSet {
         eventService.unregisterListener(player.getUniqueId(), type.getId());
         taskService.stopTask(player.getUniqueId(), "golem_energy_loop");
         taskService.stopTask(player.getUniqueId(), "golem_particle");
+        abilityService.reset(player.getUniqueId(), getType().getId());
     }
 
     @Override

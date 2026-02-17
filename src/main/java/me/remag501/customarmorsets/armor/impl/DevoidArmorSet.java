@@ -41,6 +41,7 @@ public class DevoidArmorSet extends ArmorSet {
     public void removePassive(Player player) {
         taskService.stopTask(player.getUniqueId(), "devoid_task");
         taskService.stopTask(player.getUniqueId(), "devoid_kinetic_task");
+        abilityService.reset(player.getUniqueId(), getType().getId());
     }
 
     private static class KineticData {

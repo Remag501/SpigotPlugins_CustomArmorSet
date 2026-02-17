@@ -84,6 +84,7 @@ public class VampireArmorSet extends ArmorSet {
 
         eventService.unregisterListener(player.getUniqueId(), type.getId());
         taskService.stopTask(player.getUniqueId(), "vampire_bats");
+        abilityService.reset(player.getUniqueId(), getType().getId());
     }
 
     @Override

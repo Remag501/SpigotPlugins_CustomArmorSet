@@ -60,6 +60,7 @@ public class ArcherArmorSet extends ArmorSet {
         attributesService.resetSource(player, type.getId());
 
         eventService.unregisterListener(player.getUniqueId(), type.getId());
+        abilityService.reset(player.getUniqueId(), getType().getId());
     }
 
     @Override

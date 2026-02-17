@@ -48,6 +48,7 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
     @Override
     public void removePassive(Player player) {
         combatStatsService.removeAllMods(player.getUniqueId(), type.getId());
+        abilityService.reset(player.getUniqueId(), getType().getId());
     }
 
     @Override

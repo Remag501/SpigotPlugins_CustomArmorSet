@@ -37,7 +37,7 @@ public class RoyalKnightArmorSet extends ArmorSet {
     @Override
     public void removePassive(Player player) {
         attributeService.resetSource(player, type.getId());
-
+        abilityService.reset(player.getUniqueId(), getType().getId());
     }
 
     @Override

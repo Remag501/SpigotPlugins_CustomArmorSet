@@ -122,6 +122,7 @@ public class FisterArmorSet extends ArmorSet {
         eventService.unregisterListener(player.getUniqueId(), type.getId());
         taskService.stopTask(player.getUniqueId(), "fister_meditate");
         taskService.stopTask(player.getUniqueId(), "fister_task");
+        abilityService.reset(player.getUniqueId(), getType().getId());
     }
 
     @Override
