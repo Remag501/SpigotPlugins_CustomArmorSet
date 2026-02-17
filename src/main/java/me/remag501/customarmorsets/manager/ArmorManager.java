@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.manager;
 
+import me.remag501.bgscore.api.task.TaskService;
 import me.remag501.customarmorsets.armor.ArmorRegistry;
 import me.remag501.customarmorsets.armor.ArmorSet;
 import me.remag501.customarmorsets.armor.ArmorSetType;
@@ -15,19 +16,19 @@ import java.util.List;
 
 public class ArmorManager {
 
+    private final TaskService taskService;
     private final ArmorRegistry registry;
     private final ArmorStateService stateService;
-    private final Plugin plugin;
     private final CosmeticService cosmeticService;
 
     private static final List<String> BANNED_WORLDS = List.of("spawn", "dungeonhub", "honeyclicker");
     private static final String BUNKER_PREFIX = "bunker";
 
-    public ArmorManager(Plugin plugin,
+    public ArmorManager(TaskService taskService,
                         ArmorRegistry registry,
                         ArmorStateService stateService,
                         CosmeticService cosmeticService) {
-        this.plugin = plugin;
+        this.taskService = taskService;
         this.registry = registry;
         this.stateService = stateService;
         this.cosmeticService = cosmeticService;
@@ -35,7 +36,7 @@ public class ArmorManager {
 
     public boolean equipArmor(Player player, ArmorSetType type) {
         // 1. Cosmetic Update
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        taskService.delay(1, () -> {
             ItemStack helmet = player.getInventory().getHelmet();
             if (helmet != null) {
                 player.getInventory().setHelmet(cosmeticService.makeCosmeticHelmet(helmet, type.getHeadUrl()));

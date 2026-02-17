@@ -52,13 +52,13 @@ public final class CustomArmorSets extends JavaPlugin {
         CosmeticService cosmeticService = new CosmeticService();
         ArmorService armorService = new ArmorService(namespaceService);
         RepairKitService repairKitService = new RepairKitService(namespaceService, armorService);
-        ArmorStateService armorStateService = new ArmorStateService();
+        armorStateService = new ArmorStateService();
 
         // Setup managers
         PlayerSyncManager playerSyncManager = new PlayerSyncManager(attributeService);
         ArmorRegistry armorRegistry = new ArmorRegistry(taskService, eventService, attributeService, abilityService,
                 combatStatsService, playerSyncManager, namespaceService, armorStateService);
-        ArmorManager armorManager = new ArmorManager(this, armorRegistry, armorStateService, cosmeticService);
+        ArmorManager armorManager = new ArmorManager(taskService, armorRegistry, armorStateService, cosmeticService);
 
         // 3. Register command to plugin
         CustomArmorSetCommand armorSetCommand = new CustomArmorSetCommand(repairKitService, namespaceService);
