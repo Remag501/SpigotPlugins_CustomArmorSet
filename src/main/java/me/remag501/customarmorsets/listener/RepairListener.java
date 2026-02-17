@@ -5,7 +5,7 @@ import me.remag501.bgscore.api.namespace.NamespaceService;
 import me.remag501.bgscore.api.util.BGSColor;
 import me.remag501.customarmorsets.service.ArmorService;
 import me.remag501.customarmorsets.service.CosmeticService;
-import me.remag501.customarmorsets.service.ItemService;
+import me.remag501.customarmorsets.service.RepairKitService;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -27,14 +27,14 @@ public class RepairListener {
     private final CosmeticService cosmeticService;
     private final NamespaceService namespaceService;
 
-    public RepairListener(ArmorService armorService, CosmeticService cosmeticService, ItemService itemService, NamespaceService namespaceService, EventService eventService) {
+    public RepairListener(ArmorService armorService, CosmeticService cosmeticService, RepairKitService repairKitService, NamespaceService namespaceService, EventService eventService) {
         this.armorService = armorService;
         this.cosmeticService = cosmeticService;
         this.namespaceService = namespaceService;
 
         eventService.subscribe(InventoryClickEvent.class)
                 .filter(e -> e.getWhoClicked() instanceof Player) // Must be a player
-                .filter(e -> itemService.isRepairKit(e.getCursor())) // Must be a kit
+                .filter(e -> repairKitService.isRepairKit(e.getCursor())) // Must be a kit
                 .filter(e -> e.getCurrentItem() != null && e.getCurrentItem().getType() != Material.AIR) // Must click something
                 .handler(this::onInventoryClick);
     }
