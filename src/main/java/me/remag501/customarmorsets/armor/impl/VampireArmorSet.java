@@ -66,7 +66,7 @@ public class VampireArmorSet extends ArmorSet {
 
     @Override
     public void applyPassive(Player player) {
-        attributeService.applyMaxHealth(player, type.getId(), 0.5);
+//        attributeService.applyMaxHealth(player, type.getId(), 0.5);
 
         // Register listener(s)
         UUID id = player.getUniqueId();
@@ -75,6 +75,8 @@ public class VampireArmorSet extends ArmorSet {
                 .namespace(type.getId())
                 .filter(e -> e.getDamager().getUniqueId().equals(id))
                 .handler(this::playerDamageEvent);
+
+        attributeService.applyMaxAbsorption(player, getType().getId(), 20);
     }
 
     @Override
@@ -120,8 +122,9 @@ public class VampireArmorSet extends ArmorSet {
                         return;
 
                     } else {
-                        if (player.getHealth() / 10.0 >= 0.75)
-                            player.setAbsorptionAmount(4.0 + player.getAbsorptionAmount());
+                        if (player.getHealth() / 10.0 >= 0.75) {
+                            player.setAbsorptionAmount(player.getAbsorptionAmount() + 4);
+                        }
                         else
                             player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, DURATION_TICKS, 3));
                         return;
@@ -132,14 +135,14 @@ public class VampireArmorSet extends ArmorSet {
         }
 
         // Now we check cooldown before performing main ability
-        if (abilityService.isReady(uuid, getType().getId())) {
+        if (!abilityService.isReady(uuid, getType().getId())) {
             long remaining = (abilityService.getRemainingMillis(uuid, getType().getId())) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Vampire ability on cooldown (" + remaining + "s left)");
             return;
         }
 
         // Start cooldown
-        abilityService.start(uuid, getType().getId(), Duration.ofSeconds(COOLDOWN_TICKS / 20), Duration.ofSeconds(DURATION_TICKS / 20), AbilityDisplay.XP_BAR);
+        abilityService.start(uuid, getType().getId(), Duration.ofSeconds(DURATION_TICKS / 20), Duration.ofSeconds(COOLDOWN_TICKS / 20), AbilityDisplay.XP_BAR);
 
 
         // Default: drain enemies and heal
@@ -157,7 +160,7 @@ public class VampireArmorSet extends ArmorSet {
                 if (!target.isDead() && target.getLocation().distanceSquared(player.getLocation()) <= RADIUS * RADIUS) {
                     target.damage(3, player);
                     player.setHealth(Math.min(player.getAttribute(Attribute.MAX_HEALTH).getValue(), player.getHealth() + 1.0));
-                    drawParticleLine(target.getEyeLocation(), player.getEyeLocation(), Particle.BLOCK, Color.MAROON);
+                    drawParticleLine(target.getEyeLocation(), player.getEyeLocation(), Color.MAROON);
                 }
             }
             return false;
@@ -166,13 +169,19 @@ public class VampireArmorSet extends ArmorSet {
 
     }
 
-    private void drawParticleLine(Location from, Location to, Particle particle, Color color) {
+    private void drawParticleLine(Location from, Location to, Color color) {
         double distance = from.distance(to);
+        // Use Particle.DUST specifically for color support
+        Particle particle = Particle.DUST;
+
         Vector direction = to.toVector().subtract(from.toVector()).normalize().multiply(0.3);
         Location current = from.clone();
 
+        Particle.DustOptions dustOptions = new Particle.DustOptions(color, 1.5f);
+
         for (double i = 0; i < distance; i += 0.3) {
-            from.getWorld().spawnParticle(particle, current, 0, new Particle.DustOptions(color, 1.5f));
+            // count 1, offsetX/Y/Z 0, speed 0, data dustOptions
+            from.getWorld().spawnParticle(particle, current, 1, 0, 0, 0, 0, dustOptions);
             current.add(direction);
         }
     }

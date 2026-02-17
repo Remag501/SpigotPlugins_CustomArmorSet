@@ -3,6 +3,7 @@ package me.remag501.customarmorsets.armor.impl;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
+import me.remag501.bgscore.api.ability.AbilityDisplay;
 import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.combat.CombatStatsService;
@@ -58,7 +59,7 @@ public class GolemBusterArmorSet extends ArmorSet {
         combatStatsService.setTargetDamageMod(player.getUniqueId(), type.getId(), 1.5f, TargetCategory.NON_PLAYER);
         combatStatsService.setSourceDefenseMod(player.getUniqueId(), type.getId(), 0.75f, TargetCategory.NON_PLAYER);
 
-        abilityService.setCharge(id, getType().getId(), 100);
+        abilityService.setupUltimate(id, getType().getId(), 100, AbilityDisplay.XP_BAR);
 
         // Start energy loop timer
         taskService.subscribe(player.getUniqueId(), "golem_energy_loop", 0, 20, (ticks) -> {
@@ -210,8 +211,19 @@ public class GolemBusterArmorSet extends ArmorSet {
             Location loc = target.getLocation().add(0, 1.2, 0);
 
             // Redstone-like particle effect
+            // 1. Use Particle.DUST if you want to use DustOptions (Colors)
             Particle.DustOptions redDust = new Particle.DustOptions(Color.RED, 1.2F);
-            target.getWorld().spawnParticle(Particle.FIREWORK, loc, 10, 0.3, 0.4, 0.3, 0, redDust);
+
+            // 2. The 'extra' parameter (0) is usually speed.
+            // For DUST, 'data' must be the last parameter.
+            target.getWorld().spawnParticle(
+                    Particle.DUST,
+                    loc,
+                    10,      // count
+                    0.3, 0.4, 0.3, // offset x, y, z
+                    0.0,     // speed (usually 0 for static dust)
+                    redDust  // data (The DustOptions)
+            );
 
             return false;
         });
@@ -336,22 +348,6 @@ public class GolemBusterArmorSet extends ArmorSet {
         player.sendMessage(BGSColor.POSITIVE + "Battery +" + energy + " from kill!");
         abilityService.addCharge(player.getUniqueId(), getType().getId(), energy);
     }
-
-//    private int consumePlayerEnergy(Player player, int amount) {
-//        UUID uuid = player.getUniqueId();
-//        int currentEnergy = playerEnergy.get(uuid);
-//        int newEnergy = currentEnergy + amount;
-//
-//        if (newEnergy < 0) {
-//            return -1;
-//        }
-//        if (newEnergy > 100) {
-//            newEnergy = 100;
-//        }
-//
-//        playerEnergy.put(uuid, newEnergy);
-//        return newEnergy;
-//    }
 
     public void spawnSpiralBeam(Player player) {
         Location eye = player.getEyeLocation();

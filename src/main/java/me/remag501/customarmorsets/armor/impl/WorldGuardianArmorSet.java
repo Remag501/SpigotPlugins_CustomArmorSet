@@ -12,24 +12,19 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 public class WorldGuardianArmorSet extends ArmorSet {
 
-//    private static final Map<UUID, Boolean> isInvulnerable = new HashMap<>();
-    private static final long COOLDOWN = 25 * 1000;
+    private static final long COOLDOWN = 25;
 
     private final EventService eventService;
-    private final TaskService taskService;
     private final AbilityService abilityService;
     private final AttributeService attributeService;
 
-    public WorldGuardianArmorSet(EventService eventService, TaskService taskService, AbilityService abilityService, AttributeService attributeService) {
+    public WorldGuardianArmorSet(EventService eventService, AbilityService abilityService, AttributeService attributeService) {
         super(ArmorSetType.WORLD_GUARDIAN);
         this.eventService = eventService;
-        this.taskService = taskService;
         this.abilityService = abilityService;
         this.attributeService = attributeService;
     }
@@ -45,7 +40,6 @@ public class WorldGuardianArmorSet extends ArmorSet {
                 .owner(id)
                 .namespace(type.getId())
                 .filter(e -> e.getEntity() instanceof Player p && p.getUniqueId().equals(id))
-//                .filter(e -> isInvulnerable.get(id) == true)
                 .filter(e -> abilityService.isActive(id, getType().getId()))
                 .handler(e -> e.setCancelled(true));
     }
@@ -61,23 +55,13 @@ public class WorldGuardianArmorSet extends ArmorSet {
     public void triggerAbility(Player player) {
         UUID uuid = player.getUniqueId();
 
-        if (abilityService.isReady(uuid, getType().getId())) {
+        if (!abilityService.isReady(uuid, getType().getId())) {
             long timeLeft = (abilityService.getRemainingMillis(uuid, getType().getId())) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Ability is on cooldown for " + timeLeft + " more seconds!");
             return;
         }
 
-        abilityService.start(uuid, getType().getId(), Duration.ofSeconds(COOLDOWN), Duration.ofSeconds(3), AbilityDisplay.XP_BAR);
-
-//        isInvulnerable.put(uuid, true);
-//
-//        cooldownBarManager.startCooldownBar(player, 3);
-//
-//        taskService.delay(60, () -> {
-//            isInvulnerable.put(uuid, false);
-//            cooldownBarManager.startCooldownBar(player, (int)(COOLDOWN / 1000));
-//            abilityCooldowns.put(uuid, now);
-//        });
+        abilityService.start(uuid, getType().getId(), Duration.ofSeconds(3), Duration.ofSeconds(COOLDOWN), AbilityDisplay.XP_BAR);
 
         player.sendMessage(BGSColor.POSITIVE + "You are invulnerable for 3 seconds!");
     }

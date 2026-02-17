@@ -58,7 +58,7 @@ public class ArmorManager {
         register(ArmorSetType.LAST_SPARTAN, new LastSpartanArmorSet(eventService, taskService, abilityService, attributeService, combatStatsService));
         register(ArmorSetType.VIKING_CAPTAIN, new VikingCaptainArmorSet(taskService, combatStatsService, abilityService));
         register(ArmorSetType.ROYAL_KNIGHT, new RoyalKnightArmorSet(abilityService, attributeService));
-        register(ArmorSetType.WORLD_GUARDIAN, new WorldGuardianArmorSet(eventService, taskService, abilityService, attributeService));
+        register(ArmorSetType.WORLD_GUARDIAN, new WorldGuardianArmorSet(eventService, abilityService, attributeService));
         register(ArmorSetType.VAMPIRE, new VampireArmorSet(eventService, taskService, this, abilityService, attributeService, namespaceService));
         register(ArmorSetType.FISTER, new FisterArmorSet(eventService, taskService, this, abilityService, attributeService));
         register(ArmorSetType.ARCHER, new ArcherArmorSet(eventService, abilityService, attributeService));

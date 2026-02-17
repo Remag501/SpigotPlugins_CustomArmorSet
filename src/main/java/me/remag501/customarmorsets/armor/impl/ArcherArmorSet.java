@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.ability.AbilityDisplay;
 import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
@@ -13,13 +14,14 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class ArcherArmorSet extends ArmorSet {
 
-    private static final long COOLDOWN = 5 * 1000; // 5 seconds
+    private static final long COOLDOWN = 5; // 5 seconds
 
     private final EventService eventService;
     private final AbilityService abilityService;
@@ -66,8 +68,8 @@ public class ArcherArmorSet extends ArmorSet {
     @Override
     public void triggerAbility(Player player) {
         UUID uuid = player.getUniqueId();
-        long now = System.currentTimeMillis();
-        if (abilityService.isActive(uuid, getType().getId())) {
+
+        if (!abilityService.isReady(uuid, getType().getId())) {
             long timeLeft = (abilityService.getRemainingMillis(uuid, getType().getId())) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Ability on cooldown for " + timeLeft + " seconds!");
             return;
@@ -106,7 +108,7 @@ public class ArcherArmorSet extends ArmorSet {
             world.spawnParticle(Particle.SWEEP_ATTACK, particleLoc, 1, 0, 0, 0, 0);
         }
 
-        abilityService.isActive(uuid, getType().getId());
+        abilityService.startCooldown(uuid, getType().getId(), Duration.ofSeconds(COOLDOWN), AbilityDisplay.XP_BAR);
     }
 
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {

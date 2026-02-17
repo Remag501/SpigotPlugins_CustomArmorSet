@@ -128,7 +128,6 @@ public class FisterArmorSet extends ArmorSet {
     @Override
     public void triggerAbility(Player player) {
         UUID uuid = player.getUniqueId();
-        long now = System.currentTimeMillis();
 
         // Cancel meditative state if already active
         if (abilityService.isActive(uuid, getType().getId())) {
@@ -139,14 +138,14 @@ public class FisterArmorSet extends ArmorSet {
         }
 
         // Check if player is on cooldown
-        if (abilityService.isReady(uuid, getType().getId())) {
+        if (!abilityService.isReady(uuid, getType().getId())) {
             long remaining = (abilityService.getRemainingMillis(uuid, getType().getId())) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Your meditate ability is on cooldown for another " + remaining + " seconds.");
             return;
         }
 
         // Start cooldown
-        abilityService.start(uuid, getType().getId(), Duration.ofSeconds(ABILITY_COOLDOWN), Duration.ofSeconds(MEDIATION_TIME), AbilityDisplay.XP_BAR);
+        abilityService.start(uuid, getType().getId(), Duration.ofSeconds(MEDIATION_TIME),  Duration.ofSeconds(ABILITY_COOLDOWN), AbilityDisplay.XP_BAR);
 
         // Begin meditative state
         Location floatLocation = player.getLocation().clone().add(0, 3, 0);
@@ -194,8 +193,9 @@ public class FisterArmorSet extends ArmorSet {
             }
         }
 
-        taskService.delay(60, () -> {
-            endMeditation(player);
+        taskService.delay(55, () -> {
+            if (abilityService.isActive(uuid, getType().getId()))
+                endMeditation(player);
         });
     }
 

@@ -16,7 +16,7 @@ import java.util.UUID;
 
 public class RoyalKnightArmorSet extends ArmorSet {
 
-    private static final long COOLDOWN = 7 * 1000; // 7 seconds cooldown
+    private static final long COOLDOWN = 7; // 7 seconds cooldown
 
     private final AbilityService abilityService;
     private final AttributeService attributeService;
@@ -43,9 +43,8 @@ public class RoyalKnightArmorSet extends ArmorSet {
     @Override
     public void triggerAbility(Player player) {
         UUID uuid = player.getUniqueId();
-        long now = System.currentTimeMillis();
 
-        if (abilityService.isReady(uuid, getType().getId())) {
+        if (!abilityService.isReady(uuid, getType().getId())) {
             long timeLeft = (abilityService.getRemainingMillis(uuid, getType().getId())) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Ability is on cooldown for " + timeLeft + " more seconds!");
             return;

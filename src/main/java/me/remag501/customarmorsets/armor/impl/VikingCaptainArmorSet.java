@@ -19,13 +19,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 public class VikingCaptainArmorSet extends ArmorSet implements Listener {
 
-    private static final long COOLDOWN = 7 * 1000; // 7 seconds cooldown
+    private static final long COOLDOWN = 7; // 7 seconds cooldown
 
     private final TaskService taskService;
     private final CombatStatsService combatStatsService;
@@ -55,7 +53,7 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
     public void triggerAbility(Player player) {
         UUID uuid = player.getUniqueId();
 
-        if (abilityService.isReady(uuid, getType().getId())) {
+        if (!abilityService.isReady(uuid, getType().getId())) {
             long timeLeft = (abilityService.getRemainingMillis(uuid, getType().getId())) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Ability is on cooldown for " + timeLeft + " more seconds!");
             return;
@@ -117,12 +115,6 @@ public class VikingCaptainArmorSet extends ArmorSet implements Listener {
         player.sendMessage(BGSColor.POSITIVE + "Your axe has returned.");
     }
 
-    /**
-     * Calculates base melee damage for a given axe and Sharpness level.
-     *
-     * @param item The axe ItemStack.
-     * @return Total base damage with Sharpness included.
-     */
     public static double calculateAxeDamage(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) return 1.0;
 

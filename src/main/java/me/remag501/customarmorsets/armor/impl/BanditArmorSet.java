@@ -78,6 +78,7 @@ public class BanditArmorSet extends ArmorSet {
         UUID uuid = player.getUniqueId();
         eventService.unregisterListener(uuid, type.getId());
         taskService.stopTask(uuid, "bandit_task");
+        attributeService.resetSource(player, type.getId());
         abilityService.reset(uuid, type.getId());
     }
 

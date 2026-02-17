@@ -1,5 +1,6 @@
 package me.remag501.customarmorsets.armor.impl;
 
+import me.remag501.bgscore.api.ability.AbilityDisplay;
 import me.remag501.bgscore.api.ability.AbilityService;
 import me.remag501.bgscore.api.combat.AttributeService;
 import me.remag501.bgscore.api.event.EventService;
@@ -86,7 +87,7 @@ public class IcemanArmorSet extends ArmorSet {
         playerInUlt.put(uuid, false);
 
         // Setup dome charge
-        abilityService.setCharge(uuid, getType().getId(), 100);
+        abilityService.setupUltimate(uuid, getType().getId(), 100, AbilityDisplay.XP_BAR);
 
         // Start task for ult
         startTask(player);

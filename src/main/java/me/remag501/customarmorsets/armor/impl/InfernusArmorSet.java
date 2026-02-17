@@ -74,7 +74,12 @@ public class InfernusArmorSet extends ArmorSet {
     public void triggerAbility(Player player) {
         UUID uuid = player.getUniqueId();
 
-        if (abilityService.isReady(uuid, getType().getId())) {
+        if (abilityService.isActive(uuid, getType().getId())) {
+            player.sendMessage(BGSColor.NEGATIVE + "Flame thrower already in use!");
+            return;
+        }
+
+        if (!abilityService.isReady(uuid, getType().getId())) {
             long timeLeft = abilityService.getRemainingMillis(uuid, getType().getId()) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Ability is on cooldown for " + timeLeft + " more seconds!");
             return;

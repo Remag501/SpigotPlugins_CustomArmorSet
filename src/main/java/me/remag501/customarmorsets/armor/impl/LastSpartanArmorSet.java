@@ -24,7 +24,6 @@ import static me.remag501.customarmorsets.util.LookEntitiesUtil.getNearestEntity
 
 public class LastSpartanArmorSet extends ArmorSet {
 
-//    private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
     private static final long COOLDOWN = 3;
 
     private final EventService eventService;
@@ -63,7 +62,7 @@ public class LastSpartanArmorSet extends ArmorSet {
     public void triggerAbility(Player player) {
         UUID uuid = player.getUniqueId();
 
-        if (abilityService.isReady(uuid, getType().getId())) {
+        if (!abilityService.isReady(uuid, getType().getId())) {
             long timeLeft = abilityService.getRemainingMillis(uuid, getType().getId()) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Ability is on cooldown for " + timeLeft + " more seconds!");
             return;

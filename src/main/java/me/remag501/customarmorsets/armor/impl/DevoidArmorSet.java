@@ -20,8 +20,7 @@ import static me.remag501.customarmorsets.util.LookEntitiesUtil.getNearestEntity
 
 public class DevoidArmorSet extends ArmorSet {
 
-    private static final Map<UUID, Long> abilityCooldowns = new HashMap<>();
-    private static final long COOLDOWN = 10 * 1000;
+    private static final long COOLDOWN = 10;
 
     private final AbilityService abilityService;
     private final TaskService taskService;
@@ -61,14 +60,14 @@ public class DevoidArmorSet extends ArmorSet {
         UUID uuid = player.getUniqueId();
         long now = System.currentTimeMillis();
 
-        if (abilityService.isReady(uuid, getType().getId())) {
+        if (!abilityService.isReady(uuid, getType().getId())) {
             long timeLeft = (abilityService.getRemainingMillis(uuid, getType().getId())) / 1000;
             player.sendMessage(BGSColor.NEGATIVE + "Ability is on cooldown for " + timeLeft + " more seconds!");
             return;
         }
 
         // Start the cooldown
-        abilityService.start(uuid, getType().getId(), Duration.ofSeconds(COOLDOWN), Duration.ofSeconds(1), AbilityDisplay.XP_BAR);
+        abilityService.start(uuid, getType().getId(), Duration.ofSeconds(1), Duration.ofSeconds(COOLDOWN), AbilityDisplay.XP_BAR);
 
         boolean isSneaking = player.isSneaking();
 
@@ -84,7 +83,6 @@ public class DevoidArmorSet extends ArmorSet {
                     velocityMap.put(target.getUniqueId(), new KineticData(ticks, target.getVelocity()));
                 }
             } else if (ticks >= 20) {
-                abilityCooldowns.put(uuid, now);
                 return true;
             }
 
