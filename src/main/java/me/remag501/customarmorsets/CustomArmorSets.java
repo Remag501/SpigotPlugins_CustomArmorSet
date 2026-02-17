@@ -51,13 +51,9 @@ public final class CustomArmorSets extends JavaPlugin {
         // Setup services
         CosmeticService cosmeticService = new CosmeticService();
         ArmorService armorService = new ArmorService(namespaceService);
-//        AttributesService attributesService = new AttributesService(this);
         ItemService itemService = new ItemService(namespaceService, armorService);
 
         // Setup managers
-//        DamageStatsManager damageStatsManager = new DamageStatsManager();
-//        DefenseStatsManager defenseStatsManager = new DefenseStatsManager();
-//        CooldownBarManager cooldownBarManager = new CooldownBarManager(this);
         PlayerSyncManager playerSyncManager = new PlayerSyncManager(attributeService);
         armorManager = new ArmorManager(this, taskService, eventService, cosmeticService, attributeService, abilityService,
                 combatStatsService, armorService, playerSyncManager, namespaceService);
@@ -82,9 +78,6 @@ public final class CustomArmorSets extends JavaPlugin {
         // Listener for broken items
         new BrokenItemListener(itemService, eventService);
         new RepairListener(armorService, cosmeticService, itemService, namespaceService, eventService);
-
-        // Listener for damage stats
-//        new DamageListener(damageStatsManager, defenseStatsManager, eventService);
 
         // Mythic mobs
         getServer().getPluginManager().registerEvents(new MythicMobsListener(this), this);
