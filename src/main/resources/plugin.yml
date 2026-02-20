@@ -1,5 +1,6 @@
-name: CustomArmorSets
-version: 1.0
+name: ${project.name}
+version: ${project.version}
+
 main: me.remag501.armor.ArmorPlugin
 api-version: 1.21
 
