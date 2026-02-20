@@ -1,6 +1,6 @@
 name: CustomArmorSets
 version: 1.0
-main: me.remag501.customarmorsets.CustomArmorSets
+main: me.remag501.armor.ArmorPlugin
 api-version: 1.21
 
 commands:
