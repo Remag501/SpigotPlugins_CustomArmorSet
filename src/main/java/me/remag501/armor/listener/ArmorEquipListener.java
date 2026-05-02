@@ -1,6 +1,6 @@
 package me.remag501.armor.listener;
 
-import me.remag501.bgscore.api.util.BGSColor;
+import me.remag501.core.api.util.BGSColor;
 import me.remag501.armor.armor.ArmorSetType;
 import me.remag501.armor.manager.ArmorManager;
 import me.remag501.armor.service.ArmorService;

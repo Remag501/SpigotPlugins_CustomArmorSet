@@ -1,11 +1,11 @@
 package me.remag501.armor.armor;
 
-import me.remag501.bgscore.api.ability.AbilityService;
-import me.remag501.bgscore.api.combat.AttributeService;
-import me.remag501.bgscore.api.combat.CombatStatsService;
-import me.remag501.bgscore.api.event.EventService;
-import me.remag501.bgscore.api.namespace.NamespaceService;
-import me.remag501.bgscore.api.task.TaskService;
+import me.remag501.core.api.ability.AbilityService;
+import me.remag501.core.api.combat.AttributeService;
+import me.remag501.core.api.combat.CombatStatsService;
+import me.remag501.core.api.event.EventService;
+import me.remag501.core.api.namespace.NamespaceService;
+import me.remag501.core.api.task.TaskService;
 import me.remag501.armor.armor.impl.*;
 import me.remag501.armor.manager.PlayerSyncManager;
 import me.remag501.armor.service.ArmorStateService;

@@ -1,8 +1,8 @@
 package me.remag501.armor.listener;
 
-import me.remag501.bgscore.api.event.EventService;
-import me.remag501.bgscore.api.namespace.NamespaceService;
-import me.remag501.bgscore.api.util.BGSColor;
+import me.remag501.core.api.event.EventService;
+import me.remag501.core.api.namespace.NamespaceService;
+import me.remag501.core.api.util.BGSColor;
 import me.remag501.armor.service.ArmorService;
 import me.remag501.armor.service.CosmeticService;
 import me.remag501.armor.service.RepairKitService;

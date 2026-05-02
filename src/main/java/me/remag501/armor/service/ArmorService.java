@@ -1,6 +1,6 @@
 package me.remag501.armor.service;
 
-import me.remag501.bgscore.api.namespace.NamespaceService;
+import me.remag501.core.api.namespace.NamespaceService;
 import me.remag501.armor.armor.ArmorSetType;
 import me.remag501.armor.lib.armorequipevent.ArmorType;
 import org.bukkit.Material;

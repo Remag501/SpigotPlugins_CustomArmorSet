@@ -1,6 +1,6 @@
 package me.remag501.armor.manager;
 
-import me.remag501.bgscore.api.task.TaskService;
+import me.remag501.core.api.task.TaskService;
 import me.remag501.armor.armor.ArmorRegistry;
 import me.remag501.armor.armor.ArmorSet;
 import me.remag501.armor.armor.ArmorSetType;

@@ -1,7 +1,7 @@
 package me.remag501.armor.command;
 
-import me.remag501.bgscore.api.namespace.NamespaceService;
-import me.remag501.bgscore.api.util.BGSColor;
+import me.remag501.core.api.namespace.NamespaceService;
+import me.remag501.core.api.util.BGSColor;
 import me.remag501.armor.armor.ArmorSetType;
 import me.remag501.armor.service.RepairKitService;
 import me.remag501.armor.util.ArmorUtil;

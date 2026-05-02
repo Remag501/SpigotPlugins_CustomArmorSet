@@ -1,6 +1,6 @@
 package me.remag501.armor.manager;
 
-import me.remag501.bgscore.api.combat.AttributeService;
+import me.remag501.core.api.combat.AttributeService;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;

@@ -1,6 +1,6 @@
 package me.remag501.armor.listener;
 
-import me.remag501.bgscore.api.event.EventService;
+import me.remag501.core.api.event.EventService;
 import me.remag501.armor.service.ArmorStateService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;

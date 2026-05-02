@@ -1,9 +1,9 @@
 package me.remag501.armor.armor.impl;
 
-import me.remag501.bgscore.api.ability.AbilityDisplay;
-import me.remag501.bgscore.api.ability.AbilityService;
-import me.remag501.bgscore.api.task.TaskService;
-import me.remag501.bgscore.api.util.BGSColor;
+import me.remag501.core.api.ability.AbilityDisplay;
+import me.remag501.core.api.ability.AbilityService;
+import me.remag501.core.api.task.TaskService;
+import me.remag501.core.api.util.BGSColor;
 import me.remag501.armor.armor.ArmorSet;
 import me.remag501.armor.armor.ArmorSetType;
 import org.bukkit.Bukkit;
