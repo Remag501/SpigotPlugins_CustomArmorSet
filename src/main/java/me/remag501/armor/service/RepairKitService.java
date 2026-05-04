@@ -1,6 +1,7 @@
 package me.remag501.armor.service;
 
 import me.remag501.core.api.namespace.NamespaceService;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -53,7 +54,7 @@ public class RepairKitService {
         if (item == null || !item.hasItemMeta()) return false;
 
         PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer();
-        return container.has(namespaceService.getRarityKey(), PersistentDataType.BYTE);
+        return container.has(namespaceService.getRepairKitKey(), PersistentDataType.BYTE);
     }
 
     public boolean isBroken(ItemStack item) {

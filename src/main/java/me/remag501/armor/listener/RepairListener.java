@@ -6,6 +6,7 @@ import me.remag501.core.api.util.BGSColor;
 import me.remag501.armor.service.ArmorService;
 import me.remag501.armor.service.CosmeticService;
 import me.remag501.armor.service.RepairKitService;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -40,17 +41,10 @@ public class RepairListener {
     }
 
     public void onInventoryClick(InventoryClickEvent event) {
-//        if (!(event.getWhoClicked() instanceof Player player)) return;
-//
+
         ItemStack cursor = event.getCursor();
-//        if (!itemService.isRepairKit(cursor)) return;
 
         ItemStack clickedItem = event.getCurrentItem();
-//        if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
-
-//        Material type = clickedItem.getType();
-//        if (type.getMaxDurability() <= 0 || !(clickedItem.getItemMeta() instanceof Damageable))
-//            return;
 
         // Get tier and corresponding repair amount
         ItemMeta meta = cursor.getItemMeta();
