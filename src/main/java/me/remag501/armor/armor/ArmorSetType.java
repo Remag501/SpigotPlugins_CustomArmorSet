@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 public enum ArmorSetType {
-    SNOWMAN("snowman", "Snow Man", Color.WHITE.asRGB(), 3, 0,
+    SNOWMAN("snowman", "Snow Man", 0, 3, 0,
             "http://textures.minecraft.net/texture/bf96f13c7fb55b00a172ded93c12419c912188700389ef366d43eb3c107aab71",
 //            SnowmanArmorSet::new,
             Arrays.asList("", ""),
