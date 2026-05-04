@@ -28,6 +28,7 @@ public class ArmorService {
 
         // Simulate the change without modifying the actual inventory
         // Array Order: 0:Boots, 1:Legs, 2:Chest, 3:Helmet
+
         switch (armorType) {
             case HELMET     -> armor[3] = armorPiece;
             case CHESTPLATE -> armor[2] = armorPiece;

@@ -17,15 +17,17 @@ import java.util.UUID;
 public class CosmeticService {
 
     public ItemStack makeCosmeticHelmet(ItemStack original, String texture) {
-
-        if (texture == null)
+        if (texture == null || texture.isEmpty())
             return original;
 
         original.setType(Material.PLAYER_HEAD);
         SkullMeta skullMeta = (SkullMeta) original.getItemMeta();
-        // Set the custom texture
-        PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID().toString());
+
+        // Use a random UUID instead of a name string to bypass the 16-character limit
+        // and provide a dummy name if needed (or null)
+        PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID(), "Cosmetic");
         PlayerTextures playerTexture = profile.getTextures();
+
         try {
             URL url = new URL(texture);
             playerTexture.setSkin(url);
@@ -33,11 +35,11 @@ public class CosmeticService {
             skullMeta.setOwnerProfile(profile);
         } catch (MalformedURLException e) {
             Bukkit.getLogger().severe("Invalid skin URL: " + texture);
-            e.printStackTrace();
+            // Better to not print the full stack trace for a simple URL typo
         }
+
         original.setItemMeta(skullMeta);
         return original;
-
     }
 
     public void updateCosmeticHelmetLoreSafely(ItemStack armorPiece, List<String> newLoreLines) {
